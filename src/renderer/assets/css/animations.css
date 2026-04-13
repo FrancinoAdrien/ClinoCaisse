@@ -1,0 +1,162 @@
+/* ═══════════════════════════════════════════════════════════════════
+   ClinoCaisse — Animations CSS
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── KEYFRAMES ───────────────────────────────────────────────────────── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes toastOut {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(40px); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes cardHover {
+  from { transform: translateY(0) scale(1); }
+  to   { transform: translateY(-4px) scale(1.02); }
+}
+
+@keyframes clockTick {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.01); }
+  100% { transform: scale(1); }
+}
+
+/* ── UTILITY CLASSES ─────────────────────────────────────────────────── */
+.fade-in      { animation: fadeIn 0.3s ease forwards; }
+.slide-up     { animation: slideInUp 0.3s ease forwards; }
+.slide-left   { animation: slideInLeft 0.3s ease forwards; }
+.slide-right  { animation: slideInRight 0.3s ease forwards; }
+.scale-in     { animation: scaleIn 0.25s ease forwards; }
+.pulse        { animation: pulse 2s ease-in-out infinite; }
+
+/* ── VIEW TRANSITIONS ─────────────────────────────────────────────────── */
+.view { animation: fadeIn 0.2s ease; }
+
+/* ── PRODUCT CARD ─────────────────────────────────────────────────────── */
+.product-card {
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+.product-card:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+}
+.product-card:active { transform: scale(0.97); }
+
+/* ── TABLE CARD ────────────────────────────────────────────────────────── */
+.table-card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.table-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+}
+
+/* ── DASHBOARD MODULE BUTTONS ─────────────────────────────────────────── */
+.module-btn {
+  transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
+}
+.module-btn:hover {
+  transform: translateY(-3px);
+  filter: brightness(1.12);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+}
+.module-btn:active { transform: translateY(0) scale(0.97); }
+
+/* ── SIDEBAR ITEMS ────────────────────────────────────────────────────── */
+.sidebar-item {
+  transition: background 0.15s ease, padding-left 0.15s ease;
+}
+.sidebar-item:hover { background: rgba(255,255,255,0.06); padding-left: 20px; }
+.sidebar-item.active { background: rgba(var(--accent-rgb), 0.18); border-left: 3px solid var(--accent); }
+
+/* ── CLOCK ANIMATION ──────────────────────────────────────────────────── */
+.clock-colon { animation: pulse 1s step-start infinite; }
+
+/* ── THEME CARD ────────────────────────────────────────────────────────── */
+.theme-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.theme-card:hover { transform: translateY(-4px) scale(1.03); }
+.theme-card.selected { box-shadow: 0 0 0 3px var(--accent), 0 8px 32px rgba(0,0,0,0.5); }
+
+/* ── TOAST ─────────────────────────────────────────────────────────────── */
+.toast.removing { animation: toastOut 0.3s ease forwards; }
+
+/* ── LOADING SKELETON ─────────────────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(90deg,
+    rgba(255,255,255,0.05) 25%,
+    rgba(255,255,255,0.1) 50%,
+    rgba(255,255,255,0.05) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+
+/* ── PIN BUTTON ────────────────────────────────────────────────────────── */
+.pin-btn {
+  transition: transform 0.1s ease, background 0.1s ease, box-shadow 0.1s ease;
+}
+.pin-btn:hover { transform: scale(1.08); }
+.pin-btn:active { transform: scale(0.93); }
+
+/* ── PANIER ROW ────────────────────────────────────────────────────────── */
+.panier-row {
+  transition: background 0.12s ease;
+}
+.panier-row.selected { background: rgba(var(--accent-rgb), 0.18) !important; }
+.panier-row:hover:not(.selected) { background: rgba(255,255,255,0.04) !important; }
+
+/* ── CATEGORIE ITEM ──────────────────────────────────────────────────── */
+.cat-item {
+  transition: background 0.15s ease, padding-left 0.12s ease;
+  cursor: pointer;
+}
+.cat-item:hover:not(.active-cat) { background: rgba(255,255,255,0.06); }
+.cat-item.active-cat {
+  background: rgba(var(--accent-rgb), 0.22) !important;
+  border-right: 3px solid var(--accent);
+}

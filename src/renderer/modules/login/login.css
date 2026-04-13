@@ -1,0 +1,167 @@
+/* ── LOGIN CSS ─────────────────────────────────────────────────────── */
+#view-login {
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0a1520 0%, #1a2d45 40%, #2a4060 70%, #0f1e30 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Arrière-plan animé */
+#view-login::before {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  background: radial-gradient(ellipse at 30% 40%, rgba(74,159,212,0.12) 0%, transparent 60%),
+              radial-gradient(ellipse at 70% 60%, rgba(74,159,212,0.08) 0%, transparent 50%);
+  animation: pulse 6s ease-in-out infinite;
+}
+
+/* Particules */
+.login-particles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.particle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: rgba(74,159,212,0.4);
+  border-radius: 50%;
+  animation: floatParticle linear infinite;
+}
+
+@keyframes floatParticle {
+  from { transform: translateY(100vh) translateX(0); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  to   { transform: translateY(-10px) translateX(40px); opacity: 0; }
+}
+
+/* Carte login */
+.login-card {
+  position: relative;
+  z-index: 2;
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 20px;
+  padding: 48px 40px 36px;
+  width: 420px;
+  max-width: 95vw;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05);
+  animation: scaleIn 0.4s ease;
+}
+
+/* Logo */
+.login-logo {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.login-logo .logo-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  filter: drop-shadow(0 4px 12px rgba(74,159,212,0.5));
+}
+.login-logo h1 {
+  font-size: 28px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 2px;
+  text-shadow: 0 2px 12px rgba(74,159,212,0.4);
+}
+.login-logo p {
+  font-size: 13px;
+  color: rgba(255,255,255,0.5);
+  margin-top: 4px;
+  font-weight: 300;
+}
+
+/* Affichage PIN */
+.pin-display {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin: 24px 0;
+  min-height: 28px;
+}
+.pin-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.35);
+  background: transparent;
+  transition: all 0.2s ease;
+}
+.pin-dot.filled {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(74,159,212,0.6);
+  transform: scale(1.1);
+}
+
+/* Message erreur */
+.pin-error {
+  text-align: center;
+  color: #e74c3c;
+  font-size: 13px;
+  min-height: 20px;
+  margin-bottom: 12px;
+  animation: slideInUp 0.2s ease;
+}
+
+/* Clavier numérique */
+.pin-keyboard {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.pin-btn {
+  aspect-ratio: 1;
+  border: 2px solid rgba(255,255,255,0.12);
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 70px;
+  height: 70px;
+  margin: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  font-family: 'Inter', sans-serif;
+}
+.pin-btn:hover {
+  background: rgba(255,255,255,0.12);
+  border-color: var(--accent);
+  transform: scale(1.08);
+  box-shadow: 0 4px 16px rgba(74,159,212,0.3);
+}
+.pin-btn:active { transform: scale(0.92); }
+.pin-btn.btn-clear { background: rgba(231,76,60,0.15); border-color: rgba(231,76,60,0.3); font-size: 18px; }
+.pin-btn.btn-clear:hover { background: rgba(231,76,60,0.3); border-color: #e74c3c; }
+.pin-btn.btn-delete { background: rgba(243,156,18,0.12); border-color: rgba(243,156,18,0.3); font-size: 20px; }
+.pin-btn.btn-delete:hover { background: rgba(243,156,18,0.3); border-color: #f39c12; }
+
+/* Version */
+.login-version {
+  text-align: center;
+  margin-top: 24px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.25);
+}
+
+/* Error shake */
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  20%,60% { transform: translateX(-8px); }
+  40%,80% { transform: translateX(8px); }
+}
+.shake { animation: shake 0.4s ease; }

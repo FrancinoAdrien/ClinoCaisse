@@ -1,0 +1,62 @@
+{
+  "name": "clinocaisse",
+  "version": "1.0.0",
+  "description": "ClinoCaisse — Logiciel de caisse POS par ClinoKeys",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --devtools",
+    "rebuild": "electron-rebuild -f -w better-sqlite3",
+    "postinstall": "electron-rebuild -f -w better-sqlite3",
+    "build": "electron-builder",
+    "dist": "electron-builder --win"
+  },
+  "author": "ClinoKeys",
+  "license": "MIT",
+  "keywords": [
+    "pos",
+    "caisse",
+    "electron"
+  ],
+  "dependencies": {
+    "better-sqlite3": "^9.4.3",
+    "usb": "^2.17.0"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^3.7.2",
+    "electron": "^29.1.0",
+    "electron-builder": "^26.8.1"
+  },
+  "build": {
+    "appId": "com.clinokeys.clinocaisse",
+    "productName": "ClinoCaisse",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
+      "!node_modules/.bin",
+      "!**/*.map"
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        }
+      ],
+      "icon": "./build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}

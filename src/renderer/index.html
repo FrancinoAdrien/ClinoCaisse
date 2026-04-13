@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="default">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src 'self' https://fonts.gstatic.com data:; script-src 'self'; img-src 'self' data: blob:;" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ClinoCaisse</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="assets/css/themes.css" />
+  <link rel="stylesheet" href="assets/css/global.css" />
+  <link rel="stylesheet" href="assets/css/animations.css" />
+
+  <!-- Modules CSS -->
+  <link rel="stylesheet" href="modules/login/login.css" />
+  <link rel="stylesheet" href="modules/dashboard/dashboard.css" />
+  <link rel="stylesheet" href="modules/caisse/caisse.css" />
+  <link rel="stylesheet" href="modules/stock/stock.css" />
+  <link rel="stylesheet" href="modules/cloture/cloture.css" />
+  <link rel="stylesheet" href="modules/utilisateurs/utilisateurs.css" />
+  <link rel="stylesheet" href="modules/parametres/parametres.css" />
+  <link rel="stylesheet" href="modules/theme-selector/theme-selector.css" />
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ── LOGIN ──────────────────────────────────────────────────────── -->
+  <div id="view-login" class="view active">
+    <!-- Injecté par login.js -->
+  </div>
+
+  <!-- ── DASHBOARD ─────────────────────────────────────────────────── -->
+  <div id="view-dashboard" class="view">
+    <!-- Injecté par dashboard.js -->
+  </div>
+
+  <!-- ── CAISSE ────────────────────────────────────────────────────── -->
+  <div id="view-caisse" class="view">
+    <!-- Injecté par caisse.js -->
+  </div>
+
+  <!-- ── STOCK ─────────────────────────────────────────────────────── -->
+  <div id="view-stock" class="view">
+    <!-- Injecté par stock.js -->
+  </div>
+
+  <!-- ── CLÔTURE ───────────────────────────────────────────────────── -->
+  <div id="view-cloture" class="view">
+    <!-- Injecté par cloture.js -->
+  </div>
+
+  <!-- ── UTILISATEURS ──────────────────────────────────────────────── -->
+  <div id="view-utilisateurs" class="view">
+    <!-- Injecté par utilisateurs.js -->
+  </div>
+
+  <!-- ── PARAMÈTRES ────────────────────────────────────────────────── -->
+  <div id="view-parametres" class="view">
+    <!-- Injecté par parametres.js -->
+  </div>
+
+</div>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<!-- Modals Container -->
+<div id="modal-container"></div>
+
+<!-- Scripts (ordre : shared → app → modules) -->
+<script src="shared/utils.js"></script>
+<script src="shared/toast.js"></script>
+<script src="shared/modal.js"></script>
+<script src="app.js"></script>
+<script src="modules/login/login.js"></script>
+<script src="modules/dashboard/dashboard.js"></script>
+<script src="modules/caisse/caisse.js"></script>
+<script src="modules/stock/stock.js"></script>
+<script src="modules/cloture/cloture.js"></script>
+<script src="modules/utilisateurs/utilisateurs.js"></script>
+<script src="modules/parametres/parametres.js"></script>
+<script src="modules/theme-selector/theme-selector.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,223 @@
+/* ── THEME SELECTOR CSS ─────────────────────────────────────────────── */
+.theme-selector-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(8px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.theme-selector-overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+.theme-selector-panel {
+  background: var(--card-gradient);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  width: 900px;
+  max-width: 96vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 32px 100px rgba(0,0,0,0.7);
+  transform: scale(0.96) translateY(16px);
+  transition: transform 0.3s ease;
+  overflow: hidden;
+}
+.theme-selector-overlay.open .theme-selector-panel {
+  transform: scale(1) translateY(0);
+}
+
+/* Header */
+.ts-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 28px;
+  border-bottom: 1px solid var(--border);
+  background: var(--topbar-gradient);
+}
+.ts-header h2 { font-size: 20px; font-weight: 700; color: var(--text); }
+.ts-close {
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-size: 22px;
+  cursor: pointer;
+  opacity: 0.6;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+.ts-close:hover { opacity: 1; background: rgba(231,76,60,0.2); color: #e74c3c; }
+
+/* Body */
+.ts-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 28px;
+}
+.ts-subtitle {
+  font-size: 13px;
+  opacity: 0.6;
+  margin-bottom: 20px;
+}
+
+/* Grille des thèmes */
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+/* Card thème */
+.theme-card {
+  border-radius: 12px;
+  cursor: pointer;
+  overflow: hidden;
+  border: 2px solid transparent;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  position: relative;
+}
+.theme-card:hover { transform: translateY(-4px) scale(1.03); }
+.theme-card.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb),0.4), 0 8px 32px rgba(0,0,0,0.5);
+}
+.theme-card.selected::after {
+  content: '✓';
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  background: var(--accent);
+  color: #fff;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 22px;
+  text-align: center;
+}
+
+/* Preview dans la card */
+.tc-preview {
+  height: 70px;
+  position: relative;
+  overflow: hidden;
+}
+.tc-topbar-sim {
+  height: 18px;
+  width: 100%;
+}
+.tc-body-sim {
+  height: 52px;
+  width: 100%;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+}
+.tc-btn-sim {
+  flex: 1;
+  height: 42px;
+  border-radius: 5px;
+  opacity: 0.85;
+}
+
+.tc-info {
+  padding: 9px 12px;
+  background: rgba(0,0,0,0.3);
+}
+.tc-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 3px;
+}
+.tc-accent {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.6);
+}
+.tc-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Preview live */
+.ts-live-preview {
+  background: rgba(0,0,0,0.2);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  padding: 16px;
+  margin-bottom: 20px;
+}
+.ts-live-preview h4 {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  opacity: 0.6;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.live-mock {
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.live-mock-topbar {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.9);
+}
+.live-mock-body {
+  height: 60px;
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+}
+.live-mock-btn {
+  flex: 1;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: rgba(255,255,255,0.9);
+  font-weight: 600;
+}
+
+/* Footer */
+.ts-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 28px;
+  border-top: 1px solid var(--border);
+  background: var(--bottombar-gradient);
+}
+.ts-selected-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  opacity: 0.8;
+}
