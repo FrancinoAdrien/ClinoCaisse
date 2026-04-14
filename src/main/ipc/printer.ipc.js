@@ -274,38 +274,40 @@ async function printText(text, requestedPrinterName) {
     win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
 
     win.webContents.on('did-finish-load', async () => {
-      let completed = 0;
+      let printedSuccessfully = false;
       let errors = [];
 
-      const checkDone = () => {
-        completed++;
-        if (completed >= targetPrinters.length) {
-          setTimeout(() => { try { win.close(); } catch {} }, 1000);
-          if (errors.length > 0 && errors.length === targetPrinters.length) {
-            resolve({ success: false, message: errors.join(' | ') });
-          } else {
-            resolve({ success: true });
-          }
-        }
-      };
-
       for (const printer of targetPrinters) {
-        try {
-          win.webContents.print({
-            silent: true,
-            printBackground: true,
-            deviceName: printer,
-            margins: { marginType: 'none' },
-          }, (success, errorType) => {
-            if (!success) {
-              errors.push(errorType || "Erreur inconnue");
-            }
-            checkDone();
-          });
-        } catch (err) {
-          errors.push(err.message);
-          checkDone();
-        }
+        if (printedSuccessfully) break; // Seulement la première imprimante qui marche
+
+        await new Promise((resume) => {
+          try {
+            win.webContents.print({
+              silent: true,
+              printBackground: true,
+              deviceName: printer,
+              margins: { marginType: 'none' },
+            }, (success, errorType) => {
+              if (success) {
+                printedSuccessfully = true;
+              } else {
+                errors.push(errorType || "Erreur inconnue");
+              }
+              resume();
+            });
+          } catch (err) {
+            errors.push(err.message);
+            resume();
+          }
+        });
+      }
+
+      setTimeout(() => { try { win.close(); } catch {} }, 1000);
+
+      if (!printedSuccessfully && errors.length > 0) {
+        resolve({ success: false, message: errors.join(' | ') });
+      } else {
+        resolve({ success: true });
       }
     });
   });
