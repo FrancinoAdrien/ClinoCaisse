@@ -335,6 +335,36 @@
   color: #f39c12;
 }
 
+.panier-table .td-kitchen {
+  text-align: center;
+  width: 32px;
+}
+
+.btn-kitchen-patch {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  color: #7f8c8d;
+  cursor: pointer;
+  padding: 3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.btn-kitchen-patch:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text);
+}
+
+.btn-kitchen-patch.active {
+  background: rgba(243, 156, 18, 0.2);
+  border-color: #f39c12;
+  color: #f39c12;
+  box-shadow: 0 0 8px rgba(243, 156, 18, 0.3);
+}
+
 /* Totaux */
 .panier-total-zone {
   border-top: 1px solid var(--border);
@@ -795,9 +825,29 @@
 .ticket-btn-enreg {
   padding: 14px 20px;
   border-radius: 8px;
-  background: #27ae60;
-  border: none;
-  color: #fff;
+.commande-nom-input {
+  width: 100%;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 14px;
+  margin-bottom: 5px;
+  outline: none;
+}
+
+.commande-nom-input:focus {
+  border-color: var(--accent-light);
+  box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.3);
+}
+
+.ticket-btn-enreg:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(1);
+}
+
   font-size: 15px;
   font-weight: 800;
   cursor: pointer;

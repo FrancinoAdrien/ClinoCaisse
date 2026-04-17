@@ -43,63 +43,133 @@
       <div id="dashboard-content">
         <div class="dash-title">Accueil</div>
 
-        <div class="dash-grid">
+        <div class="dash-main-row">
+          <div class="dash-grid dash-grid-metro">
 
-          <!-- Caisse (rowspan 2) -->
-          <button class="module-btn" id="btn-caisse" data-perm="perm_caisse">
+          <!-- Caisse Lounge (tuile grande 2×2) -->
+          <button class="module-btn tile-metro tile-metro-large tile--caisse" id="btn-caisse" data-perm="perm_caisse">
             <svg class="mod-icon" width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
               <rect x="2" y="6" width="20" height="14" rx="2"/>
               <path d="M22 10H2M7 6V4M12 6V4M17 6V4"/>
               <circle cx="12" cy="15" r="2"/>
               <path d="M8 15h-2M18 15h-2"/>
             </svg>
-            <span class="mod-label">Caisse</span>
+            <span class="mod-label">Caisse Lounge</span>
           </button>
 
-          <!-- Utilisateurs -->
-          <button class="module-btn" id="btn-users" data-perm="perm_utilisateur">
+          <!-- Journal d'Activité (tuile grande 2×2) -->
+          <button class="module-btn tile-metro tile-metro-large tile--journal" id="btn-journal" data-perm="perm_depenses">
+            <svg class="mod-icon" width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+            <span class="mod-label">Journal</span>
+          </button>
+
+          <!-- Cuisine / Bar (tuile moyenne haute 1×2) -->
+          <button class="module-btn tile-metro tile-metro-medium-v tile--cuisine" id="btn-cuisine" data-perm="perm_caisse">
             <svg class="mod-icon" width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
+              <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
+              <line x1="6" y1="1" x2="6" y2="4"></line>
+              <line x1="10" y1="1" x2="10" y2="4"></line>
+              <line x1="14" y1="1" x2="14" y2="4"></line>
+            </svg>
+            <span class="mod-label mod-label-sm">Cuisine & Bar</span>
+          </button>
+
+          <!-- Réservations (tuile moyenne haute 1×2) -->
+          <button class="module-btn tile-metro tile-metro-medium-v tile--reservations" id="btn-reservations" data-perm="perm_reserv">
+            <svg class="mod-icon" width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <span class="mod-label mod-label-sm">Réservations</span>
+          </button>
+
+          <!-- Stock (tuile large horizontale) -->
+          <button class="module-btn tile-metro tile-metro-wide-h tile--stock" id="btn-stock" data-perm="perm_stock">
+            <svg class="mod-icon" width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 7l-8-4-8 4m16 0v10l-8 4-8-4V7"/>
+              <path d="M12 3v18M4 7l8 4 8-4"/>
+            </svg>
+            <span class="mod-label mod-label-sm">Gestion des Stocks</span>
+          </button>
+
+          <!-- Finances (petite) -->
+          <button class="module-btn tile-metro tile-metro-small tile--finances" id="btn-finances" data-perm="perm_depenses">
+            <svg class="mod-icon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23"></line>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+            <span class="mod-label mod-label-xs">Finances</span>
+          </button>
+
+          <!-- Employés RH (petite) -->
+          <button class="module-btn tile-metro tile-metro-small tile--rh" id="btn-rh" data-perm="perm_ressources">
+            <svg class="mod-icon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            <span class="mod-label mod-label-xs">Employés</span>
+          </button>
+
+          <!-- Utilisateurs (petite) -->
+          <button class="module-btn tile-metro tile-metro-small tile--users" id="btn-users" data-perm="perm_utilisateur">
+            <svg class="mod-icon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="9" cy="7" r="3"/>
               <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/>
               <circle cx="17" cy="8" r="2.5"/>
               <path d="M15 20c0-2.5 1.8-4.5 4-5"/>
             </svg>
-            <span class="mod-label mod-label-sm">Utilisateurs</span>
+            <span class="mod-label mod-label-xs">Utilisateurs</span>
           </button>
 
-          <!-- Stock -->
-          <button class="module-btn" id="btn-stock" data-perm="perm_stock">
-            <svg class="mod-icon" width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M20 7l-8-4-8 4m16 0v10l-8 4-8-4V7"/>
-              <path d="M12 3v18M4 7l8 4 8-4"/>
+          <!-- Paramètres (petite) -->
+          <button class="module-btn tile-metro tile-metro-small tile--param" id="btn-param" data-perm="perm_parametres">
+            <svg class="mod-icon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
             </svg>
-            <span class="mod-label mod-label-sm">Gestion stock</span>
+            <span class="mod-label mod-label-xs">Paramètres</span>
           </button>
-
-          <!-- Clôture -->
-          <button class="module-btn" id="btn-cloture" data-perm="perm_cloture">
-            <svg class="mod-icon" width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          
+          <!-- Clôture (petite) -->
+          <button class="module-btn tile-metro tile-metro-small tile--cloture" id="btn-cloture" data-perm="perm_cloture">
+            <svg class="mod-icon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <rect x="3" y="3" width="18" height="18" rx="2"/>
               <path d="M7 17l3-4 3 3 2-3 2 1"/>
               <line x1="7" y1="7" x2="17" y2="7" stroke-dasharray="1.5 1"/>
             </svg>
-            <span class="mod-label mod-label-sm">Clôture de caisse</span>
+            <span class="mod-label mod-label-xs">Clôture</span>
           </button>
 
-          <!-- Paramètres -->
-          <button class="module-btn" id="btn-param" data-perm="perm_parametres">
-            <svg class="mod-icon" width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="3"/>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          <!-- Analytique — admin (petite) -->
+          <button class="module-btn tile-metro tile-metro-small tile--analytique module-btn-admin" id="btn-analytique" style="display:none">
+            <svg class="mod-icon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="12" width="4" height="10" rx="1"/>
+              <rect x="9" y="7" width="4" height="15" rx="1"/>
+              <rect x="16" y="2" width="4" height="20" rx="1"/>
             </svg>
-            <span class="mod-label mod-label-sm">Paramètres</span>
+            <span class="mod-label mod-label-xs">Analytique</span>
           </button>
 
-          <!-- Horloge -->
-          <div id="dash-clock">
+          <!-- Horloge (tuile large horizontale) -->
+          <div id="dash-clock" class="tile-metro tile-metro-wide-h tile--clock">
             <div class="clock-time" id="clock-time">00:00:00</div>
             <div class="clock-date" id="clock-date">-</div>
           </div>
+        </div>
+
+        </div>
+
         </div>
 
         <div class="dash-security-msg">
@@ -126,12 +196,20 @@
     const nameEl = document.getElementById('dash-user-name');
     if (nameEl) nameEl.textContent = `${user.nom}${user.prenom ? ' ' + user.prenom : ''}`;
 
+    const content = document.getElementById('dashboard-content');
+    if (content) content.classList.toggle('dashboard--admin', user.role === 'admin');
+
+    const btnAna = document.getElementById('btn-analytique');
+    if (btnAna) {
+      btnAna.style.display = user.role === 'admin' ? '' : 'none';
+    }
+
     // Gérer les permissions sur les boutons
     document.querySelectorAll('.module-btn[data-perm]').forEach(btn => {
       btn.style.position = 'relative'; // Pour le placement absolu du cadenas
       const perm = btn.dataset.perm;
       
-      if (user[perm] !== 1) {
+      if (user.role !== 'admin' && user[perm] !== 1) {
         btn.style.opacity   = '0.4';
         btn.style.cursor    = 'not-allowed';
         btn.title           = 'Accès non autorisé';
@@ -189,11 +267,16 @@
 
   function bindEvents() {
     const navMap = {
-      'btn-caisse':  { view: 'caisse',       perm: 'perm_caisse' },
-      'btn-users':   { view: 'utilisateurs', perm: 'perm_utilisateur' },
-      'btn-stock':   { view: 'stock',        perm: 'perm_stock' },
-      'btn-cloture': { view: 'cloture',      perm: 'perm_cloture' },
-      'btn-param':   { view: 'parametres',   perm: 'perm_parametres' },
+      'btn-caisse':       { view: 'caisse',       perm: 'perm_caisse' },
+      'btn-users':        { view: 'utilisateurs', perm: 'perm_utilisateur' },
+      'btn-stock':        { view: 'stock',        perm: 'perm_stock' },
+      'btn-cloture':      { view: 'cloture',      perm: 'perm_cloture' },
+      'btn-param':        { view: 'parametres',   perm: 'perm_parametres' },
+      'btn-journal':      { view: 'journal',      perm: 'perm_cloture' },
+      'btn-cuisine':      { view: 'cuisine',      perm: 'perm_caisse' },
+      'btn-reservations': { view: 'reservations', perm: 'perm_reserv' },
+      'btn-finances':     { view: 'finances',     perm: 'perm_depenses' },
+      'btn-rh':           { view: 'rh',           perm: 'perm_ressources' },
     };
 
     Object.entries(navMap).forEach(([btnId, { view, perm }]) => {
@@ -201,6 +284,13 @@
         if (!Utils.checkPerm(perm)) return;
         Router.go(view);
       });
+    });
+
+    // Bouton analytique (admin uniquement, pas de perm classique)
+    document.getElementById('btn-analytique')?.addEventListener('click', () => {
+      const u = Session.getUser();
+      if (!u || u.role !== 'admin') return;
+      Router.go('analytique');
     });
 
     document.getElementById('btn-theme-selector')?.addEventListener('click', () => {

@@ -1,0 +1,549 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Journal d'Activité — Styles
+   ═══════════════════════════════════════════════════════════════════ */
+
+.back-btn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 20px;
+  padding: 6px 14px;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.2s;
+}
+.back-btn:hover { background: rgba(255,255,255,0.1); }
+
+.mod-action-btn {
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: filter 0.2s;
+}
+.mod-action-btn:hover { filter: brightness(1.15); }
+.mod-action-btn-secondary {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid var(--border);
+}
+
+/* ── LAYOUT PRINCIPAL ─────────────────────────────────────────────── */
+#view-journal {
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.journal-topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 20px;
+  height: 56px;
+  min-height: 56px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.journal-topbar-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.01em;
+}
+
+.journal-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  padding: 16px 20px;
+  gap: 14px;
+}
+
+/* ── STATS BAR ────────────────────────────────────────────────────── */
+.journal-stats-row {
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.journal-stat-card {
+  flex: 1;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.journal-stat-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+
+.journal-stat-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.journal-stat-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.journal-stat-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* ── FILTRES ──────────────────────────────────────────────────────── */
+.journal-filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.journal-search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+}
+
+.journal-search-wrap svg {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.journal-search {
+  width: 100%;
+  padding: 8px 12px 8px 34px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+
+.journal-search:focus {
+  border-color: var(--accent);
+}
+
+.journal-date-filter {
+  padding: 8px 10px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.journal-date-filter:focus {
+  border-color: var(--accent);
+}
+
+/* ── FILTRES CATÉGORIE ────────────────────────────────────────────── */
+.journal-cats {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.journal-cat-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.journal-cat-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(var(--accent-rgb, 74, 159, 212), 0.06);
+}
+
+.journal-cat-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.journal-cat-count {
+  background: rgba(255,255,255,0.25);
+  border-radius: 10px;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.journal-cat-btn:not(.active) .journal-cat-count {
+  background: var(--border);
+  color: var(--text-muted);
+}
+
+/* ── RÉSULTATS ────────────────────────────────────────────────────── */
+.journal-result-info {
+  font-size: 12px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* ── TIMELINE ─────────────────────────────────────────────────────── */
+.journal-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.journal-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+.journal-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.journal-scroll::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+.journal-day-group {
+  margin-bottom: 20px;
+}
+
+.journal-day-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--bg);
+  padding: 4px 0;
+}
+
+.journal-day-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.journal-day-line {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.journal-day-total {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* ── ENTRÉE JOURNAL ───────────────────────────────────────────────── */
+.journal-entry {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin-bottom: 6px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+  animation: journalEntryIn 0.2s ease both;
+}
+
+@keyframes journalEntryIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.journal-entry:hover {
+  transform: translateX(3px);
+  border-color: var(--accent);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+}
+
+/* Couleurs par catégorie (ligne gauche) */
+.journal-entry::before {
+  content: '';
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  border-radius: 2px;
+}
+
+.journal-entry { position: relative; }
+
+.journal-entry[data-cat="AUTH"]        { border-left: 3px solid #6c63ff; }
+.journal-entry[data-cat="VENTE"]       { border-left: 3px solid #22c55e; }
+.journal-entry[data-cat="STOCK"]       { border-left: 3px solid #f59e0b; }
+.journal-entry[data-cat="PRODUIT"]     { border-left: 3px solid #3b82f6; }
+.journal-entry[data-cat="FINANCE"]     { border-left: 3px solid #ec4899; }
+.journal-entry[data-cat="RH"]          { border-left: 3px solid #14b8a6; }
+.journal-entry[data-cat="CLOTURE"]     { border-left: 3px solid #a855f7; }
+.journal-entry[data-cat="UTILISATEUR"] { border-left: 3px solid #f97316; }
+.journal-entry[data-cat="RESERVATION"] { border-left: 3px solid #06b6d4; }
+.journal-entry[data-cat="PARAMETRE"]   { border-left: 3px solid #84cc16; }
+
+/* ── ICÔNE CATÉGORIE ──────────────────────────────────────────────── */
+.journal-entry-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.icon-bg-AUTH        { background: rgba(108, 99, 255, 0.15); }
+.icon-bg-VENTE       { background: rgba(34, 197, 94,  0.15); }
+.icon-bg-STOCK       { background: rgba(245, 158, 11, 0.15); }
+.icon-bg-PRODUIT     { background: rgba(59, 130, 246, 0.15); }
+.icon-bg-FINANCE     { background: rgba(236, 72, 153, 0.15); }
+.icon-bg-RH          { background: rgba(20, 184, 166, 0.15); }
+.icon-bg-CLOTURE     { background: rgba(168, 85, 247, 0.15); }
+.icon-bg-UTILISATEUR { background: rgba(249, 115, 22, 0.15); }
+.icon-bg-RESERVATION { background: rgba(6, 182, 212,  0.15); }
+.icon-bg-PARAMETRE   { background: rgba(132, 204, 22, 0.15); }
+
+/* ── CONTENU DE L'ENTRÉE ──────────────────────────────────────────── */
+.journal-entry-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.journal-entry-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.journal-entry-action {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.journal-entry-badge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 7px;
+  border-radius: 10px;
+}
+
+.badge-AUTH        { background: rgba(108, 99, 255, 0.15); color: #a89eff; }
+.badge-VENTE       { background: rgba(34, 197, 94,  0.15); color: #4ade80; }
+.badge-STOCK       { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+.badge-PRODUIT     { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+.badge-FINANCE     { background: rgba(236, 72, 153, 0.15); color: #f472b6; }
+.badge-RH          { background: rgba(20, 184, 166, 0.15); color: #2dd4bf; }
+.badge-CLOTURE     { background: rgba(168, 85, 247, 0.15); color: #c084fc; }
+.badge-UTILISATEUR { background: rgba(249, 115, 22, 0.15); color: #fb923c; }
+.badge-RESERVATION { background: rgba(6, 182, 212,  0.15); color: #22d3ee; }
+.badge-PARAMETRE   { background: rgba(132, 204, 22, 0.15); color: #a3e635; }
+
+.journal-entry-detail {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.journal-entry-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+  min-width: 90px;
+}
+
+.journal-entry-time {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.journal-entry-operator {
+  font-size: 11px;
+  color: var(--text-muted);
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.journal-entry-montant {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* ── ÉTAT VIDE ────────────────────────────────────────────────────── */
+.journal-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 12px;
+  color: var(--text-muted);
+}
+
+.journal-empty-icon {
+  font-size: 48px;
+  opacity: 0.4;
+}
+
+.journal-empty-text {
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0.6;
+}
+
+/* ── CHARGEMENT ───────────────────────────────────────────────────── */
+.journal-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  gap: 10px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.journal-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: journalSpin 0.7s linear infinite;
+}
+
+@keyframes journalSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── PAGINATION ───────────────────────────────────────────────────── */
+.journal-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 0 4px;
+  flex-shrink: 0;
+}
+
+.journal-page-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.journal-page-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.journal-page-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.journal-page-info {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ── TILE JOURNAL sur le dashboard ───────────────────────────────── */
+.tile--journal {
+  background: linear-gradient(135deg, #1e3a5f 0%, #0f2040 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.tile--journal::before {
+  content: '';
+  position: absolute;
+  top: -30px; right: -30px;
+  width: 120px; height: 120px;
+  background: rgba(74, 159, 212, 0.15);
+  border-radius: 50%;
+}
+
+.tile--journal::after {
+  content: '';
+  position: absolute;
+  bottom: -20px; left: -20px;
+  width: 80px; height: 80px;
+  background: rgba(74, 159, 212, 0.10);
+  border-radius: 50%;
+}

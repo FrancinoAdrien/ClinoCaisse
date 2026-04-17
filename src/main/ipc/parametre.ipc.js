@@ -1,4 +1,5 @@
 'use strict';
+const { logAction } = require('./journal.ipc');
 
 module.exports = function(ipcMain, db) {
 
@@ -18,6 +19,15 @@ module.exports = function(ipcMain, db) {
     try {
       db.prepare("INSERT OR REPLACE INTO parametres (cle, valeur, date_maj) VALUES (?, ?, datetime('now'))")
         .run(cle, valeur);
+      // Logguer uniquement si ce n'est pas finance.capital (mis à jour en continu)
+      if (!cle.startsWith('finance.capital') && !cle.startsWith('sync.')) {
+        logAction(db, {
+          categorie: 'PARAMETRE',
+          action: 'Paramètre modifié',
+          detail: `${cle} = ${String(valeur).slice(0, 80)}`,
+          icone: '⚙️'
+        });
+      }
       return { success: true };
     } catch (err) {
       return { success: false, message: err.message };
@@ -33,6 +43,18 @@ module.exports = function(ipcMain, db) {
         }
       });
       tx(data);
+
+      // Log en une seule entrée pour le bulk
+      const clesFiltrees = Object.keys(data).filter(k => !k.startsWith('finance.capital') && !k.startsWith('sync.'));
+      if (clesFiltrees.length > 0) {
+        logAction(db, {
+          categorie: 'PARAMETRE',
+          action: 'Paramètres mis à jour',
+          detail: `${clesFiltrees.length} paramètre(s) modifié(s)`,
+          icone: '⚙️'
+        });
+      }
+
       return { success: true };
     } catch (err) {
       return { success: false, message: err.message };

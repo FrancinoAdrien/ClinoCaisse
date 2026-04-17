@@ -9,7 +9,7 @@ window.Session = {
   setUser(u) { this.user = u; },
   getUser() { return this.user; },
   isLoggedIn() { return !!this.user; },
-  hasPerm(perm) { return this.user && this.user[perm] === 1; },
+  hasPerm(perm) { return this.user && (this.user.role === 'admin' || this.user[perm] === 1); },
   clear() { this.user = null; },
 };
 

@@ -17,6 +17,29 @@ require('./src/main/ipc/utilisateur.ipc')(ipcMain, db);
 require('./src/main/ipc/parametre.ipc')(ipcMain, db);
 require('./src/main/ipc/theme.ipc')(ipcMain, db);
 require('./src/main/ipc/printer.ipc')(ipcMain, db);
+require('./src/main/ipc/journal.ipc')(ipcMain, db);
+require('./src/main/ipc/reservation.ipc')(ipcMain, db);
+require('./src/main/ipc/cuisine.ipc')(ipcMain, db);
+require('./src/main/ipc/finances.ipc')(ipcMain, db);
+require('./src/main/ipc/rh.ipc')(ipcMain, db);
+
+// Initialiser le moteur de synchronisation cloud
+const SyncEngine = require('./src/main/sync/syncEngine');
+const syncEngine = new SyncEngine(db);
+require('./src/main/ipc/sync.ipc')(ipcMain, db, syncEngine);
+require('./src/main/ipc/analytique.ipc')(ipcMain, db);
+
+// Démarrer l'auto-sync si déjà configuré
+try {
+  const urlRow = db.prepare(`SELECT valeur FROM parametres WHERE cle = 'sync.supabase_url'`).get();
+  const keyRow = db.prepare(`SELECT valeur FROM parametres WHERE cle = 'sync.supabase_key'`).get();
+  if (urlRow && urlRow.valeur && keyRow && keyRow.valeur) {
+    const ok = syncEngine.configure(urlRow.valeur, keyRow.valeur);
+    if (ok) syncEngine.startAutoSync();
+  }
+} catch (e) {
+  console.error('SyncEngine boot error:', e.message);
+}
 
 let mainWindow;
 

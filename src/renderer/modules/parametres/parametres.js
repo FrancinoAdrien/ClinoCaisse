@@ -23,7 +23,11 @@
           <div class="params-nav-item active" data-section="entreprise">Entreprise</div>
           <div class="params-nav-item" data-section="impression">Impression</div>
           <div class="params-nav-item" data-section="caisse">Caisse</div>
+          <div class="params-nav-item" data-section="rh">RH</div>
           <div class="params-nav-item" data-section="systeme">Système</div>
+          <div class="params-nav-item params-nav-admin" data-section="cloud" id="nav-cloud" style="display:none">
+            ☁ Cloud
+          </div>
         </nav>
 
         <!-- Contenu -->
@@ -161,6 +165,22 @@
             </div>
           </div>
 
+          <!-- RH -->
+          <div class="params-section" id="section-rh">
+            <h2>Ressources Humaines</h2>
+            <div class="params-form-card">
+              <h3>Salaires</h3>
+              <div class="form-group">
+                <label>Jour du mois pour le paiement (1-31)</label>
+                <input type="number" class="input" id="p-rh-jour" value="1" min="1" max="31" />
+                <p style="font-size:12px;opacity:0.7;margin-top:4px">Définit le jour où les salaires sont attendus par défaut.</p>
+              </div>
+            </div>
+            <div class="params-save-bar">
+              <button class="btn btn-success" id="btn-save-rh">Enregistrer</button>
+            </div>
+          </div>
+
           <!-- SYSTÈME -->
           <div class="params-section" id="section-systeme">
             <h2>Informations système</h2>
@@ -172,6 +192,55 @@
                 <div class="saisie-caisse-line"><span>Base de données</span><strong id="sys-db-path">-</strong></div>
                 <div class="saisie-caisse-line"><span>Electron</span><strong id="sys-electron">-</strong></div>
               </div>
+            </div>
+          </div>
+
+          <!-- CLOUD (Admin seulement) -->
+          <div class="params-section" id="section-cloud">
+            <h2>☁ Synchronisation Cloud (Supabase)</h2>
+
+            <div class="params-form-card">
+              <h3>Connexion Supabase</h3>
+              <div class="form-group" style="margin-bottom:12px">
+                <label>URL de la Base de Données</label>
+                <input type="url" class="input" id="p-sync-url"
+                  placeholder="https://xxxxxxxxxxxx.supabase.co" />
+              </div>
+              <div class="form-group" style="margin-bottom:16px">
+                <label>Clé API (anon ou service_role)</label>
+                <input type="password" class="input" id="p-sync-key"
+                  placeholder="eyJh..." />
+              </div>
+              <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                <button class="btn btn-success" id="btn-sync-save">Enregistrer &amp; Connecter</button>
+                <button class="btn btn-primary" id="btn-sync-test">🔌 Tester la connexion</button>
+                <span id="sync-status-badge" style="font-size:13px;padding:4px 10px;border-radius:20px;background:var(--surface-2)">Non configuré</span>
+              </div>
+            </div>
+
+            <div class="params-form-card">
+              <h3>Actions manuelles</h3>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+                <button class="btn btn-primary btn-sm" id="btn-sync-push">⬆ Push (envoyer)</button>
+                <button class="btn btn-primary btn-sm" id="btn-sync-pull">⬇ Pull (recevoir)</button>
+                <button class="btn btn-ghost btn-sm" id="btn-sync-fullpush">🔄 Forcer l’envoi total</button>
+                <button class="btn btn-ghost btn-sm" id="btn-sync-backup">💾 Backup SQLite local</button>
+              </div>
+              <div id="sync-info" style="font-size:12px;color:var(--text-muted);display:flex;flex-direction:column;gap:4px">
+                <div>En attente de synchronisation : <strong id="sync-pending">—</strong></div>
+                <div>Dernière synchronisation : <strong id="sync-last">—</strong></div>
+              </div>
+            </div>
+
+            <div class="params-form-card" style="background:rgba(255,165,0,0.07);border-color:rgba(255,165,0,0.3)">
+              <h3 style="color:#f39c12">&#9888; Comment créer votre Supabase</h3>
+              <ol style="font-size:12.5px;color:var(--text-muted);padding-left:18px;line-height:1.9">
+                <li>Aller sur <strong>supabase.com</strong> → Créer un compte gratuit</li>
+                <li>Créer un nouveau projet, choisir une région proche</li>
+                <li>Dans <em>Settings → API</em> : copier l’<strong>URL</strong> et la clé <strong>anon public</strong></li>
+                <li>Coller ces deux valeurs dans les champs ci-dessus</li>
+                <li>Cliquer <strong>« Enregistrer &amp; Connecter »</strong> — les tables seront créées automatiquement</li>
+              </ol>
             </div>
           </div>
 
@@ -210,13 +279,47 @@
     setValue('p-devise',  state.params['caisse.devise']    || 'Ar');
     setValue('p-poste',   state.params['caisse.nom_poste'] || 'Poste n°1');
 
+    // RH
+    setValue('p-rh-jour', state.params['rh.jour_paiement'] || '1');
+
     await loadPrinters();
+
+    // Afficher l'onglet Cloud si admin
+    const user = Session.getUser();
+    const navCloud = document.getElementById('nav-cloud');
+    if (navCloud) navCloud.style.display = (user && user.role === 'admin') ? '' : 'none';
+
+    // Charger les clés sync si admin
+    if (user && user.role === 'admin') {
+      try {
+        const cfg = await window.api.sync.getConfig();
+        setValue('p-sync-url', cfg.url || '');
+        setValue('p-sync-key', cfg.key || '');
+        await loadSyncStatus();
+      } catch {}
+    }
   }
 
   async function loadPrinters() {
     const { supported, system } = await window.api.printer.getList();
     state.printerList = { supported, system };
     renderPrinterList(supported);
+  }
+
+  async function loadSyncStatus() {
+    try {
+      const status = await window.api.sync.getStatus();
+      const pendingEl = document.getElementById('sync-pending');
+      const lastEl    = document.getElementById('sync-last');
+      const badge     = document.getElementById('sync-status-badge');
+      if (pendingEl) pendingEl.textContent = status.pending || 0;
+      if (lastEl)    lastEl.textContent    = status.lastSyncAt || 'Jamais';
+      if (badge && status.configured && badge.textContent === 'Non configuré') {
+        badge.textContent       = '✅ Connecté';
+        badge.style.background  = 'rgba(46,204,113,0.15)';
+        badge.style.color       = '#2ecc71';
+      }
+    } catch {}
   }
 
   function renderPrinterList(supported) {
@@ -307,6 +410,14 @@
       res.success ? Toast.success('Paramètres caisse enregistrés') : Toast.error(res.message);
     });
 
+    // Save RH
+    document.getElementById('btn-save-rh')?.addEventListener('click', async () => {
+      const res = await window.api.parametres.setBulk({
+        'rh.jour_paiement': getValue('p-rh-jour'),
+      });
+      res.success ? Toast.success('Paramètres RH enregistrés') : Toast.error(res.message);
+    });
+
     // Test impression
     document.getElementById('btn-test-impression')?.addEventListener('click', async () => {
       const btn    = document.getElementById('btn-test-impression');
@@ -321,6 +432,85 @@
     });
 
     document.getElementById('btn-refresh-printers')?.addEventListener('click', loadPrinters);
+
+    // ── CLOUD SYNC ───────────────────────────────────────────────────────────
+    function setSyncBadge(msg, ok) {
+      const badge = document.getElementById('sync-status-badge');
+      if (!badge) return;
+      badge.textContent = msg;
+      badge.style.background = ok ? 'rgba(46,204,113,0.15)' : ok === false ? 'rgba(231,76,60,0.15)' : 'var(--surface-2)';
+      badge.style.color = ok ? '#2ecc71' : ok === false ? '#e74c3c' : 'var(--text-muted)';
+    }
+
+    // Enregistrer & Connecter
+    document.getElementById('btn-sync-save')?.addEventListener('click', async () => {
+      const url = getValue('p-sync-url').trim();
+      const key = getValue('p-sync-key').trim();
+      if (!url || !key) { Toast.error('Veuillez remplir l\'URL et la clé API.'); return; }
+      setSyncBadge('Connexion en cours...', null);
+      const btn = document.getElementById('btn-sync-save');
+      if (btn) btn.disabled = true;
+      const res = await window.api.sync.configure(url, key);
+      if (btn) btn.disabled = false;
+      if (res.success) {
+        setSyncBadge('✅ Connecté', true);
+        Toast.success('☁ Connexion Supabase établie ! ' + (res.message || ''));
+        await loadSyncStatus();
+      } else {
+        setSyncBadge('❌ Échec', false);
+        Toast.error(res.message || 'Échec de la connexion');
+      }
+    });
+
+    // Tester
+    document.getElementById('btn-sync-test')?.addEventListener('click', async () => {
+      setSyncBadge('Test en cours...', null);
+      const res = await window.api.sync.test();
+      setSyncBadge(res.success ? '✅ Connecté' : '❌ Échec', res.success);
+      res.success ? Toast.success(res.message) : Toast.error(res.message);
+    });
+
+    // Push
+    document.getElementById('btn-sync-push')?.addEventListener('click', async () => {
+      const btn = document.getElementById('btn-sync-push');
+      if (btn) btn.disabled = true;
+      const res = await window.api.sync.push();
+      if (btn) btn.disabled = false;
+      if (res.success) { Toast.success(`⬆ ${res.pushed} enregistrement(s) envoyé(s)`); await loadSyncStatus(); }
+      else Toast.error(res.message || 'Échec du push');
+    });
+
+    // Pull
+    document.getElementById('btn-sync-pull')?.addEventListener('click', async () => {
+      const btn = document.getElementById('btn-sync-pull');
+      if (btn) btn.disabled = true;
+      const res = await window.api.sync.pull();
+      if (btn) btn.disabled = false;
+      if (res.success) { Toast.success(`⬇ ${res.pulled} enregistrement(s) récupéré(s)`); await loadSyncStatus(); }
+      else Toast.error(res.message || 'Échec du pull');
+    });
+
+    // Full Push
+    document.getElementById('btn-sync-fullpush')?.addEventListener('click', async () => {
+      const ok = await new Promise(r => Modal.confirm(
+        'Forcer l\'envoi total',
+        'Cela va reset et renvoyer TOUTES les données locales vers le cloud. Continuer ?',
+        r
+      ));
+      if (!ok) return;
+      const btn = document.getElementById('btn-sync-fullpush');
+      if (btn) btn.disabled = true;
+      const res = await window.api.sync.fullPush();
+      if (btn) btn.disabled = false;
+      if (res.success) { Toast.success(`🔄 Envoi total : ${res.pushed} enregistrements`); await loadSyncStatus(); }
+      else Toast.error(res.message || 'Échec');
+    });
+
+    // Backup
+    document.getElementById('btn-sync-backup')?.addEventListener('click', async () => {
+      const res = await window.api.sync.backupLocal();
+      res.success ? Toast.success('💾 ' + res.message) : (res.message !== 'Annulé' && Toast.error(res.message));
+    });
   }
 
   document.addEventListener('view:activate', (e) => {

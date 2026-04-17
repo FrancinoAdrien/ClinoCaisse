@@ -79,6 +79,7 @@
                 <tr>
                   <th style="width:28px">Qté</th>
                   <th>Article</th>
+                  <th style="width:32px">🔔</th>
                   <th style="width:50px">Rem</th>
                   <th style="width:80px;text-align:right">Prix</th>
                 </tr>
@@ -155,7 +156,7 @@
       ]);
 
       state.categories = cats;
-      state.produits = prods;
+      state.produits = prods.filter(p => !p.is_ingredient);
       state.remise1 = parseInt(params['caisse.remise1'] || '10');
       state.remise2 = parseInt(params['caisse.remise2'] || '20');
       state.devise = params['caisse.devise'] || 'Ar';
@@ -284,7 +285,7 @@
       if (deja >= stock_actuel) { Toast.warn(`Stock insuffisant (max ${stock_actuel})`); return; }
     }
     // Ne plus grouper les articles identiques, toujours ajouter en nouvelle ligne
-    state.panier.push({ produit_id, nom, prix, qte: 1, remise: 0, offert: false, stock_actuel });
+    state.panier.push({ produit_id, nom, prix, qte: 1, remise: 0, offert: false, stock_actuel, envoi_cuisine: false });
     state.selectedIndex = state.panier.length - 1;
     renderPanier();
   }
@@ -299,10 +300,24 @@
         <tr class="${i === state.selectedIndex ? 'selected' : ''}${l.offert ? ' row-offert' : ''}" data-idx="${i}">
           <td class="td-qte">${l.qte}</td>
           <td class="td-nom">${Utils.esc(l.nom)}</td>
+          <td class="td-kitchen">
+            <button class="btn-kitchen-patch${l.envoi_cuisine ? ' active' : ''}" data-kidx="${i}" title="Envoyer en cuisine">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            </button>
+          </td>
           <td style="text-align:center">${l.offert ? '<span class="tag-remise" style="background:rgba(46,204,113,.2);color:#2ecc71">Offert</span>' : remTag}</td>
           <td class="td-prix">${l.offert ? '0' : Math.round(total).toLocaleString('fr-FR')} ${state.devise}</td>
         </tr>`;
-    }).join('') || `<tr><td colspan="4" style="text-align:center;padding:20px;opacity:0.4">Panier vide</td></tr>`;
+    }).join('') || `<tr><td colspan="5" style="text-align:center;padding:20px;opacity:0.4">Panier vide</td></tr>`;
+
+    tbody.querySelectorAll('.btn-kitchen-patch').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const idx = parseInt(btn.dataset.kidx);
+        state.panier[idx].envoi_cuisine = !state.panier[idx].envoi_cuisine;
+        renderPanier();
+      });
+    });
 
     tbody.querySelectorAll('tr[data-idx]').forEach(row => {
       row.addEventListener('click', () => {
@@ -521,15 +536,17 @@
           const ticketId = card.dataset.ticketId ? parseInt(card.dataset.ticketId) : null;
 
           // Construire les nouvelles lignes depuis le panier
-          const newLignes = state.panier.map(l => ({
-            produit_id: l.produit_id,
-            produit_nom: l.nom,
-            prix_unitaire: l.prix,
-            quantite: l.qte,
-            remise: l.remise || 0,
-            est_offert: l.offert ? 1 : 0,
-            total_ttc: calcLigneTotal(l),
-          }));
+      const newLignes = state.panier.map(l => ({
+        produit_id: l.produit_id,
+        produit_nom: l.nom,
+        prix_unitaire: l.prix,
+        quantite: l.qte,
+        remise: l.remise || 0,
+        est_offert: l.offert ? 1 : 0,
+        total_ttc: calcLigneTotal(l),
+        envoi_cuisine: !!l.envoi_cuisine,
+        statut_cuisine: l.envoi_cuisine ? 'en_attente' : 'servi'
+      }));
 
           let lignesFinales = newLignes;
           let nomTable = `Table ${num}`;
@@ -551,7 +568,9 @@
                 const found = existingLignes.find(el =>
                   el.produit_id === nl.produit_id &&
                   el.remise === nl.remise &&
-                  el.est_offert === nl.est_offert
+                  el.est_offert === nl.est_offert &&
+                  el.envoi_cuisine === nl.envoi_cuisine &&
+                  el.statut_cuisine === nl.statut_cuisine
                 );
                 if (found) {
                   found.quantite += nl.quantite;
@@ -906,6 +925,7 @@
     ];
     let selectedMode = 'CASH';
     let montantSaisi = '';
+    const hasKitchenItems = state.panier.some(l => l.envoi_cuisine);
     const tableLabel = state.tableActive ? (state.tableActive.nom_table || `Table ${state.tableActive.numero}`) : '';
 
     const tikId = 'ticket-' + Date.now();
@@ -966,12 +986,14 @@
 
           <!-- Modes de paiement -->
           <div style="display:flex;flex-direction:column;gap:10px">
-            <div class="modes-paiement-list" id="modes-list">
-              ${modes.map(([val, lbl], i) => `
-                <div class="mode-item${i === 0 ? ' selected' : ''}" data-mode="${val}">${lbl}</div>
-              `).join('')}
             </div>
             ${tableLabel ? `<div style="font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;opacity:0.8;color:var(--text)">Table : <strong>${Utils.esc(tableLabel)}</strong></div>` : ''}
+            ${hasKitchenItems && !state.tableActive ? `
+              <div style="margin-top:5px">
+                <div style="font-size:11px;font-weight:700;opacity:0.6;text-transform:uppercase;margin-bottom:4px;color:var(--accent-light)">Nom de la commande (Cuisine) *</div>
+                <input type="text" id="tk-nom-commande" class="commande-nom-input" placeholder="Ex: Client Jean, Salon VIP..." />
+              </div>
+            ` : ''}
           </div>
 
           <!-- Boutons action -->
@@ -1104,11 +1126,38 @@
         const copiesEl = document.getElementById('tk-copies');
         if (copiesEl) { state.impression.copies = parseInt(copiesEl.value) || 1; saveImpressionPref(); }
 
+        // Validation Nom Commande si cuisine
+        let note = '';
+        if (hasKitchenItems) {
+           if (state.tableActive) {
+             note = state.tableActive.nom_table || `Table ${state.tableActive.numero}`;
+           } else {
+             const inputNom = document.getElementById('tk-nom-commande');
+             note = inputNom?.value.trim() || '';
+             if (!note) {
+               Toast.warn('Veuillez entrer un nom pour la cuisine');
+               inputNom?.focus();
+               return;
+             }
+           }
+        }
+
         const btn = document.getElementById('tk-enreg');
         if (btn) { btn.disabled = true; btn.textContent = 'Enregistrement...'; }
 
-        await validerVente(selectedMode, percu, rendre, tikId);
+        await validerVente(selectedMode, percu, rendre, tikId, note);
       });
+
+      // Verification temps réel du nom si cuisine && pas de table
+      if (hasKitchenItems && !state.tableActive) {
+        const inputNom = document.getElementById('tk-nom-commande');
+        const btnEnreg = document.getElementById('tk-enreg');
+        const checkNom = () => {
+          if (btnEnreg) btnEnreg.disabled = !inputNom.value.trim();
+        };
+        inputNom?.addEventListener('input', checkNom);
+        checkNom(); // État initial
+      }
     }, 20);
   }
 
@@ -1116,7 +1165,7 @@
     localStorage.setItem('cc_impression', JSON.stringify(state.impression));
   }
 
-  async function validerVente(mode, montantPaye, monnaie, modalId) {
+  async function validerVente(mode, montantPaye, monnaie, modalId, note = '') {
     const total = calcTotal();
     const sousTotal = state.panier.reduce((s, l) => s + l.prix * l.qte, 0);
     const remiseTotale = sousTotal - total;
@@ -1131,6 +1180,8 @@
       rabais: 0,
       total_ttc: calcLigneTotal(l),
       est_offert: l.offert ? 1 : 0,
+      envoi_cuisine: !!l.envoi_cuisine,
+      statut_cuisine: l.envoi_cuisine ? 'en_attente' : 'servi'
     }));
 
     const venteData = {
@@ -1141,6 +1192,7 @@
       monnaie_rendue: monnaie,
       table_numero: state.tableActive?.numero || null,
       lignes: lignesVente,
+      note: note,
     };
 
     try {

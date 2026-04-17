@@ -112,6 +112,9 @@
   color: #95a5a6;
 }
 
+.text-success { color: #2ecc71 !important; }
+.text-danger  { color: #e74c3c !important; }
+.text-warn    { color: #f39c12 !important; }
 
 .modal-header h3 {
   color: #eee;
@@ -123,4 +126,77 @@
 
 .modal-body p {
   color: #eee;
+}
+
+/* Sales Stats */
+.sales-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.sales-stat-item {
+  background: rgba(255, 255, 255, 0.04);
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  text-align: center;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.sales-stat-item:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.sales-stat-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.5;
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.sales-stat-value {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--accent-light);
+  font-variant-numeric: tabular-nums;
+}
+
+.sales-filters {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.sales-filters .btn {
+  padding: 6px 14px;
+  font-size: 12px;
+  border-radius: 20px;
+}
+
+.custom-range {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  margin-top: 15px;
+}
+
+.custom-range label {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.custom-range input {
+  padding: 4px 8px;
+  font-size: 12px;
 }

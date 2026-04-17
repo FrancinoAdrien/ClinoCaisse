@@ -1,6 +1,16 @@
 'use strict';
+const { randomUUID } = require('crypto');
+const { logAction } = require('./journal.ipc');
 
 module.exports = function(ipcMain, db) {
+
+  // Helper: ajuster le capital
+  function adjustCapital(delta) {
+    const row = db.prepare("SELECT valeur FROM parametres WHERE cle = 'finance.capital'").get();
+    const current = parseFloat(row?.valeur || '0');
+    db.prepare("INSERT OR REPLACE INTO parametres (cle, valeur, date_maj) VALUES ('finance.capital', ?, datetime('now'))")
+      .run(String(current + delta));
+  }
 
   // Générer numéro de ticket
   function genNumeroTicket() {
@@ -13,12 +23,17 @@ module.exports = function(ipcMain, db) {
   // ── CRÉER UNE VENTE ──────────────────────────────────────────────────
   ipcMain.handle('ventes:create', (e, data) => {
     const createVente = db.transaction((data) => {
-      const numero = genNumeroTicket();
+      const numero   = genNumeroTicket();
+      const venteUid = randomUUID();
+      const now      = Date.now();
+
       const venteResult = db.prepare(`
-        INSERT INTO ventes (numero_ticket, date_vente, nom_caissier, total_ttc,
-          mode_paiement, montant_paye, monnaie_rendue, statut, table_numero, note)
-        VALUES (?, datetime('now'), ?, ?, ?, ?, ?, 'valide', ?, ?)
+        INSERT INTO ventes (uuid, numero_ticket, date_vente, nom_caissier, total_ttc,
+          mode_paiement, montant_paye, monnaie_rendue, statut, table_numero, note,
+          last_modified_at, sync_status)
+        VALUES (?, ?, datetime('now'), ?, ?, ?, ?, ?, 'valide', ?, ?, ?, 0)
       `).run(
+        venteUid,
         numero,
         data.nom_caissier,
         data.total_ttc,
@@ -26,19 +41,25 @@ module.exports = function(ipcMain, db) {
         data.montant_paye || data.total_ttc,
         data.monnaie_rendue || 0,
         data.table_numero || null,
-        data.note || null
+        data.note || null,
+        now
       );
 
-      const venteId = venteResult.lastInsertRowid;
+      const venteId  = venteResult.lastInsertRowid;
       const insLigne = db.prepare(`
-        INSERT INTO lignes_vente (vente_id, produit_id, produit_nom, quantite,
-          prix_unitaire, remise, rabais, total_ttc, est_offert)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO lignes_vente (uuid, vente_id, vente_uuid, produit_id, produit_nom, quantite,
+          prix_unitaire, remise, rabais, total_ttc, est_offert, statut_cuisine, last_modified_at, sync_status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
       `);
 
+      const hasTable = data.table_numero != null && data.table_numero !== '';
       for (const ligne of data.lignes) {
+        const defCuisine = ligne.statut_cuisine
+          || (hasTable && !ligne.est_offert ? 'en_attente' : 'servi');
         insLigne.run(
+          randomUUID(),
           venteId,
+          venteUid,
           ligne.produit_id || null,
           ligne.produit_nom,
           ligne.quantite,
@@ -46,15 +67,41 @@ module.exports = function(ipcMain, db) {
           ligne.remise || 0,
           ligne.rabais || 0,
           ligne.total_ttc,
-          ligne.est_offert ? 1 : 0
+          ligne.est_offert ? 1 : 0,
+          defCuisine,
+          now
         );
 
         // Décrémenter le stock si pas illimité
         if (ligne.produit_id && !ligne.est_offert) {
-          const p = db.prepare('SELECT stock_actuel FROM produits WHERE id = ?').get(ligne.produit_id);
-          if (p && p.stock_actuel !== -1) {
-            db.prepare('UPDATE produits SET stock_actuel = MAX(0, stock_actuel - ?) WHERE id = ?')
-              .run(ligne.quantite, ligne.produit_id);
+          const p = db.prepare('SELECT stock_actuel, stock_bar, is_prepared, uuid FROM produits WHERE id = ?').get(ligne.produit_id);
+          if (p) {
+            if (p.is_prepared) {
+              // Décrémenter les ingrédients
+              const ingredients = db.prepare(`
+                SELECT rl.ingredient_uuid, rl.quantite_requise
+                FROM recettes_lignes rl
+                WHERE rl.plat_uuid = ?
+              `).all(p.uuid);
+
+              for (const ing of ingredients) {
+                const totalADeduire = ing.quantite_requise * ligne.quantite;
+                db.prepare(`
+                  UPDATE produits 
+                  SET stock_actuel = MAX(0, stock_actuel - ?),
+                      stock_bar = MAX(0, COALESCE(stock_bar, stock_actuel) - ?)
+                  WHERE uuid = ? AND stock_actuel != -1
+                `).run(totalADeduire, totalADeduire, ing.ingredient_uuid);
+              }
+            } else if (p.stock_actuel !== -1) {
+              // Produit simple, décrémentation classique
+              db.prepare(`
+                UPDATE produits 
+                SET stock_actuel = MAX(0, stock_actuel - ?),
+                    stock_bar = MAX(0, COALESCE(stock_bar, stock_actuel) - ?)
+                WHERE id = ?
+              `).run(ligne.quantite, ligne.quantite, ligne.produit_id);
+            }
           }
         }
       }
@@ -63,11 +110,27 @@ module.exports = function(ipcMain, db) {
     });
 
     try {
-      return createVente(data);
+      const result = createVente(data);
+      // Ajouter au capital le montant réellement encaissé
+      if (result.success) {
+        const paye = data.montant_paye !== undefined && data.montant_paye !== null ? data.montant_paye : data.total_ttc;
+        const encaisse = parseFloat(paye || 0);
+
+        logAction(db, {
+          categorie: 'VENTE',
+          action: 'Vente créée',
+          detail: `Ticket ${result.numero_ticket} — ${data.lignes ? data.lignes.length : 0} article(s)`,
+          operateur: data.nom_caissier || null,
+          montant: data.total_ttc || 0,
+          icone: '🛒'
+        });
+      }
+      return result;
     } catch (err) {
       return { success: false, message: err.message };
     }
   });
+
 
   // ── TOUTES LES VENTES ────────────────────────────────────────────────
   ipcMain.handle('ventes:getAll', () => {
@@ -100,7 +163,23 @@ module.exports = function(ipcMain, db) {
   // ── ANNULER UNE VENTE ────────────────────────────────────────────────
   ipcMain.handle('ventes:annuler', (e, id) => {
     try {
-      db.prepare("UPDATE ventes SET statut = 'annule' WHERE id = ?").run(id);
+      const vente = db.prepare('SELECT total_ttc, montant_paye, statut, numero_ticket, nom_caissier FROM ventes WHERE id = ?').get(id);
+      db.prepare(`UPDATE ventes SET statut = 'annule', sync_status = 0, last_modified_at = ? WHERE id = ?`)
+        .run(Date.now(), id);
+      // Restituer au capital ce qui avait été encaissé (annulation = sortie inverse)
+      if (vente?.statut === 'valide') {
+        const paye = vente.montant_paye !== null ? vente.montant_paye : vente.total_ttc;
+        const encaisse = parseFloat(paye || 0);
+
+        logAction(db, {
+          categorie: 'VENTE',
+          action: 'Vente annulée',
+          detail: `Ticket ${vente.numero_ticket || id} annulé`,
+          operateur: vente.nom_caissier || null,
+          montant: vente.total_ttc || 0,
+          icone: '❌'
+        });
+      }
       return { success: true };
     } catch (err) {
       return { success: false, message: err.message };
@@ -191,4 +270,55 @@ module.exports = function(ipcMain, db) {
       return { success: false, message: err.message };
     }
   });
+
+  // ── STATS PRODUIT ────────────────────────────────────────────────────
+  ipcMain.handle('ventes:getStatsByProduit', (e, { produitId, start, end }) => {
+    try {
+      // 1. Récupérer les données de vente
+      let queryVentes = `
+        SELECT 
+          COALESCE(SUM(lv.quantite), 0) as total_qty, 
+          COALESCE(SUM(lv.total_ttc), 0) as total_amount,
+          COALESCE(SUM(lv.quantite * COALESCE(p.prix_achat, 0)), 0) as total_cost
+        FROM lignes_vente lv
+        INNER JOIN ventes v ON lv.vente_id = v.id
+        LEFT JOIN produits p ON lv.produit_id = p.id
+        WHERE lv.produit_id = ? AND v.statut = 'valide'
+      `;
+      const paramsV = [produitId];
+      if (start) { queryVentes += ` AND v.date_vente >= ?`; paramsV.push(start); }
+      if (end) { queryVentes += ` AND v.date_vente <= ?`; paramsV.push(end); }
+      const resV = db.prepare(queryVentes).get(...paramsV);
+
+      // 2. Récupérer les données de perte (stock_historique)
+      let queryPertes = `
+        SELECT 
+          COALESCE(SUM(ABS(sh.delta)), 0) as total_perte_qty,
+          COALESCE(SUM(ABS(sh.delta) * COALESCE(p.prix_achat, 0)), 0) as total_perte_val
+        FROM stock_historique sh
+        LEFT JOIN produits p ON sh.produit_id = p.id
+        WHERE sh.produit_id = ? AND sh.delta < 0
+      `;
+      const paramsP = [produitId];
+      if (start) { queryPertes += ` AND sh.date_op >= ?`; paramsP.push(start); }
+      if (end) { queryPertes += ` AND sh.date_op <= ?`; paramsP.push(end); }
+      const resP = db.prepare(queryPertes).get(...paramsP);
+
+      const CA = resV.total_amount || 0;
+      const coutVendu = resV.total_cost || 0;
+      const valeurPerte = resP.total_perte_val || 0;
+
+      return {
+        total_qty: resV.total_qty,
+        total_amount: CA,
+        total_perte_qty: resP.total_perte_qty,
+        total_perte_val: valeurPerte,
+        benefice_net: CA - coutVendu - valeurPerte
+      };
+    } catch (err) {
+      console.error('Erreur getStatsByProduit:', err);
+      return { total_qty: 0, total_amount: 0, total_perte_qty: 0, total_perte_val: 0, benefice_net: 0 };
+    }
+  });
 };
+

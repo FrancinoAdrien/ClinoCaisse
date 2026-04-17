@@ -57,6 +57,9 @@
 
           <div class="form-group" style="margin-bottom:12px">
             <label>🔐 Permissions d'accès</label>
+            <p id="admin-perm-hint" class="admin-perm-hint" style="display:none;font-size:12px;opacity:0.85;margin:6px 0 0">
+              Rôle Administrateur : tous les droits sont actifs (même accueil que le tableau de bord principal, y compris Analytique).
+            </p>
             <div class="perms-grid">
               <label class="checkbox-label"><input type="checkbox" id="perm-caisse" /> 🛒 Caisse</label>
               <label class="checkbox-label"><input type="checkbox" id="perm-utilisateur" /> 👥 Utilisateurs</label>
@@ -64,6 +67,11 @@
               <label class="checkbox-label"><input type="checkbox" id="perm-cloture" /> 🔒 Clôture caisse</label>
               <label class="checkbox-label"><input type="checkbox" id="perm-stock" /> 📦 Gestion stock</label>
               <label class="checkbox-label"><input type="checkbox" id="perm-remises" /> 🏷️ Remises / Offert</label>
+              <label class="checkbox-label"><input type="checkbox" id="perm-grossiste" /> Grossiste</label>
+              <label class="checkbox-label"><input type="checkbox" id="perm-depenses" /> Finances / dépenses</label>
+              <label class="checkbox-label"><input type="checkbox" id="perm-ressources" /> RH / salaires</label>
+              <label class="checkbox-label"><input type="checkbox" id="perm-achats" /> Achats fourn.</label>
+              <label class="checkbox-label"><input type="checkbox" id="perm-reserv" /> Réservations</label>
             </div>
           </div>
 
@@ -86,8 +94,10 @@
             <thead>
               <tr>
                 <th>ID</th><th>Nom</th><th>Prénom</th><th>PIN</th><th>Rôle</th>
-                <th>Caisse</th><th>Utilisateurs</th><th>Paramètres</th>
-                <th>Clôture</th><th>Stock</th><th>Remises</th><th>Statut</th>
+                <th>Caisse</th><th>Util.</th><th>Param.</th>
+                <th>Clôt.</th><th>Stock</th><th>Rem.</th>
+                <th>Gros.</th><th>Fin.</th><th>RH</th><th>Ach.</th><th>Rés.</th>
+                <th>Statut</th>
               </tr>
             </thead>
             <tbody id="users-tbody"></tbody>
@@ -97,6 +107,7 @@
     `;
 
     bindEvents();
+    syncRolePermUi();
     loadUsers();
   }
 
@@ -133,9 +144,14 @@
         <td style="text-align:center">${perm(u.perm_cloture)}</td>
         <td style="text-align:center">${perm(u.perm_stock)}</td>
         <td style="text-align:center">${perm(u.perm_remises)}</td>
+        <td style="text-align:center">${perm(u.perm_grossiste)}</td>
+        <td style="text-align:center">${perm(u.perm_depenses)}</td>
+        <td style="text-align:center">${perm(u.perm_ressources)}</td>
+        <td style="text-align:center">${perm(u.perm_achats)}</td>
+        <td style="text-align:center">${perm(u.perm_reserv)}</td>
         <td><span class="badge ${u.actif ? 'badge-success' : 'badge-danger'}">${u.actif ? 'Actif' : 'Inactif'}</span></td>
       </tr>
-    `).join('') || `<tr><td colspan="12" style="text-align:center;padding:30px;opacity:0.5">Aucun utilisateur</td></tr>`;
+    `).join('') || `<tr><td colspan="17" style="text-align:center;padding:30px;opacity:0.5">Aucun utilisateur</td></tr>`;
 
     tbody.querySelectorAll('.users-row').forEach(row => {
       row.addEventListener('click', () => {
@@ -147,6 +163,23 @@
     });
   }
 
+  const PERM_IDS = ['perm-caisse', 'perm-utilisateur', 'perm-parametres', 'perm-cloture', 'perm-stock', 'perm-remises',
+    'perm-grossiste', 'perm-depenses', 'perm-ressources', 'perm-achats', 'perm-reserv'];
+
+  function syncRolePermUi() {
+    const roleEl = document.getElementById('user-role');
+    const hint = document.getElementById('admin-perm-hint');
+    if (!roleEl) return;
+    const isAdmin = roleEl.value === 'admin';
+    if (hint) hint.style.display = isAdmin ? '' : 'none';
+    PERM_IDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.disabled = isAdmin;
+      if (isAdmin) el.checked = true;
+    });
+  }
+
   function remplirFormulaire(user) {
     state.editId = user.id;
     document.getElementById('user-id').value = user.id;
@@ -154,12 +187,19 @@
     document.getElementById('user-prenom').value = user.prenom || '';
     document.getElementById('user-pin').value = '';
     document.getElementById('user-role').value = user.role;
-    document.getElementById('perm-caisse').checked = !!user.perm_caisse;
-    document.getElementById('perm-utilisateur').checked = !!user.perm_utilisateur;
-    document.getElementById('perm-parametres').checked = !!user.perm_parametres;
-    document.getElementById('perm-cloture').checked = !!user.perm_cloture;
-    document.getElementById('perm-stock').checked = !!user.perm_stock;
-    document.getElementById('perm-remises').checked = !!user.perm_remises;
+    const isAdmin = user.role === 'admin';
+    document.getElementById('perm-caisse').checked = isAdmin || !!user.perm_caisse;
+    document.getElementById('perm-utilisateur').checked = isAdmin || !!user.perm_utilisateur;
+    document.getElementById('perm-parametres').checked = isAdmin || !!user.perm_parametres;
+    document.getElementById('perm-cloture').checked = isAdmin || !!user.perm_cloture;
+    document.getElementById('perm-stock').checked = isAdmin || !!user.perm_stock;
+    document.getElementById('perm-remises').checked = isAdmin || !!user.perm_remises;
+    document.getElementById('perm-grossiste').checked = isAdmin || !!user.perm_grossiste;
+    document.getElementById('perm-depenses').checked = isAdmin || !!user.perm_depenses;
+    document.getElementById('perm-ressources').checked = isAdmin || !!user.perm_ressources;
+    document.getElementById('perm-achats').checked = isAdmin || !!user.perm_achats;
+    document.getElementById('perm-reserv').checked = isAdmin || !!user.perm_reserv;
+    syncRolePermUi();
 
     const badge = document.getElementById('form-mode-badge');
     if (badge) { badge.textContent = 'Modification'; badge.className = 'badge badge-warning'; }
@@ -173,10 +213,11 @@
       if (el) el.value = '';
     });
     document.getElementById('user-role').value = 'vendeur';
-    ['caisse','utilisateur','parametres','cloture','stock','remises'].forEach(p => {
+    ['caisse','utilisateur','parametres','cloture','stock','remises','grossiste','depenses','ressources','achats','reserv'].forEach(p => {
       const el = document.getElementById(`perm-${p}`);
       if (el) el.checked = false;
     });
+    syncRolePermUi();
     const badge = document.getElementById('form-mode-badge');
     if (badge) { badge.textContent = 'Nouveau'; badge.className = 'badge badge-info'; }
     document.getElementById('users-msg').textContent = '';
@@ -195,6 +236,11 @@
       perm_cloture: document.getElementById('perm-cloture').checked,
       perm_stock: document.getElementById('perm-stock').checked,
       perm_remises: document.getElementById('perm-remises').checked,
+      perm_grossiste: document.getElementById('perm-grossiste').checked,
+      perm_depenses: document.getElementById('perm-depenses').checked,
+      perm_ressources: document.getElementById('perm-ressources').checked,
+      perm_achats: document.getElementById('perm-achats').checked,
+      perm_reserv: document.getElementById('perm-reserv').checked,
     };
   }
 
@@ -248,6 +294,8 @@
       if (res.success) { Toast.success('Utilisateur réactivé'); resetFormulaire(); await loadUsers(); }
       else setMsg(res.message);
     });
+
+    document.getElementById('user-role')?.addEventListener('change', syncRolePermUi);
   }
 
   document.addEventListener('view:activate', (e) => {

@@ -1,4 +1,6 @@
 'use strict';
+const { randomUUID } = require('crypto');
+const { logAction } = require('./journal.ipc');
 
 module.exports = function(ipcMain, db) {
 
@@ -193,9 +195,9 @@ module.exports = function(ipcMain, db) {
   // ── CLÔTURE Z ─────────────────────────────────────────────────────────
   ipcMain.handle('cloture:faireClotureZ', (e, data) => {
     try {
-      const now    = new Date().toISOString();
-      const numero = `Z-${now.slice(0,10).replace(/-/g,'')}-${Date.now().toString().slice(-6)}`;
-      const dernZ  = db.prepare(
+      const now     = new Date().toISOString();
+      const numero  = `Z-${now.slice(0,10).replace(/-/g,'')}-${Date.now().toString().slice(-6)}`;
+      const dernZ   = db.prepare(
         "SELECT fond_fin FROM clotures WHERE type_cloture='Z' ORDER BY id DESC LIMIT 1"
       ).get();
       const fondDebut = dernZ?.fond_fin || 0;
@@ -203,13 +205,15 @@ module.exports = function(ipcMain, db) {
 
       const result = db.prepare(`
         INSERT INTO clotures (
-          type_cloture, numero_rapport, date_debut, date_fin, date_cloture,
+          uuid, type_cloture, numero_rapport, date_debut, date_fin, date_cloture,
           total_ttc, total_cash, total_mvola, total_orange, total_airtel,
           total_carte, total_autre, nombre_tickets, nombre_articles,
-          vendeur_nom, total_compte, prelevement, fond_debut, fond_fin, ecart, details_json
-        ) VALUES (?, ?, ?, ?, datetime('now'),
-          ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          vendeur_nom, total_compte, prelevement, fond_debut, fond_fin, ecart, details_json,
+          last_modified_at, sync_status
+        ) VALUES (?, ?, ?, ?, ?, datetime('now'),
+          ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
       `).run(
+        randomUUID(),
         'Z', numero, data.dateDebut, data.dateFin,
         data.totalTTC||0, data.totalCash||0, data.totalMvola||0, data.totalOrange||0,
         data.totalAirtel||0, data.totalCarte||0,
@@ -218,8 +222,32 @@ module.exports = function(ipcMain, db) {
         data.totalCompte||0, data.prelevement||0,
         fondDebut, fondFin,
         (data.totalCompte||0) - fondFin,
-        JSON.stringify({ articles: data.articlesDetail, categories: data.categoriesDetail, offerts: data.offertsDetail, remises: data.remisesDetail })
+        JSON.stringify({ articles: data.articlesDetail, categories: data.categoriesDetail, offerts: data.offertsDetail, remises: data.remisesDetail }),
+        Date.now()
       );
+
+      // --- AJOUT CLÔTURE RESTE EN CAISSE ---
+      if (fondFin > 0) {
+        db.prepare(`
+          INSERT INTO flux_tresorerie (uuid, type_flux, montant, motif, date_flux, operateur, last_modified_at, sync_status)
+          VALUES (?, 'reste_caisse', ?, 'Entrée - reste en caisse', datetime('now'), ?, ?, 1)
+        `).run(randomUUID(), fondFin, data.vendeurNom || 'Système', Date.now());
+
+        // Augmenter le capital
+        const row = db.prepare("SELECT valeur FROM parametres WHERE cle = 'finance.capital'").get();
+        const current = parseFloat(row?.valeur || '0');
+        db.prepare("INSERT OR REPLACE INTO parametres (cle, valeur, date_maj) VALUES ('finance.capital', ?, datetime('now'))")
+          .run(String(current + fondFin));
+      }
+
+      logAction(db, {
+        categorie: 'CLOTURE',
+        action: 'Clôture Z effectuée',
+        detail: `Rapport ${numero} — ${data.nbTickets || 0} tickets — Total: ${(data.totalTTC || 0).toLocaleString('fr-FR')} Ar`,
+        operateur: data.vendeurNom || null,
+        montant: data.totalTTC || 0,
+        icone: '📊'
+      });
 
       return { success: true, id: result.lastInsertRowid, numero };
     } catch (err) {

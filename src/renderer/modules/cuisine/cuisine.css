@@ -1,0 +1,204 @@
+/* ── CUISINE CSS ──────────────────────────────────────────────────── */
+
+#view-cuisine {
+
+  height: 100%;
+}
+
+#view-cuisine .module-topbar {
+  background: var(--topbar-gradient);
+  display: flex;
+  align-items: center;
+  padding: 10px 22px;
+  gap: 14px;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.4);
+  flex-shrink: 0;
+}
+
+#view-cuisine .module-topbar-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+#view-cuisine .back-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 20px;
+  padding: 6px 14px;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cuisine-filter {
+  margin-left: 20px;
+  position: relative;
+  flex: 1;
+  max-width: 300px;
+}
+
+.cuisine-filter input {
+  width: 100%;
+  padding: 8px 12px 8px 34px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.cuisine-filter input:focus {
+  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.cuisine-filter svg {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+
+#view-cuisine .module-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 20px;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.cuisine-hint {
+  font-size: 12px;
+  opacity: 0.82;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.cuisine-legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text);
+  opacity: 0.7;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.cuisine-columns {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+}
+
+.cuisine-col {
+  background: var(--card-gradient);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.cuisine-col-header {
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  color: #fff;
+}
+
+.cuisine-col-header.en-attente { background: rgba(231,76,60,0.3); border-bottom: 2px solid #e74c3c; }
+.cuisine-col-header.en-preparation { background: rgba(243,156,18,0.3); border-bottom: 2px solid #f39c12; }
+.cuisine-col-header.pret { background: rgba(39,174,96,0.3); border-bottom: 2px solid #27ae60; }
+
+.cuisine-orders {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cuisine-card {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cuisine-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cuisine-table {
+  font-size: 11px;
+  color: var(--text);
+  opacity: 0.6;
+  font-weight: 600;
+}
+
+.cuisine-qty {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--accent-light);
+}
+
+.cuisine-item {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.cuisine-action-btn {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 12px;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: background 0.15s, filter 0.15s;
+  text-align: center;
+}
+
+.cuisine-action-btn:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.cuisine-card.table-active-order {
+  border-left: 4px solid #f39c12;
+  background: rgba(243, 156, 18, 0.05);
+}

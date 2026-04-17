@@ -5,300 +5,300 @@
 
 /* ── DEFAULT — Bleu acier profond ─────────────────────────────────── */
 [data-theme="default"] {
-  --bg-gradient:        linear-gradient(to bottom, #1a2d45, #0f1e30 60%, #0a1520);
-  --topbar-gradient:    linear-gradient(to right, #0d1e30, #1a2d45, #0d1e30);
-  --bottombar-gradient: linear-gradient(to right, #091525, #0f2035, #091525);
-  --card-gradient:      linear-gradient(to bottom right, #1e3350, #152540);
-  --btn-caisse:         linear-gradient(to bottom, #c86a00, #8b4500);
-  --btn-user:           linear-gradient(to bottom, #2e5f85, #1a3d5c);
-  --btn-stock:          linear-gradient(to bottom, #8a4f6a, #5c2e45);
-  --btn-cloture:        linear-gradient(to bottom, #2fa0a0, #1a6e6e);
-  --btn-param:          linear-gradient(to bottom, #2e7a7a, #1a5050);
-  --clock-gradient:     linear-gradient(to bottom right, #0d1e30, #1a2d45);
-  --text:               #dce8f5;
-  --accent:             #4a9fd4;
-  --accent-rgb:         74,159,212;
-  --accent-light:       #72bde8;
-  --border:             rgba(74,159,212,0.25);
-  --shadow:             0 8px 32px rgba(0,0,0,0.5);
+  --bg-gradient:        linear-gradient(135deg, #1e3a5f 0%, #162b45 40%, #0f1e30 70%, #0a1520);
+  --topbar-gradient:    linear-gradient(135deg, #0f2338, #1a3355, #0f2338);
+  --bottombar-gradient: linear-gradient(135deg, #0a1929, #142840, #0a1929);
+  --card-gradient:      linear-gradient(135deg, #244070, #1a3050, #152540);
+  --btn-caisse:         linear-gradient(135deg, #ff8c42, #ff6b1a, #c86a00);
+  --btn-user:           linear-gradient(135deg, #4a7ba8, #2e5f85, #1a3d5c);
+  --btn-stock:          linear-gradient(135deg, #a86f8f, #8a4f6a, #5c2e45);
+  --btn-cloture:        linear-gradient(135deg, #3db8b8, #2fa0a0, #1a6e6e);
+  --btn-param:          linear-gradient(135deg, #4a9b9b, #2e7a7a, #1a5050);
+  --clock-gradient:     linear-gradient(135deg, #1a3355, #244070, #1a2d45);
+  --text:               #e8f2ff;
+  --accent:             #5ab4ff;
+  --accent-rgb:         90,180,255;
+  --accent-light:       #8ac5ff;
+  --border:             rgba(90,180,255,0.3);
+  --shadow:             0 8px 32px rgba(0,0,0,0.6);
 }
 
 /* ── VULCAN — Rouge volcanique obsidien ────────────────────────────── */
 [data-theme="vulcan"] {
-  --bg-gradient:        linear-gradient(to bottom, #1e0a0a, #120505 55%, #0a0000);
-  --topbar-gradient:    linear-gradient(to right, #0f0000, #1e0808, #0f0000);
-  --bottombar-gradient: linear-gradient(to right, #080000, #150505, #080000);
-  --card-gradient:      linear-gradient(to bottom right, #261010, #180808);
-  --btn-caisse:         linear-gradient(to bottom, #aa1010, #6b0000);
-  --btn-user:           linear-gradient(to bottom, #1e4a7a, #0f2a4a);
-  --btn-stock:          linear-gradient(to bottom, #5a1a7a, #36006e);
-  --btn-cloture:        linear-gradient(to bottom, #0a7a6a, #044d44);
-  --btn-param:          linear-gradient(to bottom, #7a3a00, #4a2000);
-  --clock-gradient:     linear-gradient(to bottom right, #120505, #200808);
-  --text:               #f5e0e0;
-  --accent:             #cc2222;
-  --accent-rgb:         204,34,34;
-  --accent-light:       #e05555;
-  --border:             rgba(204,34,34,0.25);
-  --shadow:             0 8px 32px rgba(180,0,0,0.4);
+  --bg-gradient:        linear-gradient(135deg, #2a0f0f, #1a0808, #120505, #0a0000);
+  --topbar-gradient:    linear-gradient(135deg, #1a0505, #2f1010, #1a0505);
+  --bottombar-gradient: linear-gradient(135deg, #0f0303, #1a0808, #0f0303);
+  --card-gradient:      linear-gradient(135deg, #331818, #261010, #180808);
+  --btn-caisse:         linear-gradient(135deg, #ff4444, #cc2222, #aa1010);
+  --btn-user:           linear-gradient(135deg, #2e5a8a, #1e4a7a, #0f2a4a);
+  --btn-stock:          linear-gradient(135deg, #7a3a9a, #5a1a7a, #36006e);
+  --btn-cloture:        linear-gradient(135deg, #1a9a8a, #0a7a6a, #044d44);
+  --btn-param:          linear-gradient(135deg, #9a4a1a, #7a3a00, #4a2000);
+  --clock-gradient:     linear-gradient(135deg, #1f0808, #2f1212, #200808);
+  --text:               #ffe8e8;
+  --accent:             #ff5555;
+  --accent-rgb:         255,85,85;
+  --accent-light:       #ff7777;
+  --border:             rgba(255,85,85,0.3);
+  --shadow:             0 8px 32px rgba(200,20,20,0.5);
 }
 
 /* ── SIENNE — Terre brûlée luxe ────────────────────────────────────── */
 [data-theme="sienne"] {
-  --bg-gradient:        linear-gradient(to bottom, #3d2010, #2a1208 55%, #1a0a04);
-  --topbar-gradient:    linear-gradient(to right, #1e0e05, #2d1608, #1e0e05);
-  --bottombar-gradient: linear-gradient(to right, #120a03, #1a0e05, #120a03);
-  --card-gradient:      linear-gradient(to bottom right, #4a2814, #301a0a);
-  --btn-caisse:         linear-gradient(to bottom, #9a4a10, #6b2e05);
-  --btn-user:           linear-gradient(to bottom, #7a4a20, #502e0a);
-  --btn-stock:          linear-gradient(to bottom, #5a3020, #381a0a);
-  --btn-cloture:        linear-gradient(to bottom, #6a3010, #401800);
-  --btn-param:          linear-gradient(to bottom, #4a2510, #2e1408);
-  --clock-gradient:     linear-gradient(to bottom right, #1e0e05, #2d1608);
-  --text:               #f0d5b0;
-  --accent:             #c87530;
-  --accent-rgb:         200,117,48;
-  --accent-light:       #e09548;
-  --border:             rgba(200,117,48,0.25);
-  --shadow:             0 8px 32px rgba(100,40,0,0.5);
+  --bg-gradient:        linear-gradient(135deg, #4a2818, #3a1f10, #2a1208, #1a0a04);
+  --topbar-gradient:    linear-gradient(135deg, #2a1508, #3d2010, #2a1508);
+  --bottombar-gradient: linear-gradient(135deg, #1a0e05, #241808, #1a0e05);
+  --card-gradient:      linear-gradient(135deg, #5a3018, #4a2814, #301a0a);
+  --btn-caisse:         linear-gradient(135deg, #ff8c42, #c87530, #9a4a10);
+  --btn-user:           linear-gradient(135deg, #8a5a30, #7a4a20, #502e0a);
+  --btn-stock:          linear-gradient(135deg, #6a4030, #5a3020, #381a0a);
+  --btn-cloture:        linear-gradient(135deg, #7a4a20, #6a3010, #401800);
+  --btn-param:          linear-gradient(135deg, #5a3518, #4a2510, #2e1408);
+  --clock-gradient:     linear-gradient(135deg, #2d1608, #3d2410, #2a1508);
+  --text:               #f5e0c8;
+  --accent:             #d48848;
+  --accent-rgb:         212,136,72;
+  --accent-light:       #e0a060;
+  --border:             rgba(212,136,72,0.3);
+  --shadow:             0 8px 32px rgba(120,50,10,0.6);
 }
 
 /* ── LILAS — Violet améthyste sombre ────────────────────────────────── */
 [data-theme="lilas"] {
-  --bg-gradient:        linear-gradient(to bottom, #3a2a50, #281a3c 55%, #1a0e2a);
-  --topbar-gradient:    linear-gradient(to right, #20103a, #30204e, #20103a);
-  --bottombar-gradient: linear-gradient(to right, #150826, #200f38, #150826);
-  --card-gradient:      linear-gradient(to bottom right, #402850, #2a1638);
-  --btn-caisse:         linear-gradient(to bottom, #7a50a0, #502870);
-  --btn-user:           linear-gradient(to bottom, #6a3880, #42185a);
-  --btn-stock:          linear-gradient(to bottom, #562870, #361050);
-  --btn-cloture:        linear-gradient(to bottom, #8a60a8, #5a3880);
-  --btn-param:          linear-gradient(to bottom, #6a4888, #402860);
-  --clock-gradient:     linear-gradient(to bottom right, #20103a, #30204e);
-  --text:               #e8d8ff;
-  --accent:             #a060d0;
-  --accent-rgb:         160,96,208;
-  --accent-light:       #c080e8;
-  --border:             rgba(160,96,208,0.25);
-  --shadow:             0 8px 32px rgba(80,20,120,0.5);
+  --bg-gradient:        linear-gradient(135deg, #4a3560, #3a2a50, #281a3c, #1a0e2a);
+  --topbar-gradient:    linear-gradient(135deg, #2a154a, #402860, #2a154a);
+  --bottombar-gradient: linear-gradient(135deg, #1a0e30, #281840, #1a0e30);
+  --card-gradient:      linear-gradient(135deg, #503060, #402850, #2a1638);
+  --btn-caisse:         linear-gradient(135deg, #9a70c0, #7a50a0, #502870);
+  --btn-user:           linear-gradient(135deg, #8a48a0, #6a3880, #42185b);
+  --btn-stock:          linear-gradient(135deg, #703890, #562870, #361050);
+  --btn-cloture:        linear-gradient(135deg, #a070c8, #8a60a8, #5a3880);
+  --btn-param:          linear-gradient(135deg, #8058a0, #6a4888, #402860);
+  --clock-gradient:     linear-gradient(135deg, #302050, #403060, #30204e);
+  --text:               #f0e8ff;
+  --accent:             #b080e0;
+  --accent-rgb:         176,128,224;
+  --accent-light:       #c8a0f0;
+  --border:             rgba(176,128,224,0.3);
+  --shadow:             0 8px 32px rgba(100,40,150,0.6);
 }
 
 /* ── MAUVE — Rose vieilli premium ─────────────────────────────────── */
 [data-theme="mauve"] {
-  --bg-gradient:        linear-gradient(to bottom, #4a2040, #301428 55%, #1e0a1a);
-  --topbar-gradient:    linear-gradient(to right, #280e22, #3a1a32, #280e22);
-  --bottombar-gradient: linear-gradient(to right, #1a0818, #280e22, #1a0818);
-  --card-gradient:      linear-gradient(to bottom right, #501e46, #341230);
-  --btn-caisse:         linear-gradient(to bottom, #8a3a7a, #5c1e52);
-  --btn-user:           linear-gradient(to bottom, #6a2a5a, #401638);
-  --btn-stock:          linear-gradient(to bottom, #532050, #361034);
-  --btn-cloture:        linear-gradient(to bottom, #9a4a88, #6a2862);
-  --btn-param:          linear-gradient(to bottom, #7a3870, #4e1e4e);
-  --clock-gradient:     linear-gradient(to bottom right, #280e22, #3a1a32);
-  --text:               #f5d8f0;
-  --accent:             #c050a8;
-  --accent-rgb:         192,80,168;
-  --accent-light:       #d870c0;
-  --border:             rgba(192,80,168,0.25);
-  --shadow:             0 8px 32px rgba(100,20,90,0.5);
+  --bg-gradient:        linear-gradient(135deg, #5a3050, #4a2040, #301428, #1e0a1a);
+  --topbar-gradient:    linear-gradient(135deg, #38182a, #4a2840, #38182a);
+  --bottombar-gradient: linear-gradient(135deg, #280a20, #381830, #280a20);
+  --card-gradient:      linear-gradient(135deg, #602850, #501e46, #341230);
+  --btn-caisse:         linear-gradient(135deg, #a85090, #8a3a7a, #5c1e52);
+  --btn-user:           linear-gradient(135deg, #8a3570, #6a2a5a, #401638);
+  --btn-stock:          linear-gradient(135deg, #703060, #532050, #361034);
+  --btn-cloture:        linear-gradient(135deg, #b060a0, #9a4a88, #6a2862);
+  --btn-param:          linear-gradient(135deg, #904880, #7a3870, #4e1e4e);
+  --clock-gradient:     linear-gradient(135deg, #38182a, #4a2535, #3a1a32);
+  --text:               #fae8f5;
+  --accent:             #d060b8;
+  --accent-rgb:         208,96,184;
+  --accent-light:       #e080d0;
+  --border:             rgba(208,96,184,0.3);
+  --shadow:             0 8px 32px rgba(120,30,110,0.6);
 }
 
 /* ── MOUSE GREY — Ardoise architecturale ────────────────────────────── */
 [data-theme="mouse_grey"] {
-  --bg-gradient:        linear-gradient(to bottom, #2a3d3d, #1c2e2e 55%, #101e1e);
-  --topbar-gradient:    linear-gradient(to right, #142828, #203838, #142828);
-  --bottombar-gradient: linear-gradient(to right, #0c1e1e, #162a2a, #0c1e1e);
-  --card-gradient:      linear-gradient(to bottom right, #304848, #1e3636);
-  --btn-caisse:         linear-gradient(to bottom, #4a6060, #2c4040);
-  --btn-user:           linear-gradient(to bottom, #385050, #223838);
-  --btn-stock:          linear-gradient(to bottom, #283e3e, #162a2a);
-  --btn-cloture:        linear-gradient(to bottom, #587070, #364e4e);
-  --btn-param:          linear-gradient(to bottom, #486060, #2e4646);
-  --clock-gradient:     linear-gradient(to bottom right, #142828, #203838);
-  --text:               #d8e8e8;
-  --accent:             #70a0a0;
-  --accent-rgb:         112,160,160;
-  --accent-light:       #90c0c0;
-  --border:             rgba(112,160,160,0.25);
-  --shadow:             0 8px 32px rgba(0,30,30,0.6);
+  --bg-gradient:        linear-gradient(135deg, #354a4a, #2a3d3d, #1c2e2e, #101e1e);
+  --topbar-gradient:    linear-gradient(135deg, #1a3030, #284040, #1a3030);
+  --bottombar-gradient: linear-gradient(135deg, #0f2424, #1a3030, #0f2424);
+  --card-gradient:      linear-gradient(135deg, #3a5050, #304848, #1e3636);
+  --btn-caisse:         linear-gradient(135deg, #5a7070, #4a6060, #2c4040);
+  --btn-user:           linear-gradient(135deg, #486060, #385050, #223838);
+  --btn-stock:          linear-gradient(135deg, #384848, #283e3e, #162a2a);
+  --btn-cloture:        linear-gradient(135deg, #688080, #587070, #364e4e);
+  --btn-param:          linear-gradient(135deg, #587070, #486060, #2e4646);
+  --clock-gradient:     linear-gradient(135deg, #203030, #304040, #283838);
+  --text:               #e8f0f0;
+  --accent:             #80b0b0;
+  --accent-rgb:         128,176,176;
+  --accent-light:       #a0d0d0;
+  --border:             rgba(128,176,176,0.3);
+  --shadow:             0 8px 32px rgba(0,40,40,0.7);
 }
 
 /* ── LIGHT BLUE — Saphir ocean deep ─────────────────────────────────── */
 [data-theme="light_blue"] {
-  --bg-gradient:        linear-gradient(to bottom, #0e2d5a, #081d3e 55%, #040e22);
-  --topbar-gradient:    linear-gradient(to right, #051428, #0c2040, #051428);
-  --bottombar-gradient: linear-gradient(to right, #030a18, #071530, #030a18);
-  --card-gradient:      linear-gradient(to bottom right, #122d5c, #0a1d42);
-  --btn-caisse:         linear-gradient(to bottom, #2060b0, #0e3a75);
-  --btn-user:           linear-gradient(to bottom, #0e3a6e, #07224a);
-  --btn-stock:          linear-gradient(to bottom, #071d3a, #030f22);
-  --btn-cloture:        linear-gradient(to bottom, #2e60a8, #1a3e72);
-  --btn-param:          linear-gradient(to bottom, #1a4a80, #0e2e56);
-  --clock-gradient:     linear-gradient(to bottom right, #051428, #0c2040);
-  --text:               #a8c8f0;
-  --accent:             #4090e0;
-  --accent-rgb:         64,144,224;
-  --accent-light:       #60b0f8;
-  --border:             rgba(64,144,224,0.25);
-  --shadow:             0 8px 32px rgba(0,20,80,0.6);
+  --bg-gradient:        linear-gradient(135deg, #123570, #0e2d5a, #081d3e, #040e22);
+  --topbar-gradient:    linear-gradient(135deg, #081a35, #142850, #081a35);
+  --bottombar-gradient: linear-gradient(135deg, #050f20, #0c1e35, #050f20);
+  --card-gradient:      linear-gradient(135deg, #1a3560, #122d5c, #0a1d42);
+  --btn-caisse:         linear-gradient(135deg, #3080d0, #2060b0, #0e3a75);
+  --btn-user:           linear-gradient(135deg, #1e5080, #0e3a6e, #07224a);
+  --btn-stock:          linear-gradient(135deg, #0f2d4a, #071d3a, #030f22);
+  --btn-cloture:        linear-gradient(135deg, #4080c0, #2e60a8, #1a3e72);
+  --btn-param:          linear-gradient(135deg, #2a6090, #1a4a80, #0e2e56);
+  --clock-gradient:     linear-gradient(135deg, #142850, #1a3550, #0c2040);
+  --text:               #b8d8f8;
+  --accent:             #50a0ff;
+  --accent-rgb:         80,160,255;
+  --accent-light:       #70b8ff;
+  --border:             rgba(80,160,255,0.3);
+  --shadow:             0 8px 32px rgba(0,30,100,0.7);
 }
 
 /* ── CANDIES — Chocolat Bordeaux gourmet ─────────────────────────────── */
 [data-theme="candies"] {
-  --bg-gradient:        linear-gradient(to bottom, #3e1a1a, #281010 55%, #180808);
-  --topbar-gradient:    linear-gradient(to right, #1c0c0c, #2e1616, #1c0c0c);
-  --bottombar-gradient: linear-gradient(to right, #120808, #201010, #120808);
-  --card-gradient:      linear-gradient(to bottom right, #461e1e, #2e1212);
-  --btn-caisse:         linear-gradient(to bottom, #7a3a20, #4e2010);
-  --btn-user:           linear-gradient(to bottom, #283a20, #162410);
-  --btn-stock:          linear-gradient(to bottom, #4a1e48, #2c0e30);
-  --btn-cloture:        linear-gradient(to bottom, #7a5010, #4e3008);
-  --btn-param:          linear-gradient(to bottom, #52283a, #381428);
-  --clock-gradient:     linear-gradient(to bottom right, #1c0c0c, #2e1616);
-  --text:               #f0d0c8;
-  --accent:             #c04040;
-  --accent-rgb:         192,64,64;
-  --accent-light:       #d86060;
-  --border:             rgba(192,64,64,0.25);
-  --shadow:             0 8px 32px rgba(100,10,10,0.6);
+  --bg-gradient:        linear-gradient(135deg, #4e2525, #3e1a1a, #281010, #180808);
+  --topbar-gradient:    linear-gradient(135deg, #2a1515, #3e2020, #2a1515);
+  --bottombar-gradient: linear-gradient(135deg, #1a0a0a, #281818, #1a0a0a);
+  --card-gradient:      linear-gradient(135deg, #562828, #461e1e, #2e1212);
+  --btn-caisse:         linear-gradient(135deg, #9a5030, #7a3a20, #4e2010);
+  --btn-user:           linear-gradient(135deg, #385030, #283a20, #162410);
+  --btn-stock:          linear-gradient(135deg, #5a2858, #4a1e48, #2c0e30);
+  --btn-cloture:        linear-gradient(135deg, #8a6020, #7a5010, #4e3008);
+  --btn-param:          linear-gradient(135deg, #6a3848, #52283a, #381428);
+  --clock-gradient:     linear-gradient(135deg, #2e1515, #3e2020, #2e1616);
+  --text:               #f5d8d0;
+  --accent:             #d05050;
+  --accent-rgb:         208,80,80;
+  --accent-light:       #e07070;
+  --border:             rgba(208,80,80,0.3);
+  --shadow:             0 8px 32px rgba(120,15,15,0.7);
 }
 
 /* ── OCEAN — Profondeur pélagique ─────────────────────────────────────── */
 [data-theme="ocean"] {
-  --bg-gradient:        linear-gradient(to bottom, #10382a, #08261a 55%, #041810);
-  --topbar-gradient:    linear-gradient(to right, #061e14, #102c20, #061e14);
-  --bottombar-gradient: linear-gradient(to right, #04140c, #0a1e14, #04140c);
-  --card-gradient:      linear-gradient(to bottom right, #163c2c, #0c2a1c);
-  --btn-caisse:         linear-gradient(to bottom, #1e6a50, #0e4232);
-  --btn-user:           linear-gradient(to bottom, #103c2a, #082418);
-  --btn-stock:          linear-gradient(to bottom, #0a2e20, #051e14);
-  --btn-cloture:        linear-gradient(to bottom, #287a60, #145040);
-  --btn-param:          linear-gradient(to bottom, #1e5a44, #103830);
-  --clock-gradient:     linear-gradient(to bottom right, #061e14, #102c20);
-  --text:               #a8d8c0;
-  --accent:             #30b888;
-  --accent-rgb:         48,184,136;
-  --accent-light:       #50d8a8;
-  --border:             rgba(48,184,136,0.25);
-  --shadow:             0 8px 32px rgba(0,50,30,0.6);
+  --bg-gradient:        linear-gradient(135deg, #144835, #10382a, #08261a, #041810);
+  --topbar-gradient:    linear-gradient(135deg, #0a2818, #143828, #0a2818);
+  --bottombar-gradient: linear-gradient(135deg, #061812, #0a2418, #061812);
+  --card-gradient:      linear-gradient(135deg, #1a4838, #163c2c, #0c2a1c);
+  --btn-caisse:         linear-gradient(135deg, #288060, #1e6a50, #0e4232);
+  --btn-user:           linear-gradient(135deg, #185035, #103c2a, #082418);
+  --btn-stock:          linear-gradient(135deg, #0f3828, #0a2e20, #051e14);
+  --btn-cloture:        linear-gradient(135deg, #389070, #287a60, #145040);
+  --btn-param:          linear-gradient(135deg, #287058, #1e5a44, #103830);
+  --clock-gradient:     linear-gradient(135deg, #143828, #1a4835, #102c20);
+  --text:               #b8e8d0;
+  --accent:             #40c898;
+  --accent-rgb:         64,200,152;
+  --accent-light:       #60d8b0;
+  --border:             rgba(64,200,152,0.3);
+  --shadow:             0 8px 32px rgba(0,60,40,0.7);
 }
 
 /* ── SUNSET — Coucher de soleil cuivré ─────────────────────────────────── */
 [data-theme="sunset"] {
-  --bg-gradient:        linear-gradient(to bottom, #3e1408, #2a0c04 55%, #180602);
-  --topbar-gradient:    linear-gradient(to right, #1c0a04, #2e1008, #1c0a04);
-  --bottombar-gradient: linear-gradient(to right, #100604, #1e0a04, #100604);
-  --card-gradient:      linear-gradient(to bottom right, #441608, #2e0e04);
-  --btn-caisse:         linear-gradient(to bottom, #8a3a18, #5c2008);
-  --btn-user:           linear-gradient(to bottom, #642e08, #3e1c04);
-  --btn-stock:          linear-gradient(to bottom, #501808, #341004);
-  --btn-cloture:        linear-gradient(to bottom, #9a4a20, #643010);
-  --btn-param:          linear-gradient(to bottom, #743a18, #4c240c);
-  --clock-gradient:     linear-gradient(to bottom right, #1c0a04, #2e1008);
-  --text:               #f5c8a0;
-  --accent:             #e06030;
-  --accent-rgb:         224,96,48;
-  --accent-light:       #f08050;
-  --border:             rgba(224,96,48,0.25);
-  --shadow:             0 8px 32px rgba(120,40,0,0.6);
+  --bg-gradient:        linear-gradient(135deg, #4e1a0a, #3e1408, #2a0c04, #180602);
+  --topbar-gradient:    linear-gradient(135deg, #2a0f05, #3e150a, #2a0f05);
+  --bottombar-gradient: linear-gradient(135deg, #1a0803, #280c04, #1a0803);
+  --card-gradient:      linear-gradient(135deg, #541a0a, #441608, #2e0e04);
+  --btn-caisse:         linear-gradient(135deg, #a85028, #8a3a18, #5c2008);
+  --btn-user:           linear-gradient(135deg, #744018, #642e08, #3e1c04);
+  --btn-stock:          linear-gradient(135deg, #602018, #501808, #341004);
+  --btn-cloture:        linear-gradient(135deg, #b06030, #9a4a20, #643010);
+  --btn-param:          linear-gradient(135deg, #884828, #743a18, #4c240c);
+  --clock-gradient:     linear-gradient(135deg, #2e150a, #3e1a08, #2e1008);
+  --text:               #fad8b0;
+  --accent:             #f07040;
+  --accent-rgb:         240,112,64;
+  --accent-light:       #ff9060;
+  --border:             rgba(240,112,64,0.3);
+  --shadow:             0 8px 32px rgba(140,50,10,0.7);
 }
 
 /* ── FOREST — Forêt ancienne ────────────────────────────────────────── */
 [data-theme="forest"] {
-  --bg-gradient:        linear-gradient(to bottom, #182818, #0e1c0e 55%, #081208);
-  --topbar-gradient:    linear-gradient(to right, #0c1a0c, #182818, #0c1a0c);
-  --bottombar-gradient: linear-gradient(to right, #081008, #0e1a0e, #081008);
-  --card-gradient:      linear-gradient(to bottom right, #1e301e, #122412);
-  --btn-caisse:         linear-gradient(to bottom, #2a4a2a, #163016);
-  --btn-user:           linear-gradient(to bottom, #1a3a1a, #0e260e);
-  --btn-stock:          linear-gradient(to bottom, #102a10, #081808);
-  --btn-cloture:        linear-gradient(to bottom, #3a5a3a, #223c22);
-  --btn-param:          linear-gradient(to bottom, #2a4a2a, #18301a);
-  --clock-gradient:     linear-gradient(to bottom right, #0c1a0c, #182818);
-  --text:               #c0d8b8;
-  --accent:             #4a9a4a;
-  --accent-rgb:         74,154,74;
-  --accent-light:       #6ab86a;
-  --border:             rgba(74,154,74,0.25);
-  --shadow:             0 8px 32px rgba(10,40,10,0.6);
+  --bg-gradient:        linear-gradient(135deg, #203020, #182818, #0e1c0e, #081208);
+  --topbar-gradient:    linear-gradient(135deg, #0f1f0f, #1a2e1a, #0f1f0f);
+  --bottombar-gradient: linear-gradient(135deg, #0a150a, #0f1f0f, #0a150a);
+  --card-gradient:      linear-gradient(135deg, #243824, #1e301e, #122412);
+  --btn-caisse:         linear-gradient(135deg, #3a5a3a, #2a4a2a, #163016);
+  --btn-user:           linear-gradient(135deg, #2a502a, #1a3a1a, #0e260e);
+  --btn-stock:          linear-gradient(135deg, #153815, #102a10, #081808);
+  --btn-cloture:        linear-gradient(135deg, #4a6a4a, #3a5a3a, #223c22);
+  --btn-param:          linear-gradient(135deg, #3a5a3a, #2a4a2a, #18301a);
+  --clock-gradient:     linear-gradient(135deg, #1a2e1a, #243824, #182818);
+  --text:               #c8e0c0;
+  --accent:             #5aa85a;
+  --accent-rgb:         90,168,90;
+  --accent-light:       #7ac87a;
+  --border:             rgba(90,168,90,0.3);
+  --shadow:             0 8px 32px rgba(15,50,15,0.7);
 }
 
 /* ── MIDNIGHT — Cosmos étoilé ───────────────────────────────────────── */
 [data-theme="midnight"] {
-  --bg-gradient:        linear-gradient(to bottom, #0a0a20, #050510 55%, #020208);
-  --topbar-gradient:    linear-gradient(to right, #030310, #08081a, #030310);
-  --bottombar-gradient: linear-gradient(to right, #020208, #060612, #020208);
-  --card-gradient:      linear-gradient(to bottom right, #0e0e28, #080820);
-  --btn-caisse:         linear-gradient(to bottom, #181840, #0c0c28);
-  --btn-user:           linear-gradient(to bottom, #202050, #101030);
-  --btn-stock:          linear-gradient(to bottom, #141430, #0a0a20);
-  --btn-cloture:        linear-gradient(to bottom, #2e2e62, #1a1a48);
-  --btn-param:          linear-gradient(to bottom, #202058, #10103a);
-  --clock-gradient:     linear-gradient(to bottom right, #030310, #08081a);
-  --text:               #c8c8e8;
-  --accent:             #6060d0;
-  --accent-rgb:         96,96,208;
-  --accent-light:       #8080e8;
-  --border:             rgba(96,96,208,0.25);
-  --shadow:             0 8px 32px rgba(10,10,60,0.7);
+  --bg-gradient:        linear-gradient(135deg, #0f0f28, #0a0a20, #050510, #020208);
+  --topbar-gradient:    linear-gradient(135deg, #050515, #0a0a20, #050515);
+  --bottombar-gradient: linear-gradient(135deg, #03030a, #060610, #03030a);
+  --card-gradient:      linear-gradient(135deg, #121230, #0e0e28, #080820);
+  --btn-caisse:         linear-gradient(135deg, #202050, #181840, #0c0c28);
+  --btn-user:           linear-gradient(135deg, #282860, #202050, #101030);
+  --btn-stock:          linear-gradient(135deg, #181838, #141430, #0a0a20);
+  --btn-cloture:        linear-gradient(135deg, #383870, #2e2e62, #1a1a48);
+  --btn-param:          linear-gradient(135deg, #282868, #202058, #10103a);
+  --clock-gradient:     linear-gradient(135deg, #0a0a20, #121230, #08081a);
+  --text:               #d0d0f0;
+  --accent:             #7070e0;
+  --accent-rgb:         112,112,224;
+  --accent-light:       #9090f0;
+  --border:             rgba(112,112,224,0.3);
+  --shadow:             0 8px 32px rgba(15,15,80,0.8);
 }
 
 /* ── COFFEE — Expresso velours ─────────────────────────────────────── */
 [data-theme="coffee"] {
-  --bg-gradient:        linear-gradient(to bottom, #221408, #160e05 55%, #0e0804);
-  --topbar-gradient:    linear-gradient(to right, #100a04, #1a1008, #100a04);
-  --bottombar-gradient: linear-gradient(to right, #0a0604, #120a04, #0a0604);
-  --card-gradient:      linear-gradient(to bottom right, #281808, #1a1005);
-  --btn-caisse:         linear-gradient(to bottom, #4a2a18, #2e180a);
-  --btn-user:           linear-gradient(to bottom, #38200e, #201208);
-  --btn-stock:          linear-gradient(to bottom, #2a1a0c, #180e06);
-  --btn-cloture:        linear-gradient(to bottom, #5a3820, #382210);
-  --btn-param:          linear-gradient(to bottom, #482a18, #2c1a0c);
-  --clock-gradient:     linear-gradient(to bottom right, #100a04, #1a1008);
-  --text:               #d8b898;
-  --accent:             #9a6038;
-  --accent-rgb:         154,96,56;
-  --accent-light:       #c07848;
-  --border:             rgba(154,96,56,0.25);
-  --shadow:             0 8px 32px rgba(60,25,5,0.6);
+  --bg-gradient:        linear-gradient(135deg, #2c1a0a, #221408, #160e05, #0e0804);
+  --topbar-gradient:    linear-gradient(135deg, #150c04, #201408, #150c04);
+  --bottombar-gradient: linear-gradient(135deg, #0f0803, #140c04, #0f0803);
+  --card-gradient:      linear-gradient(135deg, #302018, #281808, #1a1005);
+  --btn-caisse:         linear-gradient(135deg, #5a3828, #4a2a18, #2e180a);
+  --btn-user:           linear-gradient(135deg, #483018, #38200e, #201208);
+  --btn-stock:          linear-gradient(135deg, #382818, #2a1a0c, #180e06);
+  --btn-cloture:        linear-gradient(135deg, #6a4830, #5a3820, #382210);
+  --btn-param:          linear-gradient(135deg, #583828, #482a18, #2c1a0c);
+  --clock-gradient:     linear-gradient(135deg, #1a1408, #241808, #1a1008);
+  --text:               #e0c0a0;
+  --accent:             #a87048;
+  --accent-rgb:         168,112,72;
+  --accent-light:       #c89060;
+  --border:             rgba(168,112,72,0.3);
+  --shadow:             0 8px 32px rgba(70,35,10,0.7);
 }
 
 /* ── CORAL — Corail abyssal ─────────────────────────────────────────── */
 [data-theme="coral"] {
-  --bg-gradient:        linear-gradient(to bottom, #3e1808, #2c0e05 55%, #1a0802);
-  --topbar-gradient:    linear-gradient(to right, #1e0c04, #2e1206, #1e0c04);
-  --bottombar-gradient: linear-gradient(to right, #120802, #1e0c04, #120802);
-  --card-gradient:      linear-gradient(to bottom right, #461c0a, #2e1005);
-  --btn-caisse:         linear-gradient(to bottom, #8a3a18, #5c2008);
-  --btn-user:           linear-gradient(to bottom, #682808, #421805);
-  --btn-stock:          linear-gradient(to bottom, #521a08, #341004);
-  --btn-cloture:        linear-gradient(to bottom, #9a4820, #623010);
-  --btn-param:          linear-gradient(to bottom, #762e14, #4a1e0a);
-  --clock-gradient:     linear-gradient(to bottom right, #1e0c04, #2e1206);
-  --text:               #f5c0a0;
-  --accent:             #e05030;
-  --accent-rgb:         224,80,48;
-  --accent-light:       #f57050;
-  --border:             rgba(224,80,48,0.25);
-  --shadow:             0 8px 32px rgba(140,40,10,0.6);
+  --bg-gradient:        linear-gradient(135deg, #4e1a0a, #3e1808, #2c0e05, #1a0802);
+  --topbar-gradient:    linear-gradient(135deg, #2a0f04, #3e1508, #2a0f04);
+  --bottombar-gradient: linear-gradient(135deg, #1a0802, #280c04, #1a0802);
+  --card-gradient:      linear-gradient(135deg, #561c0a, #461c0a, #2e1005);
+  --btn-caisse:         linear-gradient(135deg, #a85028, #8a3a18, #5c2008);
+  --btn-user:           linear-gradient(135deg, #783818, #682808, #421805);
+  --btn-stock:          linear-gradient(135deg, #622818, #521a08, #341004);
+  --btn-cloture:        linear-gradient(135deg, #b05830, #9a4820, #623010);
+  --btn-param:          linear-gradient(135deg, #883818, #762e14, #4a1e0a);
+  --clock-gradient:     linear-gradient(135deg, #2e1506, #3e1a08, #2e1206);
+  --text:               #fad0b0;
+  --accent:             #f06040;
+  --accent-rgb:         240,96,64;
+  --accent-light:       #ff8060;
+  --border:             rgba(240,96,64,0.3);
+  --shadow:             0 8px 32px rgba(160,50,20,0.7);
 }
 
 /* ── ROYAL — Pourpre & Or impérial ─────────────────────────────────── */
 [data-theme="royal"] {
-  --bg-gradient:        linear-gradient(to bottom, #200a28, #150618 55%, #0c0410);
-  --topbar-gradient:    linear-gradient(to right, #100414, #1c0820, #100414);
-  --bottombar-gradient: linear-gradient(to right, #0a020e, #140418, #0a020e);
-  --card-gradient:      linear-gradient(to bottom right, #281030, #180820);
-  --btn-caisse:         linear-gradient(to bottom, #7a4a00, #503000);
-  --btn-user:           linear-gradient(to bottom, #5a2800, #381800);
-  --btn-stock:          linear-gradient(to bottom, #440e1a, #2c0810);
-  --btn-cloture:        linear-gradient(to bottom, #8a5810, #5a3808);
-  --btn-param:          linear-gradient(to bottom, #6a3830, #421e20);
-  --clock-gradient:     linear-gradient(to bottom right, #100414, #1c0820);
-  --text:               #eed8c0;
-  --accent:             #c09020;
-  --accent-rgb:         192,144,32;
-  --accent-light:       #e0b030;
-  --border:             rgba(192,144,32,0.25);
-  --shadow:             0 8px 32px rgba(60,0,80,0.6);
+  --bg-gradient:        linear-gradient(135deg, #280c30, #200a28, #150618, #0c0410);
+  --topbar-gradient:    linear-gradient(135deg, #150614, #200a18, #150614);
+  --bottombar-gradient: linear-gradient(135deg, #0c0410, #140614, #0c0410);
+  --card-gradient:      linear-gradient(135deg, #301238, #281030, #180820);
+  --btn-caisse:         linear-gradient(135deg, #9a5810, #7a4a00, #503000);
+  --btn-user:           linear-gradient(135deg, #703810, #5a2800, #381800);
+  --btn-stock:          linear-gradient(135deg, #541828, #440e1a, #2c0810);
+  --btn-cloture:        linear-gradient(135deg, #a06818, #8a5810, #5a3808);
+  --btn-param:          linear-gradient(135deg, #804838, #6a3830, #421e20);
+  --clock-gradient:     linear-gradient(135deg, #1c0820, #281028, #1c0820);
+  --text:               #f0e0c8;
+  --accent:             #d0a040;
+  --accent-rgb:         208,160,64;
+  --accent-light:       #e0b850;
+  --border:             rgba(208,160,64,0.3);
+  --shadow:             0 8px 32px rgba(80,20,100,0.7);
 }
