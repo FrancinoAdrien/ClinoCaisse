@@ -166,11 +166,20 @@
             <div class="clock-time" id="clock-time">00:00:00</div>
             <div class="clock-date" id="clock-date">-</div>
           </div>
-        </div>
+          </div><!-- /.dash-grid -->
 
-        </div>
+          <!-- Panneau latéral droit : bouton Terrain -->
+          <div class="dash-side-panel">
+            <button class="module-btn dash-terrain-btn" id="btn-terrain" data-perm="perm_reserv">
+              <svg class="mod-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                <polyline points="9 22 9 12 15 12 15 22"/>
+              </svg>
+              <span class="mod-label mod-label-xs">Terrain</span>
+            </button>
+          </div>
 
-        </div>
+        </div><!-- /.dash-main-row -->
 
         <div class="dash-security-msg">
           Obligation de conservation de vos données : effectuez régulièrement un backup externe de votre base de données.
@@ -277,6 +286,7 @@
       'btn-reservations': { view: 'reservations', perm: 'perm_reserv' },
       'btn-finances':     { view: 'finances',     perm: 'perm_depenses' },
       'btn-rh':           { view: 'rh',           perm: 'perm_ressources' },
+      'btn-terrain':      { view: 'terrain',      perm: 'perm_reserv' },
     };
 
     Object.entries(navMap).forEach(([btnId, { view, perm }]) => {

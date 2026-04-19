@@ -4,7 +4,8 @@ module.exports = function runMigrations(db) {
   db.exec(`
     -- ── UTILISATEURS ─────────────────────────────────────────────────
     CREATE TABLE IF NOT EXISTS utilisateurs (
-      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      uuid            TEXT PRIMARY KEY,
+      id              INTEGER,
       nom             TEXT    NOT NULL,
       prenom          TEXT,
       pin             TEXT    NOT NULL,
@@ -17,29 +18,43 @@ module.exports = function runMigrations(db) {
       perm_cloture    INTEGER NOT NULL DEFAULT 0,
       perm_stock      INTEGER NOT NULL DEFAULT 0,
       perm_remises    INTEGER NOT NULL DEFAULT 0,
+      perm_grossiste   INTEGER NOT NULL DEFAULT 0,
+      perm_depenses    INTEGER NOT NULL DEFAULT 0,
+      perm_ressources  INTEGER NOT NULL DEFAULT 0,
+      perm_achats      INTEGER NOT NULL DEFAULT 0,
+      perm_reserv      INTEGER NOT NULL DEFAULT 0,
       date_creation   TEXT    DEFAULT (datetime('now')),
-      date_modification TEXT  DEFAULT (datetime('now'))
+      date_modification TEXT  DEFAULT (datetime('now')),
+      last_modified_at INTEGER DEFAULT 0,
+      sync_status      INTEGER DEFAULT 1,
+      poste_source     TEXT
     );
 
     -- ── CATEGORIES ───────────────────────────────────────────────────
     CREATE TABLE IF NOT EXISTS categories (
-      id          INTEGER PRIMARY KEY AUTOINCREMENT,
-      code        TEXT    NOT NULL UNIQUE,
-      nom         TEXT    NOT NULL,
-      description TEXT,
-      ordre       INTEGER DEFAULT 0
+      uuid            TEXT PRIMARY KEY,
+      id              INTEGER,
+      code            TEXT    NOT NULL UNIQUE,
+      nom             TEXT    NOT NULL,
+      description     TEXT,
+      ordre           INTEGER DEFAULT 0,
+      parent_id       INTEGER,
+      last_modified_at INTEGER DEFAULT 0,
+      sync_status      INTEGER DEFAULT 1,
+      poste_source     TEXT
     );
 
     -- ── PRODUITS ─────────────────────────────────────────────────────
     CREATE TABLE IF NOT EXISTS produits (
-      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      uuid            TEXT PRIMARY KEY,
+      id              INTEGER,
       reference       TEXT,
       nom             TEXT    NOT NULL,
       description     TEXT,
       prix_vente_ttc  REAL    NOT NULL DEFAULT 0,
       prix_achat      REAL    DEFAULT 0,
       prix_emporte    REAL    DEFAULT 0,
-      categorie_id    INTEGER REFERENCES categories(id) ON DELETE SET NULL,
+      categorie_id    INTEGER,
       stock_actuel    REAL    NOT NULL DEFAULT -1,
       stock_bar       REAL    NOT NULL DEFAULT 0,
       stock_alerte    REAL    DEFAULT 0,
@@ -47,12 +62,24 @@ module.exports = function runMigrations(db) {
       fournisseur     TEXT,
       image_data      BLOB,
       actif           INTEGER NOT NULL DEFAULT 1,
-      date_creation   TEXT    DEFAULT (datetime('now'))
+      prix_gros        REAL DEFAULT 0,
+      unite_base       TEXT DEFAULT 'Unité',
+      unite_carton_qte REAL DEFAULT 1,
+      unite_pack_qte   REAL DEFAULT 1,
+      stock_grossiste  REAL DEFAULT 0,
+      is_alcool        INTEGER DEFAULT 0,
+      is_ingredient    INTEGER DEFAULT 0,
+      is_prepared      INTEGER DEFAULT 0,
+      date_creation   TEXT    DEFAULT (datetime('now')),
+      last_modified_at INTEGER DEFAULT 0,
+      sync_status      INTEGER DEFAULT 1,
+      poste_source     TEXT
     );
 
     -- ── VENTES ───────────────────────────────────────────────────────
     CREATE TABLE IF NOT EXISTS ventes (
-      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      uuid            TEXT PRIMARY KEY,
+      id              INTEGER,
       numero_ticket   TEXT    NOT NULL,
       date_vente      TEXT    NOT NULL DEFAULT (datetime('now')),
       nom_caissier    TEXT,
@@ -62,26 +89,39 @@ module.exports = function runMigrations(db) {
       monnaie_rendue  REAL    DEFAULT 0,
       statut          TEXT    DEFAULT 'valide',
       table_numero    INTEGER,
-      note            TEXT
+      type_vente      TEXT    DEFAULT 'BAR',
+      client_uuid     TEXT,
+      note            TEXT,
+      last_modified_at INTEGER DEFAULT 0,
+      sync_status      INTEGER DEFAULT 1,
+      poste_source     TEXT
     );
 
     -- ── LIGNES VENTE ─────────────────────────────────────────────────
     CREATE TABLE IF NOT EXISTS lignes_vente (
-      id              INTEGER PRIMARY KEY AUTOINCREMENT,
-      vente_id        INTEGER NOT NULL REFERENCES ventes(id) ON DELETE CASCADE,
-      produit_id      INTEGER REFERENCES produits(id),
+      uuid            TEXT PRIMARY KEY,
+      id              INTEGER,
+      vente_id        INTEGER,
+      vente_uuid      TEXT,
+      produit_id      INTEGER,
       produit_nom     TEXT    NOT NULL,
       quantite        REAL    NOT NULL DEFAULT 1,
       prix_unitaire   REAL    NOT NULL DEFAULT 0,
       remise          REAL    DEFAULT 0,
       rabais          REAL    DEFAULT 0,
       total_ttc       REAL    NOT NULL DEFAULT 0,
-      est_offert      INTEGER DEFAULT 0
+      est_offert      INTEGER DEFAULT 0,
+      unite_choisie    TEXT    DEFAULT 'Unité',
+      statut_cuisine   TEXT    DEFAULT 'servi',
+      last_modified_at INTEGER DEFAULT 0,
+      sync_status      INTEGER DEFAULT 1,
+      poste_source     TEXT
     );
 
     -- ── TICKETS TABLE ─────────────────────────────────────────────────
     CREATE TABLE IF NOT EXISTS tickets_table (
-      id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+      uuid                TEXT PRIMARY KEY,
+      id                  INTEGER,
       numero_table        INTEGER NOT NULL,
       nom_table           TEXT,
       nom_caissier        TEXT,
@@ -89,18 +129,26 @@ module.exports = function runMigrations(db) {
       date_modification   TEXT    DEFAULT (datetime('now')),
       montant_total       REAL    DEFAULT 0,
       lignes_json         TEXT    DEFAULT '[]',
-      statut              TEXT    DEFAULT 'en_cours'
+      statut              TEXT    DEFAULT 'en_cours',
+      last_modified_at    INTEGER DEFAULT 0,
+      sync_status         INTEGER DEFAULT 1,
+      poste_source        TEXT
     );
 
     -- ── CONFIG TABLES ─────────────────────────────────────────────────
     CREATE TABLE IF NOT EXISTS tables_config (
-      numero_table  INTEGER PRIMARY KEY,
-      ordre         INTEGER DEFAULT 0
+      uuid          TEXT PRIMARY KEY,
+      numero_table  INTEGER,
+      ordre         INTEGER DEFAULT 0,
+      last_modified_at INTEGER DEFAULT 0,
+      sync_status      INTEGER DEFAULT 1,
+      poste_source     TEXT
     );
 
     -- ── CLÔTURES ─────────────────────────────────────────────────────
     CREATE TABLE IF NOT EXISTS clotures (
-      id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+      uuid                TEXT PRIMARY KEY,
+      id                  INTEGER,
       type_cloture        TEXT    NOT NULL,
       numero_rapport      TEXT,
       date_debut          TEXT,
@@ -122,27 +170,38 @@ module.exports = function runMigrations(db) {
       fond_debut          REAL    DEFAULT 0,
       fond_fin            REAL    DEFAULT 0,
       ecart               REAL    DEFAULT 0,
-      details_json        TEXT    DEFAULT '{}'
+      details_json        TEXT    DEFAULT '{}',
+      last_modified_at    INTEGER DEFAULT 0,
+      sync_status         INTEGER DEFAULT 1,
+      poste_source        TEXT
     );
 
     -- ── PARAMÈTRES ───────────────────────────────────────────────────
     CREATE TABLE IF NOT EXISTS parametres (
-      cle         TEXT    PRIMARY KEY,
+      uuid        TEXT PRIMARY KEY,
+      cle         TEXT    UNIQUE,
       valeur      TEXT,
-      date_maj    TEXT    DEFAULT (datetime('now'))
+      date_maj    TEXT    DEFAULT (datetime('now')),
+      last_modified_at INTEGER DEFAULT 0,
+      sync_status      INTEGER DEFAULT 1,
+      poste_source     TEXT
     );
 
     -- ── HISTORIQUE STOCK ─────────────────────────────────────────────
     CREATE TABLE IF NOT EXISTS stock_historique (
-      id            INTEGER PRIMARY KEY AUTOINCREMENT,
-      produit_id    INTEGER REFERENCES produits(id),
+      uuid          TEXT PRIMARY KEY,
+      id            INTEGER,
+      produit_id    INTEGER,
       produit_nom   TEXT,
       ancienne_qte  REAL,
       nouvelle_qte  REAL,
       delta         REAL,
       motif         TEXT,
       operateur     TEXT,
-      date_op       TEXT    DEFAULT (datetime('now'))
+      date_op       TEXT    DEFAULT (datetime('now')),
+      last_modified_at INTEGER DEFAULT 0,
+      sync_status      INTEGER DEFAULT 1,
+      poste_source     TEXT
     );
 
     -- ── NOUVELLES TABLES V3 (GROSSISTE & LOUNGE) ────────────────────
@@ -264,8 +323,8 @@ module.exports = function runMigrations(db) {
     );
 
     CREATE TABLE IF NOT EXISTS creances_clients (
-      id               INTEGER PRIMARY KEY AUTOINCREMENT,
-      uuid             TEXT UNIQUE,
+      uuid             TEXT PRIMARY KEY,
+      id               INTEGER,
       client_nom       TEXT NOT NULL,
       montant          REAL NOT NULL,
       statut           TEXT DEFAULT 'en_attente',
@@ -274,7 +333,8 @@ module.exports = function runMigrations(db) {
       description      TEXT,
       operateur        TEXT,
       last_modified_at INTEGER DEFAULT 0,
-      sync_status      INTEGER DEFAULT 0
+      sync_status      INTEGER DEFAULT 1,
+      poste_source     TEXT
     );
 
     CREATE TABLE IF NOT EXISTS salaires_paiements (
@@ -329,7 +389,8 @@ module.exports = function runMigrations(db) {
 
     -- ── JOURNAL D'ACTIVITÉ ──────────────────────────────────────────────
     CREATE TABLE IF NOT EXISTS journal_activite (
-      id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      uuid         TEXT PRIMARY KEY,
+      id           INTEGER,
       date_action  TEXT    NOT NULL DEFAULT (datetime('now')),
       categorie    TEXT    NOT NULL,
       action       TEXT    NOT NULL,
@@ -337,7 +398,47 @@ module.exports = function runMigrations(db) {
       operateur    TEXT,
       montant      REAL,
       icone        TEXT,
-      meta_json    TEXT
+      meta_json    TEXT,
+      last_modified_at INTEGER DEFAULT 0,
+      sync_status      INTEGER DEFAULT 1,
+      poste_source     TEXT
+    );
+
+    -- ── ESPACES (Terrain, Local, Salle, Maison, Autre) ──────────────────
+    CREATE TABLE IF NOT EXISTS espaces (
+      uuid          TEXT PRIMARY KEY,
+      id            INTEGER,
+      nom           TEXT    NOT NULL,
+      type          TEXT    DEFAULT 'terrain',
+      description   TEXT,
+      tarif_heure   REAL    DEFAULT 0,
+      actif         INTEGER DEFAULT 1,
+      date_creation TEXT    DEFAULT (datetime('now')),
+      type_tarif    TEXT    DEFAULT 'heure',
+      last_modified_at INTEGER DEFAULT 0,
+      sync_status      INTEGER DEFAULT 1,
+      poste_source     TEXT
+    );
+
+    -- ── RÉSERVATIONS TERRAIN ─────────────────────────────────────────────
+    CREATE TABLE IF NOT EXISTS reservations_terrain (
+      uuid            TEXT PRIMARY KEY,
+      id              INTEGER,
+      client_nom      TEXT    NOT NULL,
+      client_contact  TEXT,
+      espace_id       INTEGER,
+      date_debut      TEXT    NOT NULL,
+      date_fin        TEXT    NOT NULL,
+      montant_total   REAL    DEFAULT 0,
+      montant_paye    REAL    DEFAULT 0,
+      statut_paiement TEXT    DEFAULT 'en_attente',
+      statut          TEXT    DEFAULT 'confirmee',
+      note            TEXT,
+      operateur       TEXT,
+      date_creation   TEXT    DEFAULT (datetime('now')),
+      last_modified_at INTEGER DEFAULT 0,
+      sync_status      INTEGER DEFAULT 1,
+      poste_source     TEXT
     );
   `);
 
@@ -350,6 +451,10 @@ module.exports = function runMigrations(db) {
     { table: 'utilisateurs', col: 'perm_ressources',  def: 'INTEGER NOT NULL DEFAULT 0' },
     { table: 'utilisateurs', col: 'perm_achats',      def: 'INTEGER NOT NULL DEFAULT 0' },
     { table: 'utilisateurs', col: 'perm_reserv',      def: 'INTEGER NOT NULL DEFAULT 0' },
+    { table: 'utilisateurs', col: 'uuid',             def: 'TEXT' },
+    { table: 'utilisateurs', col: 'last_modified_at', def: 'INTEGER DEFAULT 0' },
+    { table: 'utilisateurs', col: 'sync_status',      def: 'INTEGER DEFAULT 0' },
+    { table: 'utilisateurs', col: 'poste_source',     def: 'TEXT' },
 
     // ── Table CATEGORIES (Synchro + Parent)
     { table: 'categories',   col: 'uuid',             def: 'TEXT' },
@@ -396,6 +501,9 @@ module.exports = function runMigrations(db) {
     { table: 'clotures',     col: 'sync_status',      def: 'INTEGER DEFAULT 0' },
     { table: 'clotures',     col: 'poste_source',     def: 'TEXT' },
     
+    // ── Table ESPACES
+    { table: 'espaces',      col: 'type_tarif',       def: "TEXT DEFAULT 'heure'" },
+
     // ── Table RESERVATIONS (Multi-tables & Durée)
     { table: 'reservations', col: 'tables_json',      def: "TEXT DEFAULT '[]'" },
     // ── Table EMPLOYES
@@ -403,11 +511,155 @@ module.exports = function runMigrations(db) {
     // ── Table DEPENSES
     { table: 'depenses',          col: 'statut',           def: "TEXT DEFAULT 'payee'" },
     { table: 'depenses',          col: 'fournisseur_nom',  def: 'TEXT' },
+
+    // ── Harmonisation Globale (21 Tables)
+    { table: 'stock_lots',        col: 'uuid',             def: 'TEXT' },
+    { table: 'stock_lots',        col: 'last_modified_at', def: 'INTEGER DEFAULT 0' },
+    { table: 'stock_lots',        col: 'sync_status',      def: 'INTEGER DEFAULT 0' },
+    { table: 'stock_lots',        col: 'poste_source',     def: 'TEXT' },
+
+    { table: 'stock_transferts',  col: 'uuid',             def: 'TEXT' },
+    { table: 'stock_transferts',  col: 'last_modified_at', def: 'INTEGER DEFAULT 0' },
+    { table: 'stock_transferts',  col: 'sync_status',      def: 'INTEGER DEFAULT 0' },
+    { table: 'stock_transferts',  col: 'poste_source',     def: 'TEXT' },
+
+    { table: 'clients',           col: 'uuid',             def: 'TEXT' },
+    { table: 'clients',           col: 'last_modified_at', def: 'INTEGER DEFAULT 0' },
+    { table: 'clients',           col: 'sync_status',      def: 'INTEGER DEFAULT 0' },
+    { table: 'clients',           col: 'poste_source',     def: 'TEXT' },
+
+    { table: 'credits_paiements',  col: 'uuid',             def: 'TEXT' },
+    { table: 'credits_paiements',  col: 'last_modified_at', def: 'INTEGER DEFAULT 0' },
+    { table: 'credits_paiements',  col: 'sync_status',      def: 'INTEGER DEFAULT 0' },
+    { table: 'credits_paiements',  col: 'poste_source',     def: 'TEXT' },
+
+    { table: 'fournisseurs',      col: 'uuid',             def: 'TEXT' },
+    { table: 'fournisseurs',      col: 'last_modified_at', def: 'INTEGER DEFAULT 0' },
+    { table: 'fournisseurs',      col: 'sync_status',      def: 'INTEGER DEFAULT 0' },
+    { table: 'fournisseurs',      col: 'poste_source',     def: 'TEXT' },
+
+    { table: 'achats',            col: 'uuid',             def: 'TEXT' },
+    { table: 'achats',            col: 'last_modified_at', def: 'INTEGER DEFAULT 0' },
+    { table: 'achats',            col: 'sync_status',      def: 'INTEGER DEFAULT 0' },
+    { table: 'achats',            col: 'poste_source',     def: 'TEXT' },
+
+    { table: 'reservations',      col: 'uuid',             def: 'TEXT' },
+    { table: 'reservations',      col: 'last_modified_at', def: 'INTEGER DEFAULT 0' },
+    { table: 'reservations',      col: 'sync_status',      def: 'INTEGER DEFAULT 0' },
+    { table: 'reservations',      col: 'poste_source',     def: 'TEXT' },
+
+    { table: 'depenses',          col: 'uuid',             def: 'TEXT' },
+    { table: 'depenses',          col: 'last_modified_at', def: 'INTEGER DEFAULT 0' },
+    { table: 'depenses',          col: 'sync_status',      def: 'INTEGER DEFAULT 0' },
+    { table: 'depenses',          col: 'poste_source',     def: 'TEXT' },
+
+    { table: 'employes',          col: 'uuid',             def: 'TEXT' },
+    { table: 'employes',          col: 'last_modified_at', def: 'INTEGER DEFAULT 0' },
+    { table: 'employes',          col: 'sync_status',      def: 'INTEGER DEFAULT 0' },
+    { table: 'employes',          col: 'poste_source',     def: 'TEXT' },
+
+    { table: 'creances_clients',  col: 'uuid',             def: 'TEXT' },
+    { table: 'creances_clients',  col: 'last_modified_at', def: 'INTEGER DEFAULT 0' },
+    { table: 'creances_clients',  col: 'sync_status',      def: 'INTEGER DEFAULT 0' },
+    { table: 'creances_clients',  col: 'poste_source',     def: 'TEXT' },
+
+    { table: 'salaires_paiements', col: 'uuid',             def: 'TEXT' },
+    { table: 'salaires_paiements', col: 'last_modified_at', def: 'INTEGER DEFAULT 0' },
+    { table: 'salaires_paiements', col: 'sync_status',      def: 'INTEGER DEFAULT 0' },
+    { table: 'salaires_paiements', col: 'poste_source',     def: 'TEXT' },
+
+    { table: 'livraisons',        col: 'uuid',             def: 'TEXT' },
+    { table: 'livraisons',        col: 'last_modified_at', def: 'INTEGER DEFAULT 0' },
+    { table: 'livraisons',        col: 'sync_status',      def: 'INTEGER DEFAULT 0' },
+    { table: 'livraisons',        col: 'poste_source',     def: 'TEXT' },
+
+    { table: 'recettes_lignes',   col: 'uuid',             def: 'TEXT' },
+    { table: 'recettes_lignes',   col: 'last_modified_at', def: 'INTEGER DEFAULT 0' },
+    { table: 'recettes_lignes',   col: 'sync_status',      def: 'INTEGER DEFAULT 0' },
+    { table: 'recettes_lignes',   col: 'poste_source',     def: 'TEXT' },
+
+    { table: 'flux_tresorerie',   col: 'uuid',             def: 'TEXT' },
+    { table: 'flux_tresorerie',   col: 'last_modified_at', def: 'INTEGER DEFAULT 0' },
+    { table: 'flux_tresorerie',   col: 'sync_status',      def: 'INTEGER DEFAULT 0' },
+    { table: 'flux_tresorerie',   col: 'poste_source',     def: 'TEXT' },
+
+    { table: 'reservations_terrain', col: 'sync_status',   def: 'INTEGER DEFAULT 0' },
+    { table: 'reservations_terrain', col: 'poste_source',  def: 'TEXT' },
+
+    { table: 'tickets_table',     col: 'uuid',             def: 'TEXT' },
+    { table: 'tickets_table',     col: 'last_modified_at', def: 'INTEGER DEFAULT 0' },
+    { table: 'tickets_table',     col: 'sync_status',      def: 'INTEGER DEFAULT 0' },
+    { table: 'tickets_table',     col: 'poste_source',     def: 'TEXT' },
+
+    { table: 'tables_config',     col: 'uuid',             def: 'TEXT' },
+    { table: 'tables_config',     col: 'last_modified_at', def: 'INTEGER DEFAULT 0' },
+    { table: 'tables_config',     col: 'sync_status',      def: 'INTEGER DEFAULT 0' },
+    { table: 'tables_config',     col: 'poste_source',     def: 'TEXT' },
+
+    { table: 'parametres',        col: 'uuid',             def: 'TEXT' },
+    { table: 'parametres',        col: 'last_modified_at', def: 'INTEGER DEFAULT 0' },
+    { table: 'parametres',        col: 'sync_status',      def: 'INTEGER DEFAULT 0' },
+    { table: 'parametres',        col: 'poste_source',     def: 'TEXT' },
+
+    { table: 'stock_historique',  col: 'uuid',             def: 'TEXT' },
+    { table: 'stock_historique',  col: 'last_modified_at', def: 'INTEGER DEFAULT 0' },
+    { table: 'stock_historique',  col: 'sync_status',      def: 'INTEGER DEFAULT 0' },
+    { table: 'stock_historique',  col: 'poste_source',     def: 'TEXT' },
+
+    { table: 'journal_activite',  col: 'uuid',             def: 'TEXT' },
+    { table: 'journal_activite',  col: 'last_modified_at', def: 'INTEGER DEFAULT 0' },
+    { table: 'journal_activite',  col: 'sync_status',      def: 'INTEGER DEFAULT 0' },
+    { table: 'journal_activite',  col: 'poste_source',     def: 'TEXT' },
+
+    { table: 'espaces',           col: 'uuid',             def: 'TEXT' },
+    { table: 'espaces',           col: 'last_modified_at', def: 'INTEGER DEFAULT 0' },
+    { table: 'espaces',           col: 'sync_status',      def: 'INTEGER DEFAULT 0' },
+    { table: 'espaces',           col: 'poste_source',     def: 'TEXT' },
   ];
   for (const { table, col, def } of syncCols) {
     try {
       db.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${def}`);
     } catch { /* colonne déjà existante, ignorer */ }
+  }
+
+  // ── UUID BACKFILL (Données existantes) ────────────────────────────────────
+  // Attribuer un UUID aux lignes qui n'en ont pas encore
+  const TABLES_WITH_UUID = [
+    'utilisateurs', 'categories', 'produits', 'ventes', 'lignes_vente',
+    'tickets_table', 'tables_config', 'clotures', 'parametres', 'stock_historique',
+    'stock_lots', 'stock_transferts', 'clients', 'credits_paiements', 'fournisseurs',
+    'achats', 'reservations', 'depenses', 'employes', 'creances_clients',
+    'salaires_paiements', 'livraisons', 'recettes_lignes', 'flux_tresorerie',
+    'journal_activite', 'espaces', 'reservations_terrain'
+  ];
+  for (const tbl of TABLES_WITH_UUID) {
+    try {
+      db.exec(`UPDATE ${tbl} SET uuid = lower(hex(randomblob(16))) WHERE uuid IS NULL OR uuid = ''`);
+      db.exec(`UPDATE ${tbl} SET last_modified_at = ${Date.now()} WHERE last_modified_at IS NULL OR last_modified_at = 0`);
+    } catch { /* ignore if table missing */ }
+  }
+  // Marquer toutes les données existantes (sync_status = 1 = déjà sync) sauf
+  // celles qui n'ont jamais été envoyées (sync_status NULL → forcer à 0 pour envoi)
+  // On met sync_status = 0 uniquement là où c'est NULL (jamais initialisé)
+  for (const tbl of TABLES_WITH_UUID) {
+    try {
+      db.exec(`UPDATE ${tbl} SET sync_status = 0 WHERE sync_status IS NULL`);
+    } catch { /* ignore */ }
+  }
+
+  // ── MIGRATION : Backfill id = rowid pour les tables avec uuid PRIMARY KEY ──
+  // Le champ 'id' (INTEGER sans AUTOINCREMENT) n'est jamais rempli automatiquement
+  // car c'est 'uuid TEXT' qui sert de PRIMARY KEY. On le backfille avec rowid.
+  const TABLES_NEED_ID_BACKFILL = [
+    'ventes', 'lignes_vente', 'tickets_table', 'produits', 'categories',
+    'utilisateurs', 'clotures', 'depenses', 'stock_historique',
+    'clients', 'creances_clients', 'credits_paiements',
+    'employes', 'salaires_paiements', 'reservations', 'journal_activite'
+  ];
+  for (const tbl of TABLES_NEED_ID_BACKFILL) {
+    try {
+      db.exec(`UPDATE ${tbl} SET id = rowid WHERE id IS NULL`);
+    } catch { /* ignore if table missing or no id column */ }
   }
 
   // ── DONNÉES PAR DÉFAUT ────────────────────────────────────────────────
@@ -459,9 +711,18 @@ module.exports = function runMigrations(db) {
   // Tables par défaut (10 tables)
   const nbTables = db.prepare('SELECT COUNT(*) as n FROM tables_config').get().n;
   if (nbTables === 0) {
-    const ins = db.prepare('INSERT OR IGNORE INTO tables_config (numero_table, ordre) VALUES (?, ?)');
+    const ins = db.prepare("INSERT OR IGNORE INTO tables_config (uuid, numero_table, ordre) VALUES (lower(hex(randomblob(16))), ?, ?)");
     for (let i = 1; i <= 10; i++) ins.run(i, i);
 
+  }
+
+  // Espaces par défaut (3 espaces exemple)
+  const nbEspaces = db.prepare('SELECT COUNT(*) as n FROM espaces').get().n;
+  if (nbEspaces === 0) {
+    const insEspace = db.prepare("INSERT INTO espaces (uuid, nom, type, description, tarif_heure) VALUES (lower(hex(randomblob(16))), ?, ?, ?, ?)");
+    insEspace.run('Terrain Principal', 'terrain', 'Grand terrain extérieur', 0);
+    insEspace.run('Salle Polyvalente', 'salle', 'Salle intérieure climatisée', 0);
+    insEspace.run('Local Réunion', 'local', 'Local pour réunions et événements', 0);
   }
 
   // Paramètres par défaut
@@ -484,8 +745,10 @@ module.exports = function runMigrations(db) {
     'caisse.devise':            'Ar',
     'caisse.nom_poste':         'Poste n°1',
     'caisse.version':           '2.0.0',
+    'license.activated':        '0',
+    'license.first_launch':     '',
   };
-  const setParam = db.prepare('INSERT OR IGNORE INTO parametres (cle, valeur) VALUES (?, ?)');
+  const setParam = db.prepare("INSERT OR IGNORE INTO parametres (uuid, cle, valeur) VALUES (lower(hex(randomblob(16))), ?, ?)");
   Object.entries(defaults).forEach(([k, v]) => setParam.run(k, v));
 
 

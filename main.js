@@ -19,15 +19,19 @@ require('./src/main/ipc/theme.ipc')(ipcMain, db);
 require('./src/main/ipc/printer.ipc')(ipcMain, db);
 require('./src/main/ipc/journal.ipc')(ipcMain, db);
 require('./src/main/ipc/reservation.ipc')(ipcMain, db);
+require('./src/main/ipc/terrain.ipc')(ipcMain, db);
 require('./src/main/ipc/cuisine.ipc')(ipcMain, db);
 require('./src/main/ipc/finances.ipc')(ipcMain, db);
 require('./src/main/ipc/rh.ipc')(ipcMain, db);
 
 // Initialiser le moteur de synchronisation cloud
 const SyncEngine = require('./src/main/sync/syncEngine');
+const { initNotifier } = require('./src/main/sync/notifier');
 const syncEngine = new SyncEngine(db);
+initNotifier(syncEngine); // Connecter le notifieur singleton
 require('./src/main/ipc/sync.ipc')(ipcMain, db, syncEngine);
 require('./src/main/ipc/analytique.ipc')(ipcMain, db);
+require('./src/main/ipc/license.ipc')(ipcMain, db, syncEngine);
 
 // Démarrer l'auto-sync si déjà configuré
 try {

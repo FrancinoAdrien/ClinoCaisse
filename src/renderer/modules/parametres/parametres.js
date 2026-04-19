@@ -223,6 +223,8 @@
               <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
                 <button class="btn btn-primary btn-sm" id="btn-sync-push">⬆ Push (envoyer)</button>
                 <button class="btn btn-primary btn-sm" id="btn-sync-pull">⬇ Pull (recevoir)</button>
+                <button class="btn btn-success btn-sm" id="btn-sync-fullpull">📥 Pull Total (Cloud → App)</button>
+                <button class="btn btn-warning btn-sm" id="btn-sync-tables">🗳 Envoyer les tables</button>
                 <button class="btn btn-ghost btn-sm" id="btn-sync-fullpush">🔄 Forcer l’envoi total</button>
                 <button class="btn btn-ghost btn-sm" id="btn-sync-backup">💾 Backup SQLite local</button>
               </div>
@@ -239,7 +241,9 @@
                 <li>Créer un nouveau projet, choisir une région proche</li>
                 <li>Dans <em>Settings → API</em> : copier l’<strong>URL</strong> et la clé <strong>anon public</strong></li>
                 <li>Coller ces deux valeurs dans les champs ci-dessus</li>
-                <li>Cliquer <strong>« Enregistrer &amp; Connecter »</strong> — les tables seront créées automatiquement</li>
+                <li>Cliquer <strong>« Enregistrer & Connecter »</strong></li>
+                <li><strong>IMPORTANT</strong> : Si c'est un nouveau projet, vous devez autoriser l'exécution de scripts une seule fois (Suivez le guide si une erreur s'affiche).</li>
+                <li>Utiliser le bouton <strong>« Envoyer les tables »</strong> pour initialiser la structure du cloud</li>
               </ol>
             </div>
           </div>
@@ -454,7 +458,15 @@
       if (btn) btn.disabled = false;
       if (res.success) {
         setSyncBadge('✅ Connecté', true);
-        Toast.success('☁ Connexion Supabase établie ! ' + (res.message || ''));
+        Toast.success('☁ Connexion Supabase établie !');
+        
+        // Déclencher le premier Pull Total automatiquement si la base est neuve
+        const status = await window.api.sync.getStatus();
+        if (status.pending === 0 && !status.lastSyncAt) {
+          Toast.info('📦 Récupération initiale des données Cloud...');
+          await window.api.sync.fullPull();
+        }
+        
         await loadSyncStatus();
       } else {
         setSyncBadge('❌ Échec', false);
@@ -490,6 +502,28 @@
       else Toast.error(res.message || 'Échec du pull');
     });
 
+    // Pull Total
+    document.getElementById('btn-sync-fullpull')?.addEventListener('click', async () => {
+      const ok = await new Promise(r => Modal.confirm(
+        '📥 Récupération Totale',
+        'Cela va forcer la récupération de TOUTES les données présentes sur le Cloud. Continuer ?',
+        r
+      ));
+      if (!ok) return;
+      
+      const btn = document.getElementById('btn-sync-fullpull');
+      if (btn) btn.disabled = true;
+      const res = await window.api.sync.fullPull();
+      if (btn) btn.disabled = false;
+      
+      if (res.success) {
+        Toast.success(`✅ ${res.pulled} enregistrements récupérés du Cloud.`);
+        await loadSyncStatus();
+      } else {
+        Toast.error(res.message || 'Échec de la récupération');
+      }
+    });
+
     // Full Push
     document.getElementById('btn-sync-fullpush')?.addEventListener('click', async () => {
       const ok = await new Promise(r => Modal.confirm(
@@ -511,6 +545,62 @@
       const res = await window.api.sync.backupLocal();
       res.success ? Toast.success('💾 ' + res.message) : (res.message !== 'Annulé' && Toast.error(res.message));
     });
+
+    // Envoyer les tables
+    document.getElementById('btn-sync-tables')?.addEventListener('click', async () => {
+      const ok = await new Promise(r => Modal.confirm(
+        'Envoyer la structure',
+        'Cela va exécuter le script SQL sur Supabase pour créer ou mettre à jour les tables. Continuer ?',
+        r
+      ));
+      if (!ok) return;
+
+      const btn = document.getElementById('btn-sync-tables');
+      if (btn) { btn.disabled = true; btn.textContent = 'Envoi en cours…'; }
+      
+      const res = await window.api.sync.sendTables();
+      
+      if (btn) { btn.disabled = false; btn.textContent = '🗳 Envoyer les tables'; }
+      
+      if (res.success) {
+        Toast.success('✅ ' + res.message);
+      } else if (res.code === 'MISSING_RPC') {
+        showRpcHelpModal();
+      } else {
+        Toast.error('❌ ' + (res.message || 'Erreur lors de l\'envoi du schéma'));
+      }
+    });
+
+    function showRpcHelpModal() {
+      const sql = `CREATE OR REPLACE FUNCTION exec_sql(sql TEXT)\nRETURNS void AS $$\nBEGIN\n  EXECUTE sql;\nEND;\n$$ LANGUAGE plpgsql SECURITY DEFINER;`;
+      
+      const modal = Modal.open({
+        title: '🛠 Action requise sur Supabase',
+        content: `
+          <div style="font-size:14px;color:var(--text);line-height:1.5">
+            <p>Pour autoriser l'application à créer les tables, vous devez exécuter une commande de configuration une seule fois dans votre tableau de bord Supabase.</p>
+            <ol style="margin:15px 0;padding-left:20px">
+              <li>Ouvrez votre projet sur <strong>Supabase.com</strong></li>
+              <li>Allez dans le <strong>SQL Editor</strong> (icône &gt;_)</li>
+              <li>Cliquez sur <strong>+ New Query</strong></li>
+              <li>Collez le code ci-dessous :</li>
+            </ol>
+            <pre style="background:var(--surface-3);padding:15px;border-radius:8px;font-family:monospace;font-size:12px;margin:10px 0;overflow-x:auto;border:1px solid var(--border)">${sql}</pre>
+            <button class="btn btn-primary btn-sm" id="btn-copy-rpc" style="margin-bottom:15px">📋 Copier le code</button>
+            <p style="font-size:13px;opacity:0.7">Une fois terminé, cliquez sur <strong>Run</strong> dans Supabase, puis revenez ici pour récliquer sur « Envoyer les tables ».</p>
+          </div>
+          <div class="modal-footer" style="margin-top:20px;padding-top:15px;border-top:1px solid var(--border)">
+            <button class="btn btn-ghost" id="btn-close-rpc-modal">Fermer</button>
+          </div>
+        `
+      });
+
+      document.getElementById('btn-close-rpc-modal')?.addEventListener('click', () => Modal.closeAll());
+      document.getElementById('btn-copy-rpc')?.addEventListener('click', () => {
+        navigator.clipboard.writeText(sql);
+        Toast.success('Code copié !');
+      });
+    }
   }
 
   document.addEventListener('view:activate', (e) => {

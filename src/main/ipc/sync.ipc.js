@@ -10,9 +10,9 @@ module.exports = function(ipcMain, db, syncEngine) {
   ipcMain.handle('sync:configure', async (e, url, key) => {
     try {
       // Sauvegarder l'URL et la clé dans les paramètres
-      const stmt = db.prepare("INSERT OR REPLACE INTO parametres (cle, valeur, date_maj) VALUES (?, ?, datetime('now'))");
-      stmt.run('sync.supabase_url', url);
-      stmt.run('sync.supabase_key', key);
+      const stmt = db.prepare("INSERT OR REPLACE INTO parametres (uuid, cle, valeur, date_maj, last_modified_at, sync_status) VALUES (COALESCE((SELECT uuid FROM parametres WHERE cle = ?), lower(hex(randomblob(16)))), ?, ?, datetime('now'), ?, 0)");
+      stmt.run('sync.supabase_url', 'sync.supabase_url', url, Date.now());
+      stmt.run('sync.supabase_key', 'sync.supabase_key', key, Date.now());
 
       const ok = syncEngine.configure(url, key);
       if (!ok) return { success: false, message: 'Configuration invalide. Vérifiez l\'URL et la clé.' };
@@ -31,6 +31,11 @@ module.exports = function(ipcMain, db, syncEngine) {
     return await syncEngine.testConnexion();
   });
 
+  // ── ENVOYER LES TABLES (MIGRATION MANUELLE) ──────────────────────────────
+  ipcMain.handle('sync:sendTables', async () => {
+    return await syncEngine.sendTables();
+  });
+
   // ── PUSH (local → cloud) ─────────────────────────────────────────────────
   ipcMain.handle('sync:push', async () => {
     return await syncEngine.pushPending();
@@ -39,6 +44,11 @@ module.exports = function(ipcMain, db, syncEngine) {
   // ── PULL (cloud → local) ─────────────────────────────────────────────────
   ipcMain.handle('sync:pull', async () => {
     return await syncEngine.pullUpdates();
+  });
+
+  // ── FULL PULL (restauration massive du cloud) ────────────────────────────
+  ipcMain.handle('sync:fullPull', async () => {
+    return await syncEngine.fullPull();
   });
 
   // ── FULL PUSH (restauration massive) ─────────────────────────────────────

@@ -1,0 +1,43 @@
+<div class="activation-container">
+    <div class="activation-card">
+        <div class="activation-header" style="position: relative;">
+            <button id="btn-activation-retour" class="btn btn-ghost" style="position: absolute; top: -15px; left: -15px; display: none;">← Retour</button>
+            <div class="activation-icon">🔐</div>
+            <h1>Activation Requise</h1>
+            <p id="activation-msg">Votre période d'essai est terminée. Veuillez activer votre licence pour continuer à utiliser ClinoCaisse.</p>
+        </div>
+
+        <div class="activation-body">
+            <div class="input-group">
+                <label for="license-key">Clé d'activation du jour</label>
+                <input type="text" id="license-key" placeholder="Entrez la clé ici..." spellcheck="false" autocomplete="off">
+            </div>
+            
+            <button id="btn-activate" class="btn-primary">Valider la clé</button>
+            
+            <div class="activation-divider">
+                <span>OU SYNCHRONISATION CLOUD</span>
+            </div>
+            
+            <p class="sync-desc">Saisissez l'URL et la clé Supabase pour activer via le cloud.</p>
+            
+            <div class="input-group">
+                <label for="cloud-url">URL Supabase</label>
+                <input type="text" id="cloud-url" placeholder="https://xyz.supabase.co" spellcheck="false" autocomplete="off">
+            </div>
+            <div class="input-group">
+                <label for="cloud-key">Clé Anon / Service Role</label>
+                <input type="text" id="cloud-key" placeholder="votre-cle-api" spellcheck="false" autocomplete="off">
+            </div>
+
+            <button id="btn-sync-cloud" class="btn-secondary" style="margin-top: 8px;">
+                <span class="icon">☁️</span> Enregistrer et Synchroniser
+            </button>
+        </div>
+
+        <div class="activation-footer">
+            <p>Besoin d'aide ? Contactez votre administrateur.</p>
+            <p class="trial-id" id="trial-info"></p>
+        </div>
+    </div>
+</div>

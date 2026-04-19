@@ -27,10 +27,21 @@
   <link rel="stylesheet" href="modules/reservations/reservations.css" />
   <link rel="stylesheet" href="modules/finances/finances.css" />
   <link rel="stylesheet" href="modules/rh/rh.css" />
+  <link rel="stylesheet" href="modules/terrain/terrain.css" />
 </head>
 <body>
 
 <div id="app">
+
+  <!-- ── BANNIÈRE D'ESSAI (Injected globally) ───────────────────────── -->
+  <div id="trial-banner" style="display:none; background: #e74c3c; color: white; text-align: center; padding: 8px; font-size: 13px; font-weight: 700; cursor: pointer; flex-shrink: 0; z-index: 9999;">
+    Période d'essai : <span id="trial-countdown">...</span> — Cliquez ici pour activer l'application
+  </div>
+
+  <!-- ── ACTIVATION ────────────────────────────────────────────────── -->
+  <div id="view-activation" class="view">
+    <!-- Injecté par activation.js -->
+  </div>
 
   <!-- ── LOGIN ──────────────────────────────────────────────────────── -->
   <div id="view-login" class="view active">
@@ -97,6 +108,11 @@
     <!-- Injecté par analytique.js -->
   </div>
 
+  <!-- ── TERRAIN (Réservation d'espaces) ─────────────────────────── -->
+  <div id="view-terrain" class="view">
+    <!-- Injecté par terrain.js -->
+  </div>
+
 </div>
 
 <!-- Toast container -->
@@ -124,6 +140,8 @@
 <script src="modules/reservations/reservations.js"></script>
 <script src="modules/finances/finances.js"></script>
 <script src="modules/rh/rh.js"></script>
+<script src="modules/terrain/terrain.js"></script>
+<script src="activation/activation.js"></script>
 
 </body>
 </html>

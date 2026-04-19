@@ -256,7 +256,7 @@
             <div class="fin-row-cat">${Utils.esc(m.libelle)}</div>
             <div class="fin-row-desc" style="opacity:0.7">${Utils.esc(m.detail || '')}</div>
             <div class="fin-row-right">
-              <span class="fin-row-date">${m.date_op ? new Date(m.date_op).toLocaleDateString('fr-FR') : '—'}</span>
+              <span class="fin-row-date">${m.date_op ? new Date(m.date_op).toLocaleDateString('fr-FR') + ' ' + new Date(m.date_op).toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'}) : '—'}</span>
               <span class="fin-row-amount ${amountClass}">
                 ${amountPrefix}${Utils.formatMontant(m.montant)}
               </span>
@@ -443,7 +443,7 @@
               description: document.getElementById('cmd-desc')?.value?.trim() || '',
               montant,
               date_depense: document.getElementById('cmd-date')?.value,
-              operateur: user?.nom || ''
+              operateur: user?.nom || 'Connecté'
             });
             Toast.success('Commande enregistrée (dette créée) !');
           } else {
@@ -453,7 +453,7 @@
               description: (document.getElementById('cmd-desc')?.value?.trim() || ''),
               montant,
               date_depense: document.getElementById('cmd-date')?.value,
-              operateur: user?.nom || ''
+              operateur: user?.nom || 'Connecté'
             });
             Toast.success('Dépense enregistrée !');
           }
@@ -494,7 +494,7 @@
             description: document.getElementById('cr-desc')?.value?.trim() || '',
             montant,
             date_echeance: document.getElementById('cr-echeance')?.value || '',
-            operateur: user?.nom || ''
+            operateur: user?.nom || 'Connecté'
           });
           Toast.success('Créance enregistrée !');
           Modal.close(mid);

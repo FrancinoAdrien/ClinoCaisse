@@ -90,7 +90,42 @@ document.addEventListener('DOMContentLoaded', async () => {
   const savedTheme = localStorage.getItem('cc_theme') || 'default';
   ThemeManager.apply(savedTheme);
 
-  // Vérifier session existante
+  // 1. Vérifier la licence
+  const license = await window.api.license.status();
+  
+  if (license.status === 'expired') {
+    Router.go('activation');
+    return;
+  }
+  
+  if (license.status === 'trial') {
+    const banner = document.getElementById('trial-banner');
+    if (banner) {
+      banner.style.display = 'block';
+      let remainingMs = license.remainingMs;
+      
+      const updateBanner = () => {
+        if (remainingMs <= 0) {
+            window.location.reload();
+            return;
+        }
+        const totalSeconds = Math.floor(remainingMs / 1000);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        document.getElementById('trial-countdown').textContent = `${hours}h ${minutes}m`;
+        remainingMs -= 60000;
+      };
+      
+      updateBanner();
+      setInterval(updateBanner, 60000);
+      
+      banner.addEventListener('click', () => {
+        Router.go('activation');
+      });
+    }
+  }
+
+  // 2. Vérifier session existante
   const session = await window.api.auth.getSession();
   if (session) {
     Session.setUser(session);

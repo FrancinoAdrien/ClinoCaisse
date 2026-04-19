@@ -1,6 +1,7 @@
 'use strict';
 const { randomUUID } = require('crypto');
 const { logAction } = require('./journal.ipc');
+const { notifyChange } = require('../sync/notifier');
 
 module.exports = function(ipcMain, db) {
 
@@ -8,8 +9,8 @@ module.exports = function(ipcMain, db) {
   function adjustCapital(delta) {
     const row = db.prepare("SELECT valeur FROM parametres WHERE cle = 'finance.capital'").get();
     const current = parseFloat(row?.valeur || '0');
-    db.prepare("INSERT OR REPLACE INTO parametres (cle, valeur, date_maj) VALUES ('finance.capital', ?, datetime('now'))")
-      .run(String(current + delta));
+    db.prepare("INSERT OR REPLACE INTO parametres (uuid, cle, valeur, date_maj, last_modified_at, sync_status) VALUES (COALESCE((SELECT uuid FROM parametres WHERE cle = 'finance.capital'), lower(hex(randomblob(16)))), 'finance.capital', ?, datetime('now'), ?, 0)")
+      .run(String(current + delta), Date.now());
   }
 
   // ── STATS GLOBALES ─────────────────────────────────────────────────────────
@@ -39,8 +40,8 @@ module.exports = function(ipcMain, db) {
       const beneficeVentes = db.prepare(`
         SELECT COALESCE(SUM(lv.quantite * (lv.prix_unitaire - COALESCE(p.prix_achat, 0))), 0) as t
         FROM lignes_vente lv
-        JOIN produits p ON lv.produit_id = p.id
-        JOIN ventes v ON lv.vente_id = v.id
+        JOIN produits p ON (lv.produit_id = p.id OR lv.produit_id = p.uuid)
+        JOIN ventes v ON lv.vente_uuid = v.uuid
         WHERE v.statut = 'valide' AND date(v.date_vente) >= ?
       `).get(firstDay);
 
@@ -91,8 +92,8 @@ module.exports = function(ipcMain, db) {
 
   ipcMain.handle('finances:setCapital', async (event, montant) => {
     try {
-      db.prepare("INSERT OR REPLACE INTO parametres (cle, valeur, date_maj) VALUES ('finance.capital', ?, datetime('now'))")
-        .run(String(montant));
+      db.prepare("INSERT OR REPLACE INTO parametres (uuid, cle, valeur, date_maj, last_modified_at, sync_status) VALUES (COALESCE((SELECT uuid FROM parametres WHERE cle = 'finance.capital'), lower(hex(randomblob(16)))), 'finance.capital', ?, datetime('now'), ?, 0)")
+        .run(String(montant), Date.now());
       return { success: true };
     } catch (e) {
       console.error('IPC finances:setCapital error:', e.message);
@@ -123,7 +124,7 @@ module.exports = function(ipcMain, db) {
         montant,
         icone: type_flux === 'ajout_capital' ? '⬆️' : '⬇️'
       });
-      
+      notifyChange();
       return { success: true };
     } catch (e) {
       console.error('IPC finances:addFlux error:', e.message);
@@ -305,17 +306,9 @@ module.exports = function(ipcMain, db) {
   // ── MOUVEMENTS ─────────────────────────────────────────────────────────────
   ipcMain.handle('finances:getMouvements', async (event, limit = 100) => {
     try {
-      // Entrées = ventes valides (montant réellement encaissé)
-      const entrees = db.prepare(`
-        SELECT 'entree' as sens,
-               CASE WHEN type_vente = 'GROSSISTE' THEN 'Vente Grossiste'
-                    ELSE 'Vente ' || COALESCE(type_vente, 'BAR') END as libelle,
-               COALESCE(montant_paye, total_ttc) as montant,
-               date_vente as date_op,
-               COALESCE(mode_paiement, 'CASH') as detail
-        FROM ventes
-        WHERE statut = 'valide' AND COALESCE(montant_paye, total_ttc) > 0
-      `).all();
+      // Les ventes individuelles n'apparaissent plus ici. Ce sont les recettes de clôture via flux_tresorerie qui font foi.
+      const entrees = [];
+
 
       // Sorties = dépenses payées
       const sorties = db.prepare(`
@@ -358,10 +351,10 @@ module.exports = function(ipcMain, db) {
         WHERE sh.delta < 0
       `).all();
 
-      // Flux de capital (ajouts/retraits)
+      // Flux de capital (ajouts/retraits/terrain/cloture)
       const flux = db.prepare(`
         SELECT 
-          CASE WHEN type_flux = 'ajout_capital' THEN 'entree' ELSE 'sortie' END as sens,
+          CASE WHEN type_flux IN ('ajout_capital', 'recette_terrain', 'recette_cloture') THEN 'entree' ELSE 'sortie' END as sens,
           'Mouvement Capital: ' || motif as libelle,
           montant,
           date_flux as date_op,

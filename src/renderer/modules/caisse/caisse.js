@@ -243,17 +243,27 @@
     }
 
     grid.innerHTML = toShow.map(p => {
-      const si = p.stock_actuel;
-      const inf = si === -1, rup = !inf && si <= 0, ale = !inf && !rup && si <= p.stock_alerte;
+      const isPrep = !!p.is_prepared;
+      const si = isPrep ? (p.virtual_stock ?? 0) : p.stock_actuel;
+      const inf = si === -1, rup = (isPrep ? si <= 0 : (!inf && si <= 0));
+      const ale = !inf && !rup && si <= (p.stock_alerte || 0);
+      
       const stockCls = rup ? 'rupture' : ale ? 'alerte' : '';
-      const stockLbl = inf ? '' : rup ? '⛔ 0' : ale ? `⚠ ${si}` : `${si}`;
+      let stockLbl = '';
+      if (isPrep) {
+        stockLbl = rup ? '🥣 0' : `🥣 ${si}`;
+      } else if (!inf) {
+        stockLbl = rup ? '⛔ 0' : ale ? `⚠ ${si}` : `${si}`;
+      }
+
       const imgHtml = p.image_data
         ? `<img class="card-img" src="${p.image_data}" alt="" />`
         : ``;
       return `
         <div class="product-card${rup ? ' stock-out' : ale ? ' stock-low' : ''}"
              data-id="${p.id}" data-prix="${p.prix_vente_ttc}"
-             data-nom="${Utils.esc(p.nom)}" data-stock="${si}" title="${Utils.esc(p.nom)}">
+             data-nom="${Utils.esc(p.nom)}" data-stock="${si}" 
+             data-is-prep="${isPrep ? 1 : 0}" title="${Utils.esc(p.nom)}">
           ${imgHtml}
           <div class="card-nom">${Utils.esc(p.nom)}</div>
           <div class="card-prix">${Math.round(p.prix_vente_ttc).toLocaleString('fr-FR')} ${state.devise}</div>
@@ -269,23 +279,25 @@
         card.classList.add('selected-product');
 
         ajouterAuPanier({
-          produit_id: parseInt(card.dataset.id),
+          produit_id: card.dataset.id,
           nom: card.getAttribute('data-nom'),
           prix: parseFloat(card.dataset.prix),
           stock_actuel: parseFloat(card.dataset.stock),
+          is_prepared: card.dataset.isPrep === '1'
         });
       });
     });
   }
 
   // ── PANIER — ACTIONS ──────────────────────────────────────────────────
-  function ajouterAuPanier({ produit_id, nom, prix, stock_actuel }) {
-    if (stock_actuel !== -1) {
+  function ajouterAuPanier({ produit_id, nom, prix, stock_actuel, is_prepared }) {
+    if (stock_actuel !== -1 || is_prepared) {
+      const limit = is_prepared ? stock_actuel : stock_actuel;
       const deja = state.panier.filter(l => l.produit_id === produit_id).reduce((s, l) => s + l.qte, 0);
-      if (deja >= stock_actuel) { Toast.warn(`Stock insuffisant (max ${stock_actuel})`); return; }
+      if (deja >= limit) { Toast.warn(`Stock insuffisant (max ${limit})`); return; }
     }
     // Ne plus grouper les articles identiques, toujours ajouter en nouvelle ligne
-    state.panier.push({ produit_id, nom, prix, qte: 1, remise: 0, offert: false, stock_actuel, envoi_cuisine: false });
+    state.panier.push({ produit_id, nom, prix, qte: 1, remise: 0, offert: false, stock_actuel, is_prepared, envoi_cuisine: false });
     state.selectedIndex = state.panier.length - 1;
     renderPanier();
   }
@@ -347,7 +359,10 @@
       const q = parseInt(val);
       if (!q || q < 1) return;
       const l = state.panier[idx];
-      if (l.stock_actuel !== -1 && q > l.stock_actuel) { Toast.warn(`Max ${l.stock_actuel}`); return; }
+      const limit = l.is_prepared ? l.stock_actuel : l.stock_actuel;
+      if (l.stock_actuel !== -1 || l.is_prepared) {
+        if (q > limit) { Toast.warn(`Max ${limit}`); return; }
+      }
       state.panier[idx].qte = q;
       renderPanier();
     });
@@ -533,7 +548,7 @@
       document.querySelectorAll('#sauver-tables-grid .table-cell').forEach(card => {
         card.addEventListener('click', async () => {
           const num = parseInt(card.dataset.num);
-          const ticketId = card.dataset.ticketId ? parseInt(card.dataset.ticketId) : null;
+          const ticketId = card.dataset.ticketId || null; // uuid or null
 
           // Construire les nouvelles lignes depuis le panier
       const newLignes = state.panier.map(l => ({
@@ -622,7 +637,7 @@
     const nom = t.ticket?.nom_table || `Table ${t.numero}`;
     const total = t.ticket?.montant_total || 0;
     return `
-      <div class="table-cell ${occ ? 'occupee' : 'libre'}" data-num="${t.numero}" data-ticket-id="${t.ticket?.id || ''}">
+      <div class="table-cell ${occ ? 'occupee' : 'libre'}" data-num="${t.numero}" data-ticket-id="${t.ticket?.uuid || ''}">
         <div class="tc-icon">${occ ? '🟢' : '⬜'}</div>
         <div class="tc-nom">${Utils.esc(nom)}</div>
         <div class="tc-statut">${occ ? 'OCCUPÉE' : 'LIBRE'}</div>
@@ -636,7 +651,7 @@
         document.querySelectorAll('.table-cell').forEach(c => c.style.outline = '');
         card.style.outline = `2px solid var(--accent)`;
         const num = parseInt(card.dataset.num);
-        const ticketId = card.dataset.ticketId ? parseInt(card.dataset.ticketId) : null;
+        const ticketId = card.dataset.ticketId || null; // uuid or null
         const zone = document.getElementById('table-detail-zone');
         if (!zone) return;
 
@@ -767,11 +782,11 @@
           document.querySelector(`.table-cell[data-num="${num}"]`)?.click();
         });
 
-        // Charger panier dans caisse
         document.getElementById('tbl-charger')?.addEventListener('click', () => {
           state.panier = lignes.map(l => ({
             produit_id: l.produit_id, nom: l.produit_nom, prix: l.prix_unitaire,
             qte: l.quantite, remise: l.remise || 0, offert: !!l.est_offert, stock_actuel: -1,
+            is_prepared: false, envoi_cuisine: !!l.envoi_cuisine
           }));
           state.tableActive = { id: ticketId, numero: num, nom_table: t.nom_table };
           updateTableBadge();

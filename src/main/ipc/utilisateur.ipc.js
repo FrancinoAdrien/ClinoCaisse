@@ -40,12 +40,13 @@ module.exports = function(ipcMain, db) {
       const existPin = db.prepare('SELECT id FROM utilisateurs WHERE pin = ? AND actif = 1').get(data.pin);
       if (existPin) return { success: false, message: 'Ce PIN est déjà utilisé' };
 
+      const { randomUUID } = require('crypto');
       const pv = permValues(data);
       const result = db.prepare(`
-        INSERT INTO utilisateurs (nom, prenom, pin, role, ${PERM_COLS})
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO utilisateurs (uuid, nom, prenom, pin, role, last_modified_at, sync_status, ${PERM_COLS})
+        VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
-        data.nom, data.prenom || null, data.pin, data.role || 'vendeur',
+        randomUUID(), data.nom, data.prenom || null, data.pin, data.role || 'vendeur', Date.now(),
         ...pv
       );
 
@@ -77,14 +78,16 @@ module.exports = function(ipcMain, db) {
           perm_cloture = ?, perm_stock = ?, perm_remises = ?,
           perm_grossiste = ?, perm_depenses = ?, perm_ressources = ?,
           perm_achats = ?, perm_reserv = ?,
-          date_modification = datetime('now')
+          date_modification = datetime('now'),
+          last_modified_at = ?, sync_status = 0
           ${data.pin ? ', pin = ?' : ''}
-        WHERE id = ?
+        WHERE id = ? OR uuid = ?
       `).run(
         data.nom, data.prenom || null, data.role || 'vendeur',
         ...pv,
+        Date.now(),
         ...(data.pin ? [data.pin] : []),
-        id
+        id, id
       );
 
       logAction(db, {
@@ -103,9 +106,9 @@ module.exports = function(ipcMain, db) {
   ipcMain.handle('utilisateurs:desactiver', (e, id) => {
     try {
       const admin = db.prepare("SELECT COUNT(*) as n FROM utilisateurs WHERE role='admin' AND actif=1").get().n;
-      const user = db.prepare("SELECT role, nom FROM utilisateurs WHERE id=?").get(id);
+      const user = db.prepare("SELECT role, nom FROM utilisateurs WHERE id = ? OR uuid = ?").get(id, id);
       if (user?.role === 'admin' && admin <= 1) return { success: false, message: 'Impossible de désactiver le dernier administrateur' };
-      db.prepare("UPDATE utilisateurs SET actif = 0 WHERE id = ?").run(id);
+      db.prepare("UPDATE utilisateurs SET actif = 0, last_modified_at = ?, sync_status = 0 WHERE id = ? OR uuid = ?").run(Date.now(), id, id);
 
       logAction(db, {
         categorie: 'UTILISATEUR',
@@ -122,8 +125,8 @@ module.exports = function(ipcMain, db) {
 
   ipcMain.handle('utilisateurs:reactiver', (e, id) => {
     try {
-      const user = db.prepare('SELECT nom FROM utilisateurs WHERE id = ?').get(id);
-      db.prepare("UPDATE utilisateurs SET actif = 1 WHERE id = ?").run(id);
+      const user = db.prepare('SELECT nom FROM utilisateurs WHERE id = ? OR uuid = ?').get(id, id);
+      db.prepare("UPDATE utilisateurs SET actif = 1, last_modified_at = ?, sync_status = 0 WHERE id = ? OR uuid = ?").run(Date.now(), id, id);
 
       logAction(db, {
         categorie: 'UTILISATEUR',

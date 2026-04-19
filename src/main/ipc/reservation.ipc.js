@@ -81,10 +81,10 @@ module.exports = function(ipcMain, db) {
       if (!['en_attente', 'confirmee', 'annulee'].includes(status)) {
         return { success: false, message: 'Statut invalide' };
       }
-      const res = db.prepare('SELECT client_nom FROM reservations WHERE id = ?').get(id);
+      const res = db.prepare('SELECT client_nom FROM reservations WHERE id = ? OR uuid = ?').get(id, id);
       db.prepare(`
-        UPDATE reservations SET statut = ?, last_modified_at = ?, sync_status = 0 WHERE id = ?
-      `).run(status, Date.now(), id);
+        UPDATE reservations SET statut = ?, last_modified_at = ?, sync_status = 0 WHERE id = ? OR uuid = ?
+      `).run(status, Date.now(), id, id);
 
       const labels = { confirmee: 'confirmée', annulee: 'annulée', en_attente: 'en attente' };
       logAction(db, {

@@ -1,5 +1,6 @@
 'use strict';
 const { logAction } = require('./journal.ipc');
+const { notifyChange } = require('../sync/notifier');
 
 module.exports = function(ipcMain, db) {
 
@@ -17,8 +18,8 @@ module.exports = function(ipcMain, db) {
 
   ipcMain.handle('parametres:set', (e, cle, valeur) => {
     try {
-      db.prepare("INSERT OR REPLACE INTO parametres (cle, valeur, date_maj) VALUES (?, ?, datetime('now'))")
-        .run(cle, valeur);
+      db.prepare("INSERT OR REPLACE INTO parametres (uuid, cle, valeur, date_maj, last_modified_at, sync_status) VALUES (COALESCE((SELECT uuid FROM parametres WHERE cle = ?), lower(hex(randomblob(16)))), ?, ?, datetime('now'), ?, 0)")
+        .run(cle, cle, valeur, Date.now());
       // Logguer uniquement si ce n'est pas finance.capital (mis à jour en continu)
       if (!cle.startsWith('finance.capital') && !cle.startsWith('sync.')) {
         logAction(db, {
@@ -27,6 +28,7 @@ module.exports = function(ipcMain, db) {
           detail: `${cle} = ${String(valeur).slice(0, 80)}`,
           icone: '⚙️'
         });
+        notifyChange();
       }
       return { success: true };
     } catch (err) {
@@ -36,10 +38,10 @@ module.exports = function(ipcMain, db) {
 
   ipcMain.handle('parametres:setBulk', (e, data) => {
     try {
-      const stmt = db.prepare("INSERT OR REPLACE INTO parametres (cle, valeur, date_maj) VALUES (?, ?, datetime('now'))");
+      const stmt = db.prepare("INSERT OR REPLACE INTO parametres (uuid, cle, valeur, date_maj, last_modified_at, sync_status) VALUES (COALESCE((SELECT uuid FROM parametres WHERE cle = ?), lower(hex(randomblob(16)))), ?, ?, datetime('now'), ?, 0)");
       const tx = db.transaction((entries) => {
         for (const [cle, valeur] of Object.entries(entries)) {
-          stmt.run(cle, valeur);
+          stmt.run(cle, cle, valeur, Date.now());
         }
       });
       tx(data);

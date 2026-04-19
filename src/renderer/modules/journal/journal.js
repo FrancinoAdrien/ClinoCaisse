@@ -22,7 +22,7 @@
 
   // ── Catalogue des catégories ──────────────────────────────────────
   const CATEGORIES = [
-    { id: 'TOUS',        label: 'Tout',         icone: '📋' },
+    { id: 'TOUS',        label: 'Tout',          icone: '📋' },
     { id: 'AUTH',        label: 'Auth',          icone: '🔐' },
     { id: 'VENTE',       label: 'Ventes',        icone: '🛒' },
     { id: 'STOCK',       label: 'Stock',         icone: '📦' },
@@ -32,6 +32,7 @@
     { id: 'CLOTURE',     label: 'Clôtures',      icone: '📊' },
     { id: 'UTILISATEUR', label: 'Utilisateurs',  icone: '👤' },
     { id: 'RESERVATION', label: 'Réservations',  icone: '📅' },
+    { id: 'TERRAIN',     label: 'Terrain',       icone: '🏟️' },
     { id: 'PARAMETRE',   label: 'Paramètres',    icone: '⚙️'  },
   ];
 

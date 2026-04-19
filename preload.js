@@ -54,7 +54,7 @@ contextBridge.exposeInMainWorld('api', {
   // ── STOCK ────────────────────────────────────────────────────────────
   stock: {
     getAlertes: ()                    => ipcRenderer.invoke('stock:getAlertes'),
-    ajustement: (id, qty, motif)      => ipcRenderer.invoke('stock:ajustement', id, qty, motif),
+    ajustement: (id, qty, motif, op, pu, pt) => ipcRenderer.invoke('stock:ajustement', id, qty, motif, op, pu, pt),
     historique: (id)                  => ipcRenderer.invoke('stock:historique', id),
   },
 
@@ -119,10 +119,12 @@ contextBridge.exposeInMainWorld('api', {
     test:       ()         => ipcRenderer.invoke('sync:test'),
     push:       ()         => ipcRenderer.invoke('sync:push'),
     pull:       ()         => ipcRenderer.invoke('sync:pull'),
+    fullPull:   ()         => ipcRenderer.invoke('sync:fullPull'),
     fullPush:   ()         => ipcRenderer.invoke('sync:fullPush'),
     backupLocal:()         => ipcRenderer.invoke('sync:backupLocal'),
     getStatus:  ()         => ipcRenderer.invoke('sync:getStatus'),
     getConfig:  ()         => ipcRenderer.invoke('sync:getConfig'),
+    sendTables: ()         => ipcRenderer.invoke('sync:sendTables'),
   },
 
   // ── ANALYTIQUE ──────────────────────────────────────────────────────
@@ -175,6 +177,27 @@ contextBridge.exposeInMainWorld('api', {
     updateEmploye:         (data)  => ipcRenderer.invoke('rh:updateEmploye', data),
     deletePaiement:        (uuid)  => ipcRenderer.invoke('rh:deletePaiement', uuid),
     getEmployeeNetSalary:  (uuid)  => ipcRenderer.invoke('rh:getEmployeeNetSalary', uuid),
+  },
+
+  // ── TERRAIN (Réservation d'espaces) ──────────────────────────────────
+  terrain: {
+    getEspaces:              ()           => ipcRenderer.invoke('terrain:getEspaces'),
+    getAllEspaces:            ()           => ipcRenderer.invoke('terrain:getAllEspaces'),
+    createEspace:            (data)       => ipcRenderer.invoke('terrain:createEspace', data),
+    updateEspace:            (id, data)   => ipcRenderer.invoke('terrain:updateEspace', id, data),
+    deleteEspace:            (id)         => ipcRenderer.invoke('terrain:deleteEspace', id),
+    getReservations:         (filter)     => ipcRenderer.invoke('terrain:getReservations', filter),
+    getReservationsCalendrier: (mois)     => ipcRenderer.invoke('terrain:getReservationsCalendrier', mois),
+    createReservation:       (data)       => ipcRenderer.invoke('terrain:createReservation', data),
+    payerSolde:              (id, m)      => ipcRenderer.invoke('terrain:payerSolde', id, m),
+    annuler:                 (id, remb)   => ipcRenderer.invoke('terrain:annuler', id, remb),
+    decaler:                 (id, data)   => ipcRenderer.invoke('terrain:decaler', id, data),
+    getStats:                ()           => ipcRenderer.invoke('terrain:getStats'),
+  },
+  license: {
+    status:   ()          => ipcRenderer.invoke('license:status'),
+    activate: (key)       => ipcRenderer.invoke('license:activate', key),
+    sync:     ()          => ipcRenderer.invoke('license:sync'),
   }
 });
 

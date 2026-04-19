@@ -44,7 +44,7 @@ module.exports = function(ipcMain, db) {
           SUM(lv.quantite)  AS total_qte,
           SUM(lv.total_ttc) AS total_ca
         FROM lignes_vente lv
-        JOIN ventes v ON lv.vente_id = v.id
+        JOIN ventes v ON lv.vente_uuid = v.uuid
         WHERE v.date_vente >= datetime('now', ? || ' days')
           AND v.statut != 'annule'
           AND lv.est_offert = 0

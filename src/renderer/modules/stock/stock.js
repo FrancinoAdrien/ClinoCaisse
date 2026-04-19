@@ -100,6 +100,8 @@
                   <th>Pr.Vente</th>
                   <th>P.A</th>
                   <th>Stock actuel</th>
+                  <th>Date créa.</th>
+                  <th>Unité</th>
                   <th>Fournisseur</th>
                 </tr>
               </thead>
@@ -168,6 +170,14 @@
   function renderTable(prods = null) {
     const tbody = document.getElementById('stock-tbody');
     if (!tbody) return;
+
+    // Reset selection state when rendering new data
+    state.selectedProduit = null;
+    const btnEdit = document.getElementById('btn-edit-produit');
+    const btnDel = document.getElementById('btn-delete-produit');
+    if (btnEdit) btnEdit.disabled = true;
+    if (btnDel) btnDel.disabled = true;
+
     let toShow = prods || state.produits;
 
     // Filtre par Tab
@@ -190,53 +200,73 @@
       const stockActuel = p.stock_actuel;
       const barAff = p.stock_bar != null && p.stock_bar !== undefined ? p.stock_bar : stockActuel;
       const grosAff = p.stock_grossiste != null ? p.stock_grossiste : (p.stock_gros || 0);
+      const isPrep = !!p.is_prepared;
 
       const infini = stockActuel === -1;
-      const rupture = !infini && barAff <= 0;
-      const alerteBar = !infini && !rupture && barAff <= (p.stock_alerte || 0);
+      const displayStock = isPrep ? (p.virtual_stock ?? 0) : barAff;
+      const rupture = isPrep ? displayStock <= 0 : (!infini && barAff <= 0);
+      const alerteBar = !infini && !rupture && displayStock <= (p.stock_alerte || 0);
 
-      let badgeClass = 'ok', badgeTxt = barAff;
-      if (infini) { badgeClass = 'infini'; badgeTxt = '∞'; }
-      else if (rupture) { badgeClass = 'rupture'; badgeTxt = '⛔ ' + barAff; }
-      else if (alerteBar) { badgeClass = 'warn'; badgeTxt = '⚠️ ' + barAff; }
+      let badgeClass = 'ok', badgeTxt = displayStock;
+      if (isPrep) {
+        badgeClass = rupture ? 'rupture' : (alerteBar ? 'warn' : 'ok');
+        badgeTxt = '🥣 ' + displayStock;
+      } else if (infini) {
+        badgeClass = 'infini'; badgeTxt = '∞';
+      } else if (rupture) {
+        badgeClass = 'rupture'; badgeTxt = '⛔ ' + displayStock;
+      } else if (alerteBar) {
+        badgeClass = 'warn'; badgeTxt = '⚠️ ' + displayStock;
+      }
 
-      return `<tr data-id="${p.id}" class="stock-row" style="cursor:pointer">
+      return `<tr data-uuid="${p.uuid}" class="stock-row" style="cursor:pointer">
         <td>${Utils.esc(p.reference || '')}</td>
         <td><strong>${Utils.esc(p.nom)}</strong></td>
         <td>${Utils.esc(p.categorie_nom || '-')}</td>
         <td class="td-prix">${Utils.formatMontant(p.prix_vente_ttc, state.devise)}</td>
         <td class="td-prix-achat" style="opacity:0.7; font-size:12px">${Utils.formatMontant(p.prix_achat || 0, state.devise)}</td>
         <td><span class="stock-alerte-badge ${badgeClass}">${badgeTxt}</span>/${p.stock_alerte || 0}</td>
+        <td>${p.date_creation ? new Date(p.date_creation).toLocaleDateString('fr-FR') : '-'}</td>
+        <td style="opacity:0.8; font-size:12px">${Utils.esc(p.unite_base || '-')}</td>
         <td>${Utils.esc(p.fournisseur || '-')}</td>
       </tr>`;
-    }).join('') || '<tr><td colspan="7" style="text-align:center;opacity:0.5;padding:30px">Aucun produit</td></tr>';
+    }).join('') || '<tr><td colspan="9" style="text-align:center;opacity:0.5;padding:30px">Aucun produit</td></tr>';
 
     tbody.querySelectorAll('.stock-row').forEach(row => {
       row.addEventListener('click', () => {
         tbody.querySelectorAll('tr').forEach(r => r.classList.remove('selected'));
         row.classList.add('selected');
-        state.selectedProduit = state.produits.find(p => p.id === parseInt(row.dataset.id));
+        state.selectedProduit = state.produits.find(p => p.uuid === row.dataset.uuid);
         document.getElementById('btn-edit-produit').disabled = false;
         document.getElementById('btn-delete-produit').disabled = false;
       });
-      row.addEventListener('dblclick', () => openProduitForm(state.selectedProduit));
+      row.addEventListener('dblclick', () => {
+        if (state.selectedProduit) openProduitForm(state.selectedProduit);
+        else Toast.warn('Sélectionnez un produit');
+      });
     });
   }
 
   // ── FORMULAIRE PRODUIT ────────────────────────────────────────────────
   async function openProduitForm(produit = null) {
-    const isEdit = !!produit;
-    state.imageData = produit?.image_data || null;
-    state.recipeIngredients = [];
+    try {
+      const isEdit = !!produit;
+      state.imageData = produit?.image_data || null;
+      state.recipeIngredients = [];
 
-    if (isEdit && produit.is_prepared) {
-      state.recipeIngredients = await window.api.produits.getIngredients(produit.id);
-    }
+      // Si c'est un produit préparé, on charge ses ingrédients avant d'ouvrir
+      if (isEdit && (produit.is_prepared || produit.est_prepare)) {
+        try {
+          state.recipeIngredients = await window.api.produits.getIngredients(produit.uuid);
+        } catch (e) {
+          console.error("Erreur lors de la récupération des ingrédients:", e);
+        }
+      }
 
-    const id = Modal.open({
-      title: isEdit ? `✏️ Modifier : ${produit.nom}` : '➕ Nouveau produit',
-      width: '800px',
-      content: `
+      Modal.open({
+        title: isEdit ? `✏️ Modifier : ${produit.nom}` : '➕ Nouveau produit',
+        width: '800px',
+        content: `
         <div style="display:flex;gap:20px;align-items:flex-start">
           <div style="width:120px;flex-shrink:0">
             <div class="img-preview" id="img-preview-btn">
@@ -252,7 +282,7 @@
                 <label for="pf-alcool" style="font-size:12px; margin:0; cursor:pointer">Boisson alcoolisée</label>
               </div>
               <div style="display:flex; align-items:center; gap:6px;">
-                <input type="checkbox" id="pf-illimite" ${produit?.stock_actuel === -1 || produit?.stock_actuel === undefined ? 'checked' : ''} style="cursor:pointer" />
+                <input type="checkbox" id="pf-illimite" ${produit?.stock_actuel === -1 ? 'checked' : ''} style="cursor:pointer" />
                 <label for="pf-illimite" style="font-size:12px; margin:0; cursor:pointer">Stock illimité</label>
               </div>
               <div style="display:flex; align-items:center; gap:6px; margin-top:6px">
@@ -317,11 +347,11 @@
             <!-- STOCKS -->
             <div class="form-group">
               <label>Stock initial (unités de base)</label>
-              <input type="number" class="input" id="pf-stock" value="${produit?.stock_actuel !== undefined && produit?.stock_actuel !== -1 ? (produit.stock_bar != null ? produit.stock_bar : produit.stock_actuel) : 0}" step="0.5" ${produit?.stock_actuel === -1 || produit?.stock_actuel === undefined ? 'disabled style="opacity:0.5"' : ''} />
+              <input type="number" class="input" id="pf-stock" value="${produit?.stock_actuel !== undefined && produit?.stock_actuel !== -1 ? (produit.stock_bar != null ? produit.stock_bar : produit.stock_actuel) : 0}" step="0.5" ${produit?.stock_actuel === -1 ? 'disabled style="opacity:0.5"' : ''} />
             </div>
             <div class="form-group">
               <label>Seuil d'alerte</label>
-              <input type="number" class="input" id="pf-alerte" value="${produit?.stock_alerte || 0}" min="0" ${produit?.stock_actuel === -1 || produit?.stock_actuel === undefined ? 'disabled style="opacity:0.5"' : ''} />
+              <input type="number" class="input" id="pf-alerte" value="${produit?.stock_alerte || 0}" min="1" ${produit?.stock_actuel === -1 ? 'disabled style="opacity:0.5"' : ''} />
             </div>
             
             <div class="form-group" style="grid-column: span 2; margin-top:8px">
@@ -335,10 +365,7 @@
               <div style="display:flex; gap:10px; margin-bottom:12px">
                 <select class="input" id="recipe-ing-select" style="flex:1">
                   <option value="">-- Ajouter un ingrédient --</option>
-                  ${state.produits.filter(p => !!p.is_ingredient).map(p => {
-                    const pa = p.prix_achat || 0;
-                    return `<option value="${p.id}">${Utils.esc(p.nom)} (${Utils.formatMontant(pa, state.devise)})</option>`;
-                  }).join('')}
+                  ${state.produits.filter(p => !!p.is_ingredient).map(p => `<option value="${p.uuid}">${Utils.esc(p.nom)} (${Utils.formatMontant(p.prix_achat || 0, state.devise)})</option>`).join('')}
                 </select>
                 <button class="btn btn-primary btn-sm" id="btn-add-recipe-ing">Ajouter</button>
               </div>
@@ -470,15 +497,15 @@
 
       document.getElementById('btn-add-recipe-ing')?.addEventListener('click', () => {
         const select = document.getElementById('recipe-ing-select');
-        const id = select.value;
-        if (!id) return;
-        const ing = state.produits.find(p => p.id === parseInt(id));
+        const uuid = select.value;
+        if (!uuid) return;
+        const ing = state.produits.find(p => p.uuid === uuid);
         if (ing) {
-          if (state.recipeIngredients.find(x => x.ingredient_id === ing.id)) {
+          if (state.recipeIngredients.find(x => x.ingredient_uuid === ing.uuid)) {
             Toast.warn('Déjà ajouté'); return;
           }
           state.recipeIngredients.push({
-            ingredient_id: ing.id,
+            ingredient_uuid: ing.uuid,
             nom: ing.nom,
             prix_achat: ing.prix_achat || 0,
             quantite_requise: 1
@@ -495,29 +522,29 @@
         if (!nom) { Toast.warn('Nom requis'); return; }
         const data = {
           nom,
-          prix_vente_ttc: parseFloat(document.getElementById('pf-prix').value) || 0,
-          categorie_id: document.getElementById('pf-cat').value ? parseInt(document.getElementById('pf-cat').value) : null,
-          fournisseur: document.getElementById('pf-fourn').value.trim() || null,
-          stock_actuel: document.getElementById('pf-illimite').checked ? -1 : (parseFloat(document.getElementById('pf-stock').value) || 0),
-          stock_bar: document.getElementById('pf-illimite').checked ? -1 : (parseFloat(document.getElementById('pf-stock').value) || 0),
-          stock_alerte: document.getElementById('pf-illimite').checked ? 0 : (parseFloat(document.getElementById('pf-alerte').value) || 0),
-          description: document.getElementById('pf-desc').value.trim() || null,
+          prix_vente_ttc: parseFloat(document.getElementById('pf-prix')?.value) || 0,
+          categorie_id: document.getElementById('pf-cat')?.value ? parseInt(document.getElementById('pf-cat').value) : null,
+          fournisseur: document.getElementById('pf-fourn')?.value?.trim() || null,
+          stock_actuel: document.getElementById('pf-illimite')?.checked ? -1 : (parseFloat(document.getElementById('pf-stock')?.value) || 0),
+          stock_bar: document.getElementById('pf-illimite')?.checked ? -1 : (parseFloat(document.getElementById('pf-stock')?.value) || 0),
+          stock_alerte: document.getElementById('pf-illimite')?.checked ? 0 : (parseFloat(document.getElementById('pf-alerte')?.value) || 0),
+          description: document.getElementById('pf-desc')?.value?.trim() || null,
           image_data: state.imageData || null,
           
-          unite_base: document.getElementById('pf-unit-d').value.trim() || 'Unité',
-          is_alcool: document.getElementById('pf-alcool').checked ? 1 : 0,
-          is_ingredient: document.getElementById('pf-ingredient').checked ? 1 : 0,
-          is_prepared: document.getElementById('pf-prepared').checked ? 1 : 0,
+          unite_base: document.getElementById('pf-unit-d')?.value?.trim() || 'Unité',
+          is_alcool: document.getElementById('pf-alcool')?.checked ? 1 : 0,
+          is_ingredient: document.getElementById('pf-ingredient')?.checked ? 1 : 0,
+          is_prepared: document.getElementById('pf-prepared')?.checked ? 1 : 0,
           ingredients: state.recipeIngredients,
 
           // Achat initial
-          is_achat: !isEdit && chkAchat.checked,
-          prix_achat_val: parseFloat(inPrixAchat.value) || 0,
+          is_achat: !isEdit && document.getElementById('pf-achat')?.checked,
+          prix_achat_val: parseFloat(document.getElementById('pf-prix-achat')?.value) || 0,
           prix_achat_type: 'unitaire'
         };
         let res;
         if (isEdit) {
-          res = await window.api.produits.update(produit.id, data);
+          res = await window.api.produits.update(produit.uuid, data);
         } else {
           res = await window.api.produits.create(data);
         }
@@ -531,6 +558,10 @@
         }
       });
     }, 50);
+    } catch (err) {
+      console.error("Erreur critique openProduitForm:", err);
+      Toast.error("Impossible d'ouvrir le formulaire");
+    }
   }
 
   function openAjustementForm() {
@@ -572,7 +603,8 @@
         const pType = 'unitaire';
         const motif = document.getElementById('aj-stock-motif').value.trim() || (q > 0 ? 'Ajustement positif' : 'Ajustement négatif');
         
-        const res = await window.api.stock.ajustement(p.id, q, motif, pu, pType);
+        const currentUserStr = Session.getUser()?.nom || 'Admin';
+        const res = await window.api.stock.ajustement(p.uuid, q, motif, currentUserStr, pu, pType);
         if (res.success) {
           Toast.success('Stock mis à jour');
           Modal.closeAll();
@@ -635,7 +667,7 @@
     });
 
     const updateStats = async (start, end) => {
-      const stats = await window.api.ventes.getStatsByProduit({ produitId: p.id, start, end });
+      const stats = await window.api.ventes.getStatsByProduit({ produitId: p.uuid, start, end });
       const elQty = document.getElementById('sv-qty');
       const elAmt = document.getElementById('sv-amount');
       const elPQty = document.getElementById('sv-perte-qty');
@@ -701,12 +733,16 @@
     document.getElementById('btn-add-produit')?.addEventListener('click', () => openProduitForm(null));
     document.getElementById('btn-edit-produit')?.addEventListener('click', () => {
       if (state.selectedProduit) openProduitForm(state.selectedProduit);
+      else Toast.warn('Sélectionnez un produit');
     });
     document.getElementById('btn-delete-produit')?.addEventListener('click', async () => {
-      if (!state.selectedProduit) return;
-      const ok = await new Promise(r => Modal.confirm('Désactiver', `Désactiver ${state.selectedProduit.nom} ?`, r));
+      if (!state.selectedProduit) {
+        Toast.warn('Sélectionnez un produit');
+        return;
+      }
+      const ok = await new Promise(r => Modal.confirm('Désactiver ce produit', `Voulez-vous vraiment désactiver le produit « ${state.selectedProduit.nom} » ?`, r));
       if (ok) {
-        await window.api.produits.delete(state.selectedProduit.id);
+        await window.api.produits.delete(state.selectedProduit.uuid);
         Toast.success('Produit désactivé');
         state.selectedProduit = null;
         state.produits = await window.api.produits.getAll();

@@ -1,6 +1,7 @@
 'use strict';
 const { randomUUID } = require('crypto');
 const { logAction } = require('./journal.ipc');
+const { notifyChange } = require('../sync/notifier');
 
 module.exports = function(ipcMain, db) {
 
@@ -8,14 +9,19 @@ module.exports = function(ipcMain, db) {
   function adjustCapital(delta) {
     const row = db.prepare("SELECT valeur FROM parametres WHERE cle = 'finance.capital'").get();
     const current = parseFloat(row?.valeur || '0');
-    db.prepare("INSERT OR REPLACE INTO parametres (cle, valeur, date_maj) VALUES ('finance.capital', ?, datetime('now'))")
-      .run(String(current + delta));
+    db.prepare("INSERT OR REPLACE INTO parametres (uuid, cle, valeur, date_maj, last_modified_at, sync_status) VALUES (COALESCE((SELECT uuid FROM parametres WHERE cle = 'finance.capital'), lower(hex(randomblob(16)))), 'finance.capital', ?, datetime('now'), ?, 0)")
+      .run(String(current + delta), Date.now());
   }
 
   // ── TOUS LES PRODUITS ────────────────────────────────────────────────
   ipcMain.handle('produits:getAll', () => {
     return db.prepare(`
-      SELECT p.*, c.nom as categorie_nom
+      SELECT p.*, c.nom as categorie_nom,
+        (SELECT MIN(CAST(p2.stock_actuel / rl.quantite_requise AS INT))
+         FROM recettes_lignes rl
+         JOIN produits p2 ON rl.ingredient_uuid = p2.uuid
+         WHERE rl.plat_uuid = p.uuid AND p2.stock_actuel != -1
+        ) as virtual_stock
       FROM produits p
       LEFT JOIN categories c ON p.categorie_id = c.id
       WHERE p.actif = 1
@@ -24,41 +30,50 @@ module.exports = function(ipcMain, db) {
   });
 
   ipcMain.handle('produits:getByCategorie', (e, catId) => {
-    if (!catId || catId === -1) {
-      return db.prepare(`
-        SELECT p.*, c.nom as categorie_nom
-        FROM produits p LEFT JOIN categories c ON p.categorie_id = c.id
-        WHERE p.actif = 1 ORDER BY p.nom
-      `).all();
-    }
-    return db.prepare(`
-      SELECT p.*, c.nom as categorie_nom
+    let query = `
+      SELECT p.*, c.nom as categorie_nom,
+        (SELECT MIN(CAST(p2.stock_actuel / rl.quantite_requise AS INT))
+         FROM recettes_lignes rl
+         JOIN produits p2 ON rl.ingredient_uuid = p2.uuid
+         WHERE rl.plat_uuid = p.uuid AND p2.stock_actuel != -1
+        ) as virtual_stock
       FROM produits p LEFT JOIN categories c ON p.categorie_id = c.id
-      WHERE p.actif = 1 AND p.categorie_id = ?
-      ORDER BY p.nom
-    `).all(catId);
+      WHERE p.actif = 1
+    `;
+    let params = [];
+    
+    if (catId && catId !== -1) {
+      query += ` AND p.categorie_id = ? `;
+      params.push(catId);
+    }
+    
+    query += ` ORDER BY p.nom `;
+    return db.prepare(query).all(...params);
   });
 
-  ipcMain.handle('produits:getById', (e, id) => {
-    return db.prepare('SELECT * FROM produits WHERE id = ?').get(id);
+  ipcMain.handle('produits:getById', (e, identifier) => {
+    return db.prepare('SELECT * FROM produits WHERE id = ? OR uuid = ?').get(identifier, identifier);
   });
 
-  ipcMain.handle('produits:getIngredients', (e, platId) => {
-    // On récupère les ingrédients liés via recettes_lignes
-    // On joint avec produits pour avoir le nom et le prix_achat
+  ipcMain.handle('produits:getIngredients', (e, platIdentifier) => {
+    // On peut chercher par plat_uuid directement pour plus de robustesse
     return db.prepare(`
-      SELECT rl.*, p.nom, p.prix_achat, p.id as ingredient_id
+      SELECT rl.*, p.nom, p.prix_achat, p.uuid as ingredient_uuid
       FROM recettes_lignes rl
       JOIN produits p ON rl.ingredient_uuid = p.uuid
-      JOIN produits plat ON rl.plat_uuid = plat.uuid
-      WHERE plat.id = ?
-    `).all(platId);
+      WHERE rl.plat_uuid = ? OR rl.plat_uuid = (SELECT uuid FROM produits WHERE id = ?)
+    `).all(platIdentifier, platIdentifier);
   });
 
   ipcMain.handle('produits:search', (e, query) => {
     const q = `%${query}%`;
     return db.prepare(`
-      SELECT p.*, c.nom as categorie_nom
+      SELECT p.*, c.nom as categorie_nom,
+        (SELECT MIN(CAST(p2.stock_actuel / rl.quantite_requise AS INT))
+         FROM recettes_lignes rl
+         JOIN produits p2 ON rl.ingredient_uuid = p2.uuid
+         WHERE rl.plat_uuid = p.uuid AND p2.stock_actuel != -1
+        ) as virtual_stock
       FROM produits p LEFT JOIN categories c ON p.categorie_id = c.id
       WHERE p.actif = 1 AND (p.nom LIKE ? OR p.reference LIKE ? OR p.description LIKE ?)
       ORDER BY p.nom
@@ -70,13 +85,13 @@ module.exports = function(ipcMain, db) {
     try {
       const uid = randomUUID();
       const now = Date.now();
-      const stockBar = data.stock_actuel !== undefined ? data.stock_actuel : -1;
-      const stockGrossiste = data.stock_grossiste !== undefined ? data.stock_grossiste : (data.stock_gros || 0);
-      const uniteBase = (data.unite_base || data.unite_detail || 'Unité').trim() || 'Unité';
-      const cartonQte = data.unite_carton_qte != null ? data.unite_carton_qte : (data.pieces_par_carton || 1);
-      const packQte = data.unite_pack_qte != null ? data.unite_pack_qte : 1;
       const isAlcool = data.is_alcool != null ? !!data.is_alcool : !!data.est_alcool;
       const isPrepared = data.is_prepared != null ? !!data.is_prepared : false;
+
+      // Un produit à préparer est forcément illimité manuellement
+      const stockToSave = isPrepared ? -1 : (data.stock_actuel !== undefined ? data.stock_actuel : -1);
+      const stockBar = stockToSave === -1 ? 0 : stockToSave;
+      const uniteBase = (data.unite_base || data.unite_detail || 'Unité').trim() || 'Unité';
 
       const result = db.prepare(`
         INSERT INTO produits (uuid, reference, nom, description, prix_vente_ttc, prix_achat,
@@ -92,18 +107,21 @@ module.exports = function(ipcMain, db) {
         data.prix_achat_val || 0,
         data.prix_emporte || 0,
         data.categorie_id || null,
-        stockBar,
+        stockToSave,
         data.stock_alerte || 0,
         data.fournisseur || null,
         data.image_data || null,
         uniteBase,
-        stockBar === -1 ? 0 : stockBar,
+        stockBar,
         isAlcool ? 1 : 0,
         data.is_ingredient ? 1 : 0,
         isPrepared ? 1 : 0,
         now
       );
-      const id = result.lastInsertRowid;
+      const rowId = result.lastInsertRowid;
+      // SQLite do not autofill `id` because `uuid` is the primary key. We must backfill it using rowid.
+      db.prepare('UPDATE produits SET id = ? WHERE rowid = ?').run(rowId, rowId);
+      const id = rowId;
 
       // Gestion des ingrédients si produit préparé
       if (isPrepared && data.ingredients && Array.isArray(data.ingredients)) {
@@ -112,8 +130,9 @@ module.exports = function(ipcMain, db) {
           VALUES (?, ?, ?, ?, ?)
         `);
         for (const ing of data.ingredients) {
-          // On a besoin du UUID de l'ingrédient
-          const ingProd = db.prepare('SELECT uuid FROM produits WHERE id = ?').get(ing.ingredient_id);
+          // On a besoin du UUID de l'ingrédient (on cherche par id ou uuid fourni)
+          const ingId = ing.ingredient_id || ing.ingredient_uuid;
+          const ingProd = db.prepare('SELECT uuid FROM produits WHERE id = ? OR uuid = ?').get(ingId, ingId);
           if (ingProd) {
             insRecette.run(randomUUID(), uid, ingProd.uuid, ing.quantite_requise, now);
           }
@@ -139,10 +158,10 @@ module.exports = function(ipcMain, db) {
         adjustCapital(-montantTotal);
       }
       // Aligner reference = id si non fourni
-      db.prepare('UPDATE produits SET reference = ? WHERE id = ? AND (reference IS NULL OR reference = ?)').run(
-        String(id), id, String(id)
+      db.prepare('UPDATE produits SET reference = ? WHERE uuid = ? AND (reference IS NULL OR reference = ?)').run(
+        String(id), uid, String(id)
       );
-      db.prepare('UPDATE produits SET reference = ? WHERE id = ? AND reference IS NULL').run(String(id), id);
+      db.prepare('UPDATE produits SET reference = ? WHERE uuid = ? AND reference IS NULL').run(String(id), uid);
 
       logAction(db, {
         categorie: 'PRODUIT',
@@ -150,6 +169,7 @@ module.exports = function(ipcMain, db) {
         detail: `"${data.nom}" — Prix: ${data.prix_vente_ttc || 0} Ar`,
         icone: '➕'
       });
+      notifyChange();
 
       return { success: true, id };
     } catch (err) {
@@ -158,46 +178,44 @@ module.exports = function(ipcMain, db) {
   });
 
   // ── MODIFIER PRODUIT ─────────────────────────────────────────────────
-  ipcMain.handle('produits:update', (e, id, data) => {
+  ipcMain.handle('produits:update', (e, identifier, data) => {
     try {
-      const stockBar = data.stock_actuel;
-      const uniteBase = (data.unite_base || data.unite_detail || 'Unité').trim() || 'Unité';
+      const now = Date.now();
       const isAlcool = data.is_alcool != null ? !!data.is_alcool : !!data.est_alcool;
       const isPrepared = data.is_prepared != null ? !!data.is_prepared : false;
-      const now = Date.now();
+      const stockToSave = isPrepared ? -1 : (data.stock_actuel !== undefined ? data.stock_actuel : -1);
+      const uniteBase = (data.unite_base || data.unite_detail || 'Unité').trim() || 'Unité';
 
       db.prepare(`
-        UPDATE produits SET
-          nom = ?, description = ?, prix_vente_ttc = ?, prix_achat = ?,
-          prix_emporte = ?, categorie_id = ?, stock_actuel = ?, stock_alerte = ?,
-          fournisseur = ?, image_data = COALESCE(?, image_data),
-          unite_base = ?, stock_bar = ?,
-          is_alcool = ?, is_ingredient = ?, is_prepared = ?,
-          last_modified_at = ?, sync_status = 0
-        WHERE id = ?
+        UPDATE produits SET 
+          nom = ?, description = ?, prix_vente_ttc = ?, prix_achat = ?, 
+          categorie_id = ?, stock_actuel = ?, stock_alerte = ?, 
+          fournisseur = ?, image_data = COALESCE(?, image_data), unite_base = ?, 
+          stock_bar = ?, is_alcool = ?, is_ingredient = ?, 
+          is_prepared = ?, last_modified_at = ?, sync_status = 0
+        WHERE id = ? OR uuid = ?
       `).run(
         data.nom,
         data.description || null,
         data.prix_vente_ttc || 0,
         data.prix_achat_val || 0,
-        data.prix_emporte || 0,
         data.categorie_id || null,
-        stockBar,
+        stockToSave,
         data.stock_alerte || 0,
         data.fournisseur || null,
         data.image_data || null,
         uniteBase,
-        stockBar === -1 ? 0 : stockBar,
+        stockToSave === -1 ? 0 : stockToSave,
         isAlcool ? 1 : 0,
         data.is_ingredient ? 1 : 0,
         isPrepared ? 1 : 0,
         now,
-        id
+        identifier,
+        identifier
       );
 
       // Gestion des ingrédients si produit préparé
-      // On récupère l'UUID du plat
-      const plat = db.prepare('SELECT uuid FROM produits WHERE id = ?').get(id);
+      const plat = db.prepare('SELECT uuid FROM produits WHERE id = ? OR uuid = ?').get(identifier, identifier);
       if (plat) {
         // Supprimer les anciens ingrédients
         db.prepare('DELETE FROM recettes_lignes WHERE plat_uuid = ?').run(plat.uuid);
@@ -208,7 +226,7 @@ module.exports = function(ipcMain, db) {
             VALUES (?, ?, ?, ?, ?)
           `);
           for (const ing of data.ingredients) {
-            const ingProd = db.prepare('SELECT uuid FROM produits WHERE id = ?').get(ing.ingredient_id);
+            const ingProd = db.prepare('SELECT uuid FROM produits WHERE id = ? OR uuid = ?').get(ing.ingredient_id || ing.ingredient_uuid, ing.ingredient_id || ing.ingredient_uuid);
             if (ingProd) {
               insRecette.run(randomUUID(), plat.uuid, ingProd.uuid, ing.quantite_requise, now);
             }
@@ -221,6 +239,7 @@ module.exports = function(ipcMain, db) {
         detail: `"${data.nom}" — Prix: ${data.prix_vente_ttc || 0} Ar`,
         icone: '✏️'
       });
+      notifyChange();
       return { success: true };
     } catch (err) {
       return { success: false, message: err.message };
@@ -228,10 +247,10 @@ module.exports = function(ipcMain, db) {
   });
 
   // ── SUPPRIMER / DÉSACTIVER PRODUIT ────────────────────────────────────
-  ipcMain.handle('produits:delete', (e, id) => {
+  ipcMain.handle('produits:delete', (e, identifier) => {
     try {
-      const p = db.prepare('SELECT nom FROM produits WHERE id = ?').get(id);
-      db.prepare('UPDATE produits SET actif = 0 WHERE id = ?').run(id);
+      const p = db.prepare('SELECT nom FROM produits WHERE id = ? OR uuid = ?').get(identifier, identifier);
+      db.prepare('UPDATE produits SET actif = 0, last_modified_at = ?, sync_status = 0 WHERE id = ? OR uuid = ?').run(Date.now(), identifier, identifier);
       logAction(db, {
         categorie: 'PRODUIT',
         action: 'Produit désactivé',
@@ -247,7 +266,7 @@ module.exports = function(ipcMain, db) {
   // ── MISE À JOUR STOCK ────────────────────────────────────────────────
   ipcMain.handle('produits:updateStock', (e, id, qty, operation) => {
     try {
-      const produit = db.prepare('SELECT * FROM produits WHERE id = ?').get(id);
+      const produit = db.prepare('SELECT * FROM produits WHERE id = ? OR uuid = ?').get(id, id);
       if (!produit) return { success: false, message: 'Produit non trouvé' };
       if (produit.stock_actuel === -1) return { success: true }; // illimité
 
@@ -257,7 +276,7 @@ module.exports = function(ipcMain, db) {
       else if (operation === 'sub')   newStock = Math.max(0, produit.stock_actuel - qty);
       else                            newStock = produit.stock_actuel;
 
-      db.prepare('UPDATE produits SET stock_actuel = ?, stock_bar = ? WHERE id = ?').run(newStock, newStock, id);
+      db.prepare('UPDATE produits SET stock_actuel = ?, stock_bar = ? WHERE id = ? OR uuid = ?').run(newStock, newStock, id, id);
       return { success: true, newStock };
     } catch (err) {
       return { success: false, message: err.message };
@@ -285,8 +304,8 @@ module.exports = function(ipcMain, db) {
 
   ipcMain.handle('categories:update', (e, id, data) => {
     try {
-      db.prepare('UPDATE categories SET nom = ?, description = ?, parent_id = ? WHERE id = ?')
-        .run(data.nom, data.description || null, data.parent_id || null, id);
+      db.prepare('UPDATE categories SET nom = ?, description = ?, parent_id = ? WHERE id = ? OR uuid = ?')
+        .run(data.nom, data.description || null, data.parent_id || null, id, id);
       return { success: true };
     } catch (err) {
       return { success: false, message: err.message };
@@ -298,8 +317,8 @@ module.exports = function(ipcMain, db) {
       // Réassigner les sous-catégories à NULL
       db.prepare('UPDATE categories SET parent_id = NULL WHERE parent_id = ?').run(id);
       // Réassigner les produits de cette catégorie à null
-      db.prepare('UPDATE produits SET categorie_id = NULL WHERE categorie_id = ?').run(id);
-      db.prepare('DELETE FROM categories WHERE id = ?').run(id);
+      db.prepare('UPDATE produits SET categorie_id = NULL WHERE categorie_id = ? OR categorie_id = (SELECT uuid FROM categories WHERE id = ?)').run(id, id);
+      db.prepare('DELETE FROM categories WHERE id = ? OR uuid = ?').run(id, id);
       return { success: true };
     } catch (err) {
       return { success: false, message: err.message };

@@ -1,12 +1,14 @@
-'use strict';
+const fs   = require('fs');
+const path = require('path');
 
-/**
- * SyncEngine — Moteur de synchronisation Offline-First vers Supabase
- * Gère le push des données locales vers le cloud et le pull depuis le cloud.
- * Toutes les opérations sont non-bloquantes et ne perturbent pas la caisse.
- */
-
-const TABLES_SYNC = ['produits', 'ventes', 'lignes_vente', 'clotures'];
+const TABLES_SYNC = [
+  'utilisateurs', 'categories', 'produits', 'ventes', 'lignes_vente', 'clotures',
+  'stock_lots', 'stock_transferts', 'clients', 'credits_paiements',
+  'fournisseurs', 'achats', 'reservations', 'depenses', 'employes',
+  'creances_clients', 'salaires_paiements', 'livraisons',
+  'recettes_lignes', 'flux_tresorerie', 'reservations_terrain',
+  'tickets_table', 'tables_config', 'parametres', 'stock_historique', 'journal_activite', 'espaces'
+];
 const BATCH_SIZE  = 50;
 
 class SyncEngine {
@@ -15,6 +17,7 @@ class SyncEngine {
     this.supabase   = null;
     this.configured = false;
     this.syncTimer  = null;
+    this.realtimeChannel = null;
     this.isSyncing  = false;
     this.lastSyncAt = 0;
   }
@@ -119,6 +122,35 @@ class SyncEngine {
     }
   }
 
+  // ── ENVOYER LES TABLES (DEPUIS LE FICHIER SQL) ──────────────────────────
+  async sendTables() {
+    if (!this.configured) return { success: false, message: 'Non configuré' };
+    try {
+      const schemaPath = path.join(process.cwd(), 'supabase_schema.sql');
+      if (!fs.existsSync(schemaPath)) {
+        return { success: false, message: 'Fichier supabase_schema.sql introuvable.' };
+      }
+      const sql = fs.readFileSync(schemaPath, 'utf8');
+      
+      const { error } = await this.supabase.rpc('exec_sql', { sql });
+      if (error) {
+        if (error.message.includes('exec_sql')) {
+          return { 
+            success: false, 
+            code: 'MISSING_RPC', 
+            message: 'La fonction système exec_sql est manquante sur Supabase.' 
+          };
+        }
+        throw new Error(error.message);
+      }
+
+      return { success: true, message: 'Schéma Supabase mis à jour avec succès.' };
+    } catch (err) {
+      console.error('[SyncEngine] sendTables error:', err.message);
+      return { success: false, message: err.message };
+    }
+  }
+
   // ── PUSH (Local → Cloud) ──────────────────────────────────────────────────
 
   async pushPending() {
@@ -127,83 +159,69 @@ class SyncEngine {
     let totalPushed = 0;
 
     try {
-      // Produits
-      totalPushed += await this._pushTable('produits', () => {
-        return this.db.prepare(`SELECT * FROM produits WHERE sync_status = 0`).all();
-      }, (row) => ({
-        uuid: row.uuid, id: row.id, reference: row.reference, nom: row.nom,
-        description: row.description, prix_vente_ttc: row.prix_vente_ttc,
-        prix_achat: row.prix_achat, prix_emporte: row.prix_emporte,
-        categorie_id: row.categorie_id, stock_actuel: row.stock_actuel,
-        stock_alerte: row.stock_alerte, fournisseur: row.fournisseur,
-        actif: row.actif, date_creation: row.date_creation,
-        last_modified_at: row.last_modified_at,
-        poste_source: this._getPoste(),
-      }));
-
-      // Ventes
-      totalPushed += await this._pushTable('ventes', () => {
-        return this.db.prepare(`SELECT * FROM ventes WHERE sync_status = 0`).all();
-      }, (row) => ({
-        uuid: row.uuid, id: row.id, numero_ticket: row.numero_ticket,
-        date_vente: row.date_vente, nom_caissier: row.nom_caissier,
-        total_ttc: row.total_ttc, mode_paiement: row.mode_paiement,
-        montant_paye: row.montant_paye, monnaie_rendue: row.monnaie_rendue,
-        statut: row.statut, table_numero: row.table_numero, note: row.note,
-        last_modified_at: row.last_modified_at,
-        poste_source: this._getPoste(),
-      }));
-
-      // Lignes vente
-      totalPushed += await this._pushTable('lignes_vente', () => {
-        return this.db.prepare(`SELECT * FROM lignes_vente WHERE sync_status = 0`).all();
-      }, (row) => ({
-        uuid: row.uuid, id: row.id, vente_uuid: row.vente_uuid,
-        produit_id: row.produit_id, produit_nom: row.produit_nom,
-        quantite: row.quantite, prix_unitaire: row.prix_unitaire,
-        remise: row.remise, rabais: row.rabais, total_ttc: row.total_ttc,
-        est_offert: row.est_offert, last_modified_at: row.last_modified_at,
-      }));
-
-      // Clôtures
-      totalPushed += await this._pushTable('clotures', () => {
-        return this.db.prepare(`SELECT * FROM clotures WHERE sync_status = 0`).all();
-      }, (row) => ({
-        uuid: row.uuid, id: row.id, type_cloture: row.type_cloture,
-        numero_rapport: row.numero_rapport, date_debut: row.date_debut,
-        date_fin: row.date_fin, date_cloture: row.date_cloture,
-        total_ttc: row.total_ttc, total_cash: row.total_cash,
-        total_mvola: row.total_mvola, total_orange: row.total_orange,
-        total_airtel: row.total_airtel, total_carte: row.total_carte,
-        total_autre: row.total_autre, nombre_tickets: row.nombre_tickets,
-        nombre_articles: row.nombre_articles, vendeur_nom: row.vendeur_nom,
-        vendeur_id: row.vendeur_id, last_modified_at: row.last_modified_at,
-        poste_source: this._getPoste(),
-      }));
+      for (const table of TABLES_SYNC) {
+        totalPushed += await this._pushTable(table);
+      }
 
       this.lastSyncAt = Date.now();
       this._saveSyncTimestamp(this.lastSyncAt);
       return { success: true, pushed: totalPushed };
     } catch (err) {
-      console.error('[SyncEngine] pushPending error:', err.message);
+      if (!err.message.includes('fetch failed') && !err.message.includes('Failed to fetch')) {
+        console.error('[SyncEngine] pushPending error:', err.message);
+      }
       return { success: false, pushed: totalPushed, message: err.message };
     } finally {
       this.isSyncing = false;
     }
   }
 
-  async _pushTable(tableName, getRows, mapFn) {
-    const rows = getRows();
+  async _pushTable(tableName) {
+    let rows = [];
+    try {
+      rows = this.db.prepare(`SELECT * FROM ${tableName} WHERE sync_status = 0`).all();
+    } catch (err) {
+      return 0; // Table manquante ou sans sync_status
+    }
     if (!rows.length) return 0;
 
+    const posteSource = this._getPoste();
+    const crypto = require('crypto');
     let pushed = 0;
+
     for (let i = 0; i < rows.length; i += BATCH_SIZE) {
       const batch   = rows.slice(i, i + BATCH_SIZE);
-      const payload = batch.map(mapFn);
+      const payload = batch.map(row => {
+        // Gérer le poste source
+        if ('poste_source' in row && !row.poste_source) {
+          row.poste_source = posteSource;
+        }
+
+        // Injecter le timestamp réel pour Supabase si manquant ou à 0
+        if (!row.last_modified_at) {
+           row.last_modified_at = Date.now();
+        }
+        
+        // Gérer l'absence d'UUID (anciennes données locales)
+        if (!row.uuid) {
+          row.uuid = crypto.randomUUID();
+          if (row.id) {
+            try { this.db.prepare(`UPDATE ${tableName} SET uuid = ? WHERE id = ?`).run(row.uuid, row.id); } catch(e) {}
+          }
+        }
+
+        // Nettoyer les colonnes purement locales non présentes dans le Cloud
+        // ou dont la valeur nulle provoquerait des erreurs de contrainte côté Supabase
+        if ('image_data' in row) delete row.image_data;
+        // On n'envoie JAMAIS l'id local (SQLite AUTOINCREMENT) — uuid est la PK cloud
+        delete row.id;
+
+        return row;
+      });
+
       const { error } = await this.supabase.from(tableName).upsert(payload, { onConflict: 'uuid' });
       if (error) { console.error(`[SyncEngine] push ${tableName} error:`, error.message); continue; }
 
-      // Marquer comme synchronisé dans SQLite
       const uuids = batch.map(r => r.uuid).filter(Boolean);
       if (uuids.length > 0) {
         const placeholders = uuids.map(() => '?').join(',');
@@ -221,67 +239,105 @@ class SyncEngine {
     try {
       const since = this._getLastSyncTimestamp();
       let totalPulled = 0;
+      const poste = this._getPoste();
 
-      // Pull ventes depuis le cloud (autres postes)
-      const { data: ventesCloud, error: ve } = await this.supabase
-        .from('ventes')
-        .select('*')
-        .gt('last_modified_at', since)
-        .neq('poste_source', this._getPoste());
+      for (const table of TABLES_SYNC) {
+        let tablePulled = 0;
+        try {
+          // Analyser la structure locale
+          const info = this.db.prepare(`PRAGMA table_info(${table})`).all();
+          if (!info || info.length === 0) continue;
+          
+          const columns = info.map(c => c.name);
+          const hasPosteSource = columns.includes('poste_source');
 
-      if (!ve && ventesCloud && ventesCloud.length > 0) {
-        const stmt = this.db.prepare(`
-          INSERT OR IGNORE INTO ventes
-            (uuid, numero_ticket, date_vente, nom_caissier, total_ttc,
-             mode_paiement, montant_paye, monnaie_rendue, statut, table_numero, note, sync_status)
-          VALUES (?,?,?,?,?,?,?,?,?,?,?,1)
-        `);
-        const tx = this.db.transaction((rows) => {
-          for (const r of rows) {
-            stmt.run(r.uuid, r.numero_ticket, r.date_vente, r.nom_caissier,
-              r.total_ttc, r.mode_paiement, r.montant_paye, r.monnaie_rendue,
-              r.statut, r.table_numero, r.note);
+          // Étaler le since pour pallier d'éventuels décalages d'horloge entre terminaux
+          let query = this.supabase.from(table).select('*').gt('last_modified_at', Math.max(0, since - 300000));
+          
+          // N'exclure le poste source QUE si ce n'est pas une récupération totale (since > 0)
+          // Si since == 0, on veut TOUT récupérer, même nos propres données (Restauration).
+          if (hasPosteSource && since > 0) {
+            query = query.neq('poste_source', poste);
           }
-        });
-        tx(ventesCloud);
-        totalPulled += ventesCloud.length;
-      }
+          
+          const { data, error } = await query;
+          if (error) { console.error(`[SyncEngine] pull ${table} error:`, error.message); continue; }
 
-      // Pull produits (mises à jour catalogue d'autres postes)
-      const { data: produitsCloud, error: pe } = await this.supabase
-        .from('produits')
-        .select('*')
-        .gt('last_modified_at', since)
-        .neq('poste_source', this._getPoste());
+          if (data && data.length > 0) {
+            const getStmt = this.db.prepare(`SELECT uuid FROM ${table} WHERE uuid = ?`);
 
-      if (!pe && produitsCloud && produitsCloud.length > 0) {
-        const stmt = this.db.prepare(`
-          INSERT OR IGNORE INTO produits
-            (uuid, nom, description, prix_vente_ttc, prix_achat, prix_emporte,
-             categorie_id, stock_actuel, stock_alerte, fournisseur, actif, date_creation, sync_status)
-          VALUES (?,?,?,?,?,?,?,?,?,?,?,?,1)
-        `);
-        const tx = this.db.transaction((rows) => {
-          for (const r of rows) {
-            stmt.run(r.uuid, r.nom, r.description, r.prix_vente_ttc, r.prix_achat,
-              r.prix_emporte, r.categorie_id, r.stock_actuel, r.stock_alerte,
-              r.fournisseur, r.actif, r.date_creation);
+            const tx = this.db.transaction((rows) => {
+              for (const r of rows) {
+                // Forcer statut local à synchronisé
+                if ('sync_status' in r) r.sync_status = 1;
+                
+                let existing = getStmt.get(r.uuid);
+                
+                // Gérer les clés d'unicité pour les paramètres
+                if (!existing && table === 'parametres' && r.cle) {
+                  const byCle = this.db.prepare(`SELECT uuid FROM parametres WHERE cle = ?`).get(r.cle);
+                  if (byCle) {
+                    // Si on le trouve par clé mais pas par UUID, c'est que l'installation locale a généré
+                    // un uuid différent pour une clé par défaut (ex: license.activated). On supprime l'ancien.
+                    this.db.prepare(`DELETE FROM parametres WHERE uuid = ?`).run(byCle.uuid);
+                  }
+                }
+                
+                // Extraire uniquement les clés qui existent vraiment de part et d'autre pour ne pas injecter null
+                const validKeys = Object.keys(r).filter(k => columns.includes(k));
+
+                if (existing) {
+                  const updateCols = validKeys.filter(c => c !== 'id' && c !== 'uuid');
+                  if (updateCols.length === 0) continue;
+                  
+                  const setString = updateCols.map(c => `${c} = ?`).join(', ');
+                  const values = updateCols.map(c => r[c]);
+                  this.db.prepare(`UPDATE ${table} SET ${setString} WHERE uuid = ?`).run(...values, r.uuid);
+                } else {
+                  const insertCols = validKeys.filter(c => c !== 'id');
+                  if (insertCols.length === 0) continue;
+                  
+                  const placeholders = insertCols.map(() => '?').join(', ');
+                  const values = insertCols.map(c => r[c]);
+                  // Utiliser INSERT OR REPLACE pour éviter les erreurs "UNIQUE constraint failed" sur les clés comme parametres.cle
+                  this.db.prepare(`INSERT OR REPLACE INTO ${table} (${insertCols.join(', ')}) VALUES (${placeholders})`).run(...values);
+                }
+              }
+            });
+            tx(data);
+            tablePulled += data.length;
           }
-        });
-        tx(produitsCloud);
-        totalPulled += produitsCloud.length;
+        } catch (e) {
+          console.error(`[SyncEngine] pull tx error on ${table}:`, e.message);
+        }
+        totalPulled += tablePulled;
       }
 
       this.lastSyncAt = Date.now();
       this._saveSyncTimestamp(this.lastSyncAt);
       return { success: true, pulled: totalPulled };
     } catch (err) {
-      console.error('[SyncEngine] pullUpdates error:', err.message);
+      if (!err.message.includes('fetch failed') && !err.message.includes('Failed to fetch')) {
+        console.error('[SyncEngine] pullUpdates error:', err.message);
+      }
       return { success: false, pulled: 0, message: err.message };
     }
   }
 
-  // ── FULL PUSH (Restauration massive) ─────────────────────────────────────
+  // ── PULL TOTAL (Restauration massive depuis le Cloud) ───────────────────
+
+  async fullPull() {
+    if (!this.configured) return { success: false, message: 'Non configuré' };
+    try {
+      this._saveSyncTimestamp(0);
+      const res = await this.pullUpdates();
+      return { success: res.success, pulled: res.pulled, message: res.message };
+    } catch (err) {
+      return { success: false, message: err.message };
+    }
+  }
+
+  // ── FULL PUSH (Restauration massive vers le Cloud) ───────────────────────
 
   async fullPush() {
     if (!this.configured) return { success: false, message: 'Non configuré' };
@@ -296,20 +352,49 @@ class SyncEngine {
     }
   }
 
-  // ── AUTO SYNC ─────────────────────────────────────────────────────────────
+  // ── AUTO SYNC (Temps Réel) ────────────────────────────────────────────────
 
-  startAutoSync(intervalMs = 5 * 60 * 1000) {
+  _setupRealtime() {
+    if (this.realtimeChannel && this.supabase) {
+      try { this.supabase.removeChannel(this.realtimeChannel); } catch(e) {}
+    }
+    this.realtimeChannel = this.supabase.channel('public-changes')
+      .on('postgres_changes', { event: '*', schema: 'public' }, (payload) => {
+        // Déclencher le pull en cas de changement distant (Temps Réel)
+        this.pullUpdates();
+      })
+      .subscribe();
+  }
+
+  startAutoSync(intervalMs = 3000) {
     this.stopAutoSync();
     if (!this.configured) return;
+    this._setupRealtime();
     this.syncTimer = setInterval(async () => {
-      if (!this.isSyncing && navigator && !navigator.onLine) return;
-      await this.pushPending();
+      // Ignorer l'erreur réseau globale pour Electron onLine si indisponible
+      if (!this.isSyncing) await this.pushPending();
     }, intervalMs);
-    console.log(`[SyncEngine] Auto-sync démarré (toutes les ${intervalMs / 60000} min)`);
+    console.log(`[SyncEngine] Temps Réel et Radar (toutes les ${intervalMs} ms) activés.`);
+  }
+
+  // ── NOTIFICATION DE CHANGEMENT (Déclencheur Instantané) ─────────────────
+  // Appeler cette méthode après chaque écriture locale pour déclencher un push immédiat
+  notifyChange() {
+    if (!this.configured || this.isSyncing) return;
+    // Déclencher dans 500ms pour regrouper les écritures simultanées (ex: transaction)
+    if (this._notifyTimer) clearTimeout(this._notifyTimer);
+    this._notifyTimer = setTimeout(() => {
+      this.pushPending().catch(() => {});
+    }, 500);
   }
 
   stopAutoSync() {
     if (this.syncTimer) { clearInterval(this.syncTimer); this.syncTimer = null; }
+    if (this.realtimeChannel && this.supabase) {
+      try { this.supabase.removeChannel(this.realtimeChannel); } catch(e) {}
+      this.realtimeChannel = null;
+    }
+    console.log(`[SyncEngine] Temps Réel et Radar désactivés.`);
   }
 
   // ── STATUS ────────────────────────────────────────────────────────────────

@@ -1,6 +1,7 @@
 'use strict';
 const { randomUUID } = require('crypto');
 const { logAction } = require('./journal.ipc');
+const { notifyChange } = require('../sync/notifier');
 
 module.exports = function(ipcMain, db) {
 
@@ -13,7 +14,7 @@ module.exports = function(ipcMain, db) {
 
     // ── 1. Totaux par mode de paiement ────────────────────────────────────
     const ventes = db.prepare(`
-      SELECT id, total_ttc, mode_paiement, statut, date_vente, nom_caissier
+      SELECT id, uuid, total_ttc, mode_paiement, statut, date_vente, nom_caissier
       FROM ventes v
       WHERE v.statut = 'valide' ${whereV}
     `).all(...params);
@@ -21,13 +22,13 @@ module.exports = function(ipcMain, db) {
     let totalTTC = 0, totalCash = 0, totalMvola = 0, totalOrange = 0;
     let totalAirtel = 0, totalCarte = 0, totalAutre = 0, totalVirement = 0;
     let nbTickets = 0;
-    const venteIds = [];
+    const venteUuids = [];
 
     for (const v of ventes) {
       nbTickets++;
       const mt = v.total_ttc || 0;
       totalTTC += mt;
-      venteIds.push(v.id);
+      venteUuids.push(v.uuid);
       switch (v.mode_paiement) {
         case 'CASH':         totalCash      += mt; break;
         case 'MVOLA':        totalMvola     += mt; break;
@@ -46,17 +47,17 @@ module.exports = function(ipcMain, db) {
     const remises       = {}; // key = nom, value = { qte, montant, remisePct }
     let   nbArticles    = 0;
 
-    if (venteIds.length > 0) {
-      const placeholders = venteIds.map(() => '?').join(',');
+    if (venteUuids.length > 0) {
+      const placeholders = venteUuids.map(() => '?').join(',');
       const lignes = db.prepare(`
         SELECT lv.*,
                p.nom      AS produit_nom_db,
                c.nom      AS cat_nom
         FROM   lignes_vente lv
-        LEFT JOIN produits   p ON p.id = lv.produit_id
+        LEFT JOIN produits   p ON (p.id = lv.produit_id OR p.uuid = lv.produit_id)
         LEFT JOIN categories c ON c.id = p.categorie_id
-        WHERE  lv.vente_id IN (${placeholders})
-      `).all(...venteIds);
+        WHERE  lv.vente_uuid IN (${placeholders})
+      `).all(...venteUuids);
 
       for (const l of lignes) {
         nbArticles += l.quantite || 0;
@@ -226,18 +227,19 @@ module.exports = function(ipcMain, db) {
         Date.now()
       );
 
-      // --- AJOUT CLÔTURE RESTE EN CAISSE ---
-      if (fondFin > 0) {
+      // --- AJOUT RECETTE CLÔTURE AU CAPITAL ---
+      const recetteCloture = data.totalTTC || 0;
+      if (recetteCloture > 0) {
         db.prepare(`
           INSERT INTO flux_tresorerie (uuid, type_flux, montant, motif, date_flux, operateur, last_modified_at, sync_status)
-          VALUES (?, 'reste_caisse', ?, 'Entrée - reste en caisse', datetime('now'), ?, ?, 1)
-        `).run(randomUUID(), fondFin, data.vendeurNom || 'Système', Date.now());
+          VALUES (?, 'recette_cloture', ?, 'Recette Clôture ' || ?, datetime('now'), ?, ?, 1)
+        `).run(randomUUID(), recetteCloture, numero, data.vendeurNom || 'Système', Date.now());
 
-        // Augmenter le capital
+        // Augmenter le capital avec la recette réelle
         const row = db.prepare("SELECT valeur FROM parametres WHERE cle = 'finance.capital'").get();
         const current = parseFloat(row?.valeur || '0');
-        db.prepare("INSERT OR REPLACE INTO parametres (cle, valeur, date_maj) VALUES ('finance.capital', ?, datetime('now'))")
-          .run(String(current + fondFin));
+        db.prepare("INSERT OR REPLACE INTO parametres (uuid, cle, valeur, date_maj, last_modified_at, sync_status) VALUES (COALESCE((SELECT uuid FROM parametres WHERE cle = 'finance.capital'), lower(hex(randomblob(16)))), 'finance.capital', ?, datetime('now'), ?, 0)")
+          .run(String(current + recetteCloture), Date.now());
       }
 
       logAction(db, {
@@ -248,7 +250,7 @@ module.exports = function(ipcMain, db) {
         montant: data.totalTTC || 0,
         icone: '📊'
       });
-
+      notifyChange();
       return { success: true, id: result.lastInsertRowid, numero };
     } catch (err) {
       return { success: false, message: err.message };

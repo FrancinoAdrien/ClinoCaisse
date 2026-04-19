@@ -8,12 +8,12 @@ module.exports = function(ipcMain, db) {
       SELECT lv.id, lv.uuid, lv.produit_nom, lv.quantite, lv.statut_cuisine,
              v.numero_ticket, v.table_numero, v.date_vente, v.id AS vente_id, v.note
       FROM lignes_vente lv
-      INNER JOIN ventes v ON v.id = lv.vente_id
+      INNER JOIN ventes v ON v.uuid = lv.vente_uuid
       WHERE v.statut = 'valide'
         AND lv.statut_cuisine IS NOT NULL
         AND lv.statut_cuisine != 'servi'
-      ORDER BY datetime(v.date_vente) ASC, lv.id ASC
-    `).all().map(l => ({ ...l, id: `V:${l.id}` }));
+      ORDER BY datetime(v.date_vente) ASC, lv.rowid ASC
+    `).all().map(l => ({ ...l, id: `V:${l.uuid}` }));
 
     // 2. Lignes des tables en cours (sauvegardées mais non payées)
     const tableTickets = db.prepare("SELECT * FROM tickets_table WHERE statut = 'en_cours'").all();
@@ -26,7 +26,7 @@ module.exports = function(ipcMain, db) {
         // On n'affiche que si l'utilisateur a coché la "patch" cuisine
         if (l.envoi_cuisine && l.statut_cuisine && l.statut_cuisine !== 'servi') {
           tableLignes.push({
-            id: `T:${t.id}:${idx}`,
+            id: `T:${t.uuid}:${idx}`,
             produit_nom: l.produit_nom,
             quantite: l.quantite,
             statut_cuisine: l.statut_cuisine,
@@ -55,39 +55,39 @@ module.exports = function(ipcMain, db) {
       const idStrSafe = String(idStr);
       const parts = idStrSafe.split(':');
       
-      // Cas 1: Ligne de vente finalisée
+      // Cas 1: Ligne de vente finalisée (uuid)
       if (parts[0] === 'V') {
-        const ligneId = parseInt(parts[1], 10);
+        const ligneUuid = parts[1];
         db.prepare(`
-          UPDATE lignes_vente SET statut_cuisine = ?, last_modified_at = ?, sync_status = 0 WHERE id = ?
-        `).run(statut, Date.now(), ligneId);
+          UPDATE lignes_vente SET statut_cuisine = ?, last_modified_at = ?, sync_status = 0 WHERE uuid = ?
+        `).run(statut, Date.now(), ligneUuid);
         return { success: true };
       } 
       
-      // Cas 2: Ligne de table active (JSON)
+      // Cas 2: Ligne de table active (JSON via uuid)
       if (parts[0] === 'T') {
-        const ticketId = parseInt(parts[1], 10);
+        const ticketUuid = parts[1];
         const itemIdx = parseInt(parts[2], 10);
         
-        const ticket = db.prepare('SELECT lignes_json FROM tickets_table WHERE id = ?').get(ticketId);
+        const ticket = db.prepare('SELECT lignes_json FROM tickets_table WHERE uuid = ?').get(ticketUuid);
         if (!ticket) return { success: false, message: 'Table introuvable' };
         
         let lignes = JSON.parse(ticket.lignes_json || '[]');
         if (lignes[itemIdx]) {
           lignes[itemIdx].statut_cuisine = statut;
           db.prepare(`
-            UPDATE tickets_table SET lignes_json = ?, date_modification = datetime('now') WHERE id = ?
-          `).run(JSON.stringify(lignes), ticketId);
+            UPDATE tickets_table SET lignes_json = ?, date_modification = datetime('now') WHERE uuid = ?
+          `).run(JSON.stringify(lignes), ticketUuid);
           return { success: true };
         }
         return { success: false, message: 'Article introuvable sur la table' };
       }
 
-      // Fallback compatibilité (si ID est purement numérique)
-      if (!isNaN(parseInt(idStrSafe, 10))) {
+      // Fallback (si l'ID est un uuid directement)
+      if (idStrSafe.includes('-')) {
         db.prepare(`
-          UPDATE lignes_vente SET statut_cuisine = ?, last_modified_at = ?, sync_status = 0 WHERE id = ?
-        `).run(statut, Date.now(), parseInt(idStrSafe, 10));
+          UPDATE lignes_vente SET statut_cuisine = ?, last_modified_at = ?, sync_status = 0 WHERE uuid = ?
+        `).run(statut, Date.now(), idStrSafe);
         return { success: true };
       }
 

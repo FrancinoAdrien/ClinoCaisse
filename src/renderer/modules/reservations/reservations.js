@@ -107,8 +107,7 @@
 
       const cells = (tables || []).map(({ numero, ticket }) => {
         let etat = 'libre';
-        if (ticket) etat = 'occupee';
-        else if (byTable[numero]?.length) etat = 'reservee';
+        if (byTable[numero]?.length) etat = 'reservee';
 
         const ms = byTable[numero] || [];
         const title = ms.length
@@ -256,11 +255,12 @@
           </div>
         </div>`,
       footer: `
-        <button class="btn btn-ghost" onclick="Modal.closeAll()">Annuler</button>
+        <button class="btn btn-ghost" id="btn-cancel-reserv">Annuler</button>
         <button class="btn btn-success" id="r-save">Enregistrer</button>`,
     });
 
     setTimeout(() => {
+      document.getElementById('btn-cancel-reserv')?.addEventListener('click', () => Modal.closeAll());
       let selectedTables = [];
       document.querySelectorAll('.reserv-table-chip').forEach(chip => {
         chip.addEventListener('click', () => {

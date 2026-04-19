@@ -1,6 +1,7 @@
 'use strict';
 const { randomUUID } = require('crypto');
 const { logAction } = require('./journal.ipc');
+const { notifyChange } = require('../sync/notifier');
 
 module.exports = function(ipcMain, db) {
 
@@ -8,8 +9,8 @@ module.exports = function(ipcMain, db) {
   function adjustCapital(delta) {
     const row = db.prepare("SELECT valeur FROM parametres WHERE cle = 'finance.capital'").get();
     const current = parseFloat(row?.valeur || '0');
-    db.prepare("INSERT OR REPLACE INTO parametres (cle, valeur, date_maj) VALUES ('finance.capital', ?, datetime('now'))")
-      .run(String(current + delta));
+    db.prepare("INSERT OR REPLACE INTO parametres (uuid, cle, valeur, date_maj, last_modified_at, sync_status) VALUES (COALESCE((SELECT uuid FROM parametres WHERE cle = 'finance.capital'), lower(hex(randomblob(16)))), 'finance.capital', ?, datetime('now'), ?, 0)")
+      .run(String(current + delta), Date.now());
   }
 
   // ── ALERTES STOCK ─────────────────────────────────────────────────────
@@ -24,22 +25,22 @@ module.exports = function(ipcMain, db) {
   });
 
   // ── AJUSTEMENT STOCK ─────────────────────────────────────────────────
-  ipcMain.handle('stock:ajustement', (e, produitId, delta, motif, prixVal = 0, prixType = 'unitaire') => {
+  ipcMain.handle('stock:ajustement', (e, identifier, delta, motif, operateur, prixVal = 0, prixType = 'unitaire') => {
     try {
-      const produit = db.prepare('SELECT * FROM produits WHERE id = ?').get(produitId);
+      const produit = db.prepare('SELECT * FROM produits WHERE id = ? OR uuid = ?').get(identifier, identifier);
       if (!produit) return { success: false, message: 'Produit non trouvé' };
 
       const ancienneQty = produit.stock_actuel;
       const nouvelleQty = (ancienneQty === -1) ? -1 : (ancienneQty + delta);
 
-      // Mise à jour stock
-      db.prepare('UPDATE produits SET stock_actuel = ?, stock_bar = ? WHERE id = ?').run(nouvelleQty, nouvelleQty, produitId);
+      // Mise à jour stock (marquer comme à synchroniser)
+      db.prepare('UPDATE produits SET stock_actuel = ?, stock_bar = ?, last_modified_at = ?, sync_status = 0 WHERE id = ? OR uuid = ?').run(nouvelleQty, nouvelleQty, Date.now(), identifier, identifier);
 
-      // Historique
+      // Historique avec uuid et colonnes synchro
       db.prepare(`
-        INSERT INTO stock_historique (produit_id, produit_nom, ancienne_qte, nouvelle_qte, delta, motif)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `).run(produitId, produit.nom, ancienneQty, nouvelleQty, delta, motif || 'Ajustement manuel');
+        INSERT INTO stock_historique (uuid, produit_id, produit_nom, ancienne_qte, nouvelle_qte, delta, motif, last_modified_at, sync_status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)
+      `).run(randomUUID(), identifier, produit.nom, ancienneQty, nouvelleQty, delta, motif || 'Ajustement manuel', Date.now());
 
       // Si c'est un achat (delta positif et prix fourni)
       if (delta > 0 && prixVal > 0) {
@@ -50,11 +51,12 @@ module.exports = function(ipcMain, db) {
         // Enregistrer la dépense
         db.prepare(`
           INSERT INTO depenses (uuid, categorie, description, montant, date_depense, statut, operateur, last_modified_at, sync_status) 
-          VALUES (?, 'Achats stock', ?, ?, datetime('now'), 'payee', 'Système', ?, 1)
+          VALUES (?, 'Achats stock', ?, ?, datetime('now'), 'payee', ?, ?, 1)
         `).run(
           uuidDepense, 
           `${produit.nom} - Qte: ${delta}, PU: ${pu.toFixed(2)}`,
           montantTotal,
+          operateur || 'Système',
           Date.now()
         );
 
@@ -66,10 +68,11 @@ module.exports = function(ipcMain, db) {
         categorie: 'STOCK',
         action: delta > 0 ? 'Approvisionnement stock' : 'Ajustement stock',
         detail: `${produit.nom}: ${delta > 0 ? '+' : ''}${delta} ${produit.unite_base || 'unité'}(s) — ${motif || 'Ajustement manuel'}`,
-        operateur: null,
+        operateur: operateur || null,
         montant: delta > 0 && prixVal > 0 ? (prixType === 'total' ? prixVal : delta * prixVal) : null,
         icone: delta > 0 ? '📦' : '⚠️'
       });
+      notifyChange();
 
       return { success: true, ancienneQty, nouvelleQty, delta };
     } catch (err) {

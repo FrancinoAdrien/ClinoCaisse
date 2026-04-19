@@ -1,6 +1,7 @@
 'use strict';
 const { randomUUID } = require('crypto');
 const { logAction } = require('./journal.ipc');
+const { notifyChange } = require('../sync/notifier');
 
 module.exports = function(ipcMain, db) {
 
@@ -8,8 +9,8 @@ module.exports = function(ipcMain, db) {
   function adjustCapital(delta) {
     const row = db.prepare("SELECT valeur FROM parametres WHERE cle = 'finance.capital'").get();
     const current = parseFloat(row?.valeur || '0');
-    db.prepare("INSERT OR REPLACE INTO parametres (cle, valeur, date_maj) VALUES ('finance.capital', ?, datetime('now'))")
-      .run(String(current + delta));
+    db.prepare("INSERT OR REPLACE INTO parametres (uuid, cle, valeur, date_maj, last_modified_at, sync_status) VALUES (COALESCE((SELECT uuid FROM parametres WHERE cle = 'finance.capital'), lower(hex(randomblob(16)))), 'finance.capital', ?, datetime('now'), ?, 0)")
+      .run(String(current + delta), Date.now());
   }
 
   // Générer numéro de ticket
@@ -74,7 +75,7 @@ module.exports = function(ipcMain, db) {
 
         // Décrémenter le stock si pas illimité
         if (ligne.produit_id && !ligne.est_offert) {
-          const p = db.prepare('SELECT stock_actuel, stock_bar, is_prepared, uuid FROM produits WHERE id = ?').get(ligne.produit_id);
+          const p = db.prepare('SELECT stock_actuel, stock_bar, is_prepared, uuid FROM produits WHERE id = ? OR uuid = ?').get(ligne.produit_id, ligne.produit_id);
           if (p) {
             if (p.is_prepared) {
               // Décrémenter les ingrédients
@@ -99,8 +100,8 @@ module.exports = function(ipcMain, db) {
                 UPDATE produits 
                 SET stock_actuel = MAX(0, stock_actuel - ?),
                     stock_bar = MAX(0, COALESCE(stock_bar, stock_actuel) - ?)
-                WHERE id = ?
-              `).run(ligne.quantite, ligne.quantite, ligne.produit_id);
+                WHERE id = ? OR uuid = ?
+              `).run(ligne.quantite, ligne.quantite, ligne.produit_id, ligne.produit_id);
             }
           }
         }
@@ -124,6 +125,7 @@ module.exports = function(ipcMain, db) {
           montant: data.total_ttc || 0,
           icone: '🛒'
         });
+        notifyChange();
       }
       return result;
     } catch (err) {
@@ -137,8 +139,8 @@ module.exports = function(ipcMain, db) {
     return db.prepare(`
       SELECT v.*, GROUP_CONCAT(lv.produit_nom, ', ') as articles
       FROM ventes v
-      LEFT JOIN lignes_vente lv ON lv.vente_id = v.id
-      GROUP BY v.id
+      LEFT JOIN lignes_vente lv ON lv.vente_uuid = v.uuid
+      GROUP BY v.uuid
       ORDER BY v.date_vente DESC
       LIMIT 500
     `).all();
@@ -146,9 +148,10 @@ module.exports = function(ipcMain, db) {
 
   // ── VENTE PAR ID ─────────────────────────────────────────────────────
   ipcMain.handle('ventes:getById', (e, id) => {
-    const vente = db.prepare('SELECT * FROM ventes WHERE id = ?').get(id);
+    // Support lookup by numeric id (rowid) or by uuid
+    const vente = db.prepare('SELECT * FROM ventes WHERE uuid = ? OR id = ?').get(id, id);
     if (!vente) return null;
-    vente.lignes = db.prepare('SELECT * FROM lignes_vente WHERE vente_id = ?').all(id);
+    vente.lignes = db.prepare('SELECT * FROM lignes_vente WHERE vente_uuid = ?').all(vente.uuid);
     return vente;
   });
 
@@ -163,9 +166,9 @@ module.exports = function(ipcMain, db) {
   // ── ANNULER UNE VENTE ────────────────────────────────────────────────
   ipcMain.handle('ventes:annuler', (e, id) => {
     try {
-      const vente = db.prepare('SELECT total_ttc, montant_paye, statut, numero_ticket, nom_caissier FROM ventes WHERE id = ?').get(id);
-      db.prepare(`UPDATE ventes SET statut = 'annule', sync_status = 0, last_modified_at = ? WHERE id = ?`)
-        .run(Date.now(), id);
+      const vente = db.prepare('SELECT total_ttc, montant_paye, statut, numero_ticket, nom_caissier FROM ventes WHERE uuid = ? OR id = ?').get(id, id);
+      db.prepare(`UPDATE ventes SET statut = 'annule', sync_status = 0, last_modified_at = ? WHERE uuid = ? OR id = ?`)
+        .run(Date.now(), id, id);
       // Restituer au capital ce qui avait été encaissé (annulation = sortie inverse)
       if (vente?.statut === 'valide') {
         const paye = vente.montant_paye !== null ? vente.montant_paye : vente.total_ttc;
@@ -179,6 +182,7 @@ module.exports = function(ipcMain, db) {
           montant: vente.total_ttc || 0,
           icone: '❌'
         });
+        notifyChange();
       }
       return { success: true };
     } catch (err) {
@@ -207,22 +211,25 @@ module.exports = function(ipcMain, db) {
     try {
       const lignesJson = JSON.stringify(data.lignes || []);
       const total = (data.lignes || []).reduce((s, l) => s + (l.total_ttc || 0), 0);
+      const now = Date.now();
       const existing = db.prepare(
-        "SELECT id FROM tickets_table WHERE numero_table = ? AND statut = 'en_cours'"
+        "SELECT id, uuid FROM tickets_table WHERE numero_table = ? AND statut = 'en_cours'"
       ).get(data.numero_table);
 
       if (existing) {
         db.prepare(`
           UPDATE tickets_table SET nom_table = ?, nom_caissier = ?,
-            date_modification = datetime('now'), montant_total = ?, lignes_json = ?
-          WHERE id = ?
-        `).run(data.nom_table || null, data.nom_caissier, total, lignesJson, existing.id);
-        return { success: true, id: existing.id };
+            date_modification = datetime('now'), montant_total = ?, lignes_json = ?,
+            last_modified_at = ?, sync_status = 0
+          WHERE uuid = ?
+        `).run(data.nom_table || null, data.nom_caissier, total, lignesJson, now, existing.uuid);
+        return { success: true, id: existing.uuid };
       } else {
+        const uid = randomUUID();
         const result = db.prepare(`
-          INSERT INTO tickets_table (numero_table, nom_table, nom_caissier, montant_total, lignes_json)
-          VALUES (?, ?, ?, ?, ?)
-        `).run(data.numero_table, data.nom_table || null, data.nom_caissier, total, lignesJson);
+          INSERT INTO tickets_table (uuid, numero_table, nom_table, nom_caissier, montant_total, lignes_json, last_modified_at, sync_status)
+          VALUES (?, ?, ?, ?, ?, ?, ?, 0)
+        `).run(uid, data.numero_table, data.nom_table || null, data.nom_caissier, total, lignesJson, now);
         return { success: true, id: result.lastInsertRowid };
       }
     } catch (err) {
@@ -231,7 +238,8 @@ module.exports = function(ipcMain, db) {
   });
 
   ipcMain.handle('tables:charger', (e, id) => {
-    const t = db.prepare('SELECT * FROM tickets_table WHERE id = ?').get(id);
+    // Support lookup by numeric id, rowid, or uuid
+    const t = db.prepare('SELECT * FROM tickets_table WHERE uuid = ? OR id = ?').get(id, id);
     if (t && t.lignes_json) {
       try { t.lignes = JSON.parse(t.lignes_json); } catch { t.lignes = []; }
     }
@@ -240,7 +248,7 @@ module.exports = function(ipcMain, db) {
 
   ipcMain.handle('tables:supprimer', (e, id) => {
     try {
-      db.prepare("UPDATE tickets_table SET statut = 'ferme' WHERE id = ?").run(id);
+      db.prepare("UPDATE tickets_table SET statut = 'ferme', last_modified_at = ?, sync_status = 0 WHERE uuid = ? OR id = ?").run(Date.now(), id, id);
       return { success: true };
     } catch (err) {
       return { success: false, message: err.message };
@@ -251,7 +259,7 @@ module.exports = function(ipcMain, db) {
     try {
       const max = db.prepare('SELECT MAX(numero_table) as m FROM tables_config').get().m || 0;
       const next = max + 1;
-      db.prepare('INSERT INTO tables_config (numero_table, ordre) VALUES (?, ?)').run(next, next);
+      db.prepare('INSERT INTO tables_config (uuid, numero_table, ordre, last_modified_at, sync_status) VALUES (?, ?, ?, ?, 0)').run(randomUUID(), next, next, Date.now());
       return { success: true, numero: next };
     } catch (err) {
       return { success: false, message: err.message };
@@ -281,11 +289,11 @@ module.exports = function(ipcMain, db) {
           COALESCE(SUM(lv.total_ttc), 0) as total_amount,
           COALESCE(SUM(lv.quantite * COALESCE(p.prix_achat, 0)), 0) as total_cost
         FROM lignes_vente lv
-        INNER JOIN ventes v ON lv.vente_id = v.id
-        LEFT JOIN produits p ON lv.produit_id = p.id
-        WHERE lv.produit_id = ? AND v.statut = 'valide'
+        INNER JOIN ventes v ON lv.vente_uuid = v.uuid
+        LEFT JOIN produits p ON (lv.produit_id = p.id OR lv.produit_id = p.uuid)
+        WHERE (lv.produit_id = ? OR lv.produit_id = (SELECT id FROM produits WHERE uuid = ?)) AND v.statut = 'valide'
       `;
-      const paramsV = [produitId];
+      const paramsV = [produitId, produitId];
       if (start) { queryVentes += ` AND v.date_vente >= ?`; paramsV.push(start); }
       if (end) { queryVentes += ` AND v.date_vente <= ?`; paramsV.push(end); }
       const resV = db.prepare(queryVentes).get(...paramsV);
@@ -297,9 +305,9 @@ module.exports = function(ipcMain, db) {
           COALESCE(SUM(ABS(sh.delta) * COALESCE(p.prix_achat, 0)), 0) as total_perte_val
         FROM stock_historique sh
         LEFT JOIN produits p ON sh.produit_id = p.id
-        WHERE sh.produit_id = ? AND sh.delta < 0
+        WHERE (sh.produit_id = ? OR sh.produit_id = (SELECT id FROM produits WHERE uuid = ?)) AND sh.delta < 0
       `;
-      const paramsP = [produitId];
+      const paramsP = [produitId, produitId];
       if (start) { queryPertes += ` AND sh.date_op >= ?`; paramsP.push(start); }
       if (end) { queryPertes += ` AND sh.date_op <= ?`; paramsP.push(end); }
       const resP = db.prepare(queryPertes).get(...paramsP);

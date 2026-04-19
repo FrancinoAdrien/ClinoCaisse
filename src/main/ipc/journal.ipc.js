@@ -27,17 +27,20 @@ const { dialog } = require('electron');
  */
 function logAction(db, data) {
   try {
+    const { randomUUID } = require('crypto');
     db.prepare(`
-      INSERT INTO journal_activite (categorie, action, detail, operateur, montant, icone, meta_json)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO journal_activite (uuid, categorie, action, detail, operateur, montant, icone, meta_json, last_modified_at, sync_status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
     `).run(
+      randomUUID(),
       data.categorie || 'SYSTEME',
       data.action    || '',
       data.detail    || null,
       data.operateur || null,
       data.montant   != null ? data.montant : null,
       data.icone     || null,
-      data.meta      ? JSON.stringify(data.meta) : null
+      data.meta      ? JSON.stringify(data.meta) : null,
+      Date.now()
     );
   } catch (err) {
     // On ne propage jamais une erreur de journalisation

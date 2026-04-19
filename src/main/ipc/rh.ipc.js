@@ -1,5 +1,6 @@
 'use strict';
 const { logAction } = require('./journal.ipc');
+const { notifyChange } = require('../sync/notifier');
 
 module.exports = function(ipcMain, db) {
 
@@ -7,8 +8,8 @@ module.exports = function(ipcMain, db) {
   function adjustCapital(delta) {
     const row = db.prepare("SELECT valeur FROM parametres WHERE cle = 'finance.capital'").get();
     const current = parseFloat(row?.valeur || '0');
-    db.prepare("INSERT OR REPLACE INTO parametres (cle, valeur, date_maj) VALUES ('finance.capital', ?, datetime('now'))")
-      .run(String(current + delta));
+    db.prepare("INSERT OR REPLACE INTO parametres (uuid, cle, valeur, date_maj, last_modified_at, sync_status) VALUES (COALESCE((SELECT uuid FROM parametres WHERE cle = 'finance.capital'), lower(hex(randomblob(16)))), 'finance.capital', ?, datetime('now'), ?, 0)")
+      .run(String(current + delta), Date.now());
   }
 
 
@@ -87,7 +88,7 @@ module.exports = function(ipcMain, db) {
         montant: salaire_base || 0,
         icone: '👤'
       });
-
+      notifyChange();
       return result;
     } catch (e) {
       console.error('IPC rh:addEmploye error:', e.message);
@@ -174,7 +175,7 @@ module.exports = function(ipcMain, db) {
         montant,
         icone: type_paiement === 'Avance' ? '💳' : '💵'
       });
-
+      notifyChange();
       return { success: true };
     } catch (e) {
       console.error('IPC rh:addPaiement error:', e.message);
