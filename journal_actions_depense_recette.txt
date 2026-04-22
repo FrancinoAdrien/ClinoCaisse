@@ -1,0 +1,190 @@
+CLINOCAISSE - CLASSIFICATION JOURNAL SANS CONFUSION
+Date: 2026-04-21
+
+Objectif:
+- Eviter toute confusion entre DEPENSE, RECETTE, DETTE, CREANCE dans le journal.
+- Avoir une regle unique de lecture pour chaque action.
+
+====================================================================
+1) DEFINITIONS OFFICIELLES (A UTILISER PARTOUT)
+====================================================================
+
+[DEPENSE]
+Sortie d'argent immediate (l'argent quitte la caisse/capital maintenant).
+Exemples: depense payee, salaire paye, retrait capital, remboursement client.
+
+[RECETTE]
+Entree d'argent immediate (l'argent entre dans la caisse/capital maintenant).
+Exemples: vente encaissee, cloture Z comptabilisee, creance encaissee.
+
+[DETTE]
+Obligation de paiement future (argent PAS encore sorti).
+Exemples: commande fournisseur non payee.
+
+[CREANCE]
+Argent a recevoir plus tard (argent PAS encore entre).
+Exemples: creance client ajoutee en attente d'encaissement.
+
+Important:
+- DETTE et CREANCE ne sont pas des flux de tresorerie immediats.
+- DEPENSE et RECETTE sont des flux de tresorerie immediats.
+
+====================================================================
+2) CLASSIFICATION PAR ACTION JOURNAL (SOURCE CODE)
+====================================================================
+
+-------------------------
+CATEGORIE FINANCE
+-------------------------
+- Ajout capital                => RECETTE
+  Raison: l'argent entre dans le capital maintenant.
+
+- Retrait capital              => DEPENSE
+  Raison: l'argent sort du capital maintenant.
+
+- Commande enregistree         => DETTE
+  Raison: obligation de paiement creee, mais non payee au moment de l'action.
+
+- Depense payee                => DEPENSE
+  Raison: sortie d'argent effective.
+
+- Depense directe              => DEPENSE
+  Raison: sortie d'argent immediate.
+
+- Creance ajoutee              => CREANCE
+  Raison: droit de recevoir un montant plus tard, pas encore encaisse.
+
+- Creance encaissee            => RECETTE
+  Raison: argent effectivement recu.
+
+-------------------------
+CATEGORIE VENTE
+-------------------------
+- Vente creee                  => RECETTE
+  Raison: vente encaissee (selon montant_paye / total_ttc).
+
+- Vente annulee                => DEPENSE
+  Raison: sortie inverse/restitution de l'encaissement.
+
+-------------------------
+CATEGORIE CLOTURE
+-------------------------
+- Cloture Z effectuee          => RECETTE
+  Raison: recette de cloture ajoutee au capital.
+
+-------------------------
+CATEGORIE RH
+-------------------------
+- Avance employe               => DEPENSE
+  Raison: argent verse a l'employe.
+
+- Salaire paye                 => DEPENSE
+  Raison: sortie d'argent.
+
+- Paiement annule              => RECETTE
+  Raison: restitution au capital (retour d'argent).
+
+- Employe ajoute               => NEUTRE
+  Raison: pas de mouvement d'argent immediat.
+
+-------------------------
+CATEGORIE STOCK
+-------------------------
+- Approvisionnement stock      => DEPENSE (si montant > 0), sinon NEUTRE
+  Raison: achat stock = sortie d'argent quand prix renseigne.
+
+- Ajustement stock             => NEUTRE
+  Raison: variation stock sans flux monetaire direct dans le journal.
+
+-------------------------
+CATEGORIE TERRAIN
+-------------------------
+- Reservation creee            => RECETTE si montant_paye > 0, sinon CREANCE
+  Raison:
+    * montant encaisse maintenant => RECETTE
+    * zero encaisse et solde du   => CREANCE (a encaisser)
+
+- Paiement partiel recu        => RECETTE
+  Raison: encaissement partiel immediat.
+
+- Reservation soldee           => RECETTE
+  Raison: encaissement du solde.
+
+- Reservation annulee          => DEPENSE si remboursement, sinon NEUTRE
+  Raison:
+    * avec remboursement => sortie d'argent
+    * sans remboursement => pas de flux tresorerie
+
+- Espace cree                  => NEUTRE
+- Espace modifie               => NEUTRE
+- Reservation decalee          => NEUTRE
+
+-------------------------
+CATEGORIES NON FINANCIERES
+-------------------------
+- AUTH (Connexion, Deconnexion)          => NEUTRE
+- UTILISATEUR (create/update/desact/...) => NEUTRE
+- PARAMETRE (modification)               => NEUTRE
+- PRODUIT (create/update/desactive)      => NEUTRE
+- RESERVATION (statut interne)           => NEUTRE
+
+====================================================================
+3) MATRICE COURTE "SANS CONFUSION"
+====================================================================
+
+Si l'action signifie...
+- "argent sort maintenant"        => DEPENSE
+- "argent entre maintenant"       => RECETTE
+- "a payer plus tard"             => DETTE
+- "a encaisser plus tard"         => CREANCE
+- "aucun flux immediate"          => NEUTRE
+
+====================================================================
+4) LISTES PRATIQUES POUR FILTRE JOURNAL
+====================================================================
+
+DEPENSE_ACTIONS
+- Retrait capital
+- Depense payee
+- Depense directe
+- Vente annulee
+- Avance employe
+- Salaire paye
+# Conditionnel:
+- Reservation annulee (uniquement si remboursement)
+- Approvisionnement stock (uniquement si montant > 0)
+
+RECETTE_ACTIONS
+- Ajout capital
+- Vente creee
+- Cloture Z effectuee
+- Creance encaissee
+- Paiement partiel recu
+- Reservation soldee
+- Paiement annule
+# Conditionnel:
+- Reservation creee (si montant_paye > 0)
+
+DETTE_ACTIONS
+- Commande enregistree
+
+CREANCE_ACTIONS
+- Creance ajoutee
+# Conditionnel:
+- Reservation creee (si montant_paye == 0 et solde restant > 0)
+
+====================================================================
+5) RECOMMANDATION IMPLEMENTATION (UI/FILTRE)
+====================================================================
+
+Pour eviter les erreurs de classement:
+1. Filtrer d'abord par "action" (liste ci-dessus).
+2. Appliquer ensuite les regles conditionnelles avec le montant/detail.
+3. Afficher un badge explicite:
+   [DEPENSE] [RECETTE] [DETTE] [CREANCE] [NEUTRE]
+
+Ainsi, un utilisateur ne confond plus:
+- "Commande enregistree" (DETTE)
+avec
+- "Depense payee" (DEPENSE).
+

@@ -395,27 +395,35 @@
         ${e.description ? `<div class="espace-description">${escapeHtml(e.description)}</div>` : ''}
         <div class="espace-tarif">${e.tarif_heure > 0 ? fmtMoney(e.tarif_heure, devise) + '/h' : 'Tarif libre'}</div>
         <div class="espace-actions">
-          <button class="btn-espace-edit" data-id="${e.id}">✏️ Modifier</button>
-          <button class="btn-espace-delete" data-id="${e.id}">🗑 Supprimer</button>
+          <button class="btn-espace-edit" data-id="${e.id || ''}" data-uuid="${e.uuid || ''}">✏️ Modifier</button>
+          <button class="btn-espace-delete" data-id="${e.id || ''}" data-uuid="${e.uuid || ''}">🗑 Supprimer</button>
         </div>
       </div>
     `).join('');
   }
 
+  function findEspaceByAnyIdentifier(idOrUuid) {
+    const key = String(idOrUuid || '').trim();
+    if (!key) return null;
+    return espaces.find(e => String(e.id) === key || String(e.uuid) === key) || null;
+  }
+
   function bindEspaceCardEvents() {
     document.querySelectorAll('.btn-espace-edit').forEach(btn => {
       btn.addEventListener('click', () => {
-        const espace = espaces.find(e => e.id === parseInt(btn.dataset.id));
+        const rawId = btn.dataset.id || btn.dataset.uuid;
+        const espace = findEspaceByAnyIdentifier(rawId);
         if (espace) openFormEspace(espace);
       });
     });
     document.querySelectorAll('.btn-espace-delete').forEach(btn => {
       btn.addEventListener('click', () => {
-        const espace = espaces.find(e => e.id === parseInt(btn.dataset.id));
+        const rawId = btn.dataset.id || btn.dataset.uuid;
+        const espace = findEspaceByAnyIdentifier(rawId);
         if (!espace) return;
         Modal.confirm('Désactiver l\'espace', `Désactiver l'espace "${espace.nom}" ? (Les réservations existantes sont conservées)`, async (ok) => {
           if (!ok) return;
-          const res = await window.api.terrain.deleteEspace(espace.id);
+          const res = await window.api.terrain.deleteEspace(espace.id || espace.uuid);
           if (res.success) {
             Toast.success('Espace désactivé');
             await loadEspaces();
@@ -946,7 +954,7 @@
   function openFormEspace(espace) {
     const devise = localStorage.getItem('cc_devise') || 'Ar';
     const isEdit = !!espace;
-    editingEspaceId = isEdit ? espace.id : null;
+    editingEspaceId = isEdit ? (espace.id || espace.uuid) : null;
 
     const modal = createModal('modal-espace', `
       <div class="modal-header">

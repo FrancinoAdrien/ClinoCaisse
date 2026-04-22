@@ -22,6 +22,7 @@ contextBridge.exposeInMainWorld('api', {
     search: (query)               => ipcRenderer.invoke('produits:search', query),
     updateStock: (id, qty, op)    => ipcRenderer.invoke('produits:updateStock', id, qty, op),
     getIngredients: (id)          => ipcRenderer.invoke('produits:getIngredients', id),
+    uploadImage: (dataUrl, fileName, produitId) => ipcRenderer.invoke('produits:uploadImage', dataUrl, fileName, produitId),
   },
   categories: {
     getAll: ()            => ipcRenderer.invoke('categories:getAll'),
@@ -96,6 +97,7 @@ contextBridge.exposeInMainWorld('api', {
     getAll: ()            => ipcRenderer.invoke('parametres:getAll'),
     set: (cle, valeur)    => ipcRenderer.invoke('parametres:set', cle, valeur),
     setBulk: (data)       => ipcRenderer.invoke('parametres:setBulk', data),
+    uploadLogo: (dataUrl, fileName) => ipcRenderer.invoke('parametres:uploadLogo', dataUrl, fileName),
   },
 
   // ── THÈME ────────────────────────────────────────────────────────────
@@ -135,6 +137,7 @@ contextBridge.exposeInMainWorld('api', {
     getPaiementStats:  (days)         => ipcRenderer.invoke('analytique:getPaiementStats', days),
     getCAParJour:      (days)         => ipcRenderer.invoke('analytique:getCAParJour', days),
     getClotures:       (days)         => ipcRenderer.invoke('analytique:getClotures', days),
+    getOverview:       (range)        => ipcRenderer.invoke('analytique:getOverview', range),
   },
 
   // ── JOURNAL D'ACTIVITÉ ────────────────────────────────────────────────

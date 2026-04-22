@@ -313,6 +313,88 @@ async function printText(text, requestedPrinterName) {
   });
 }
 
+function escapeHtml(text) {
+  return String(text || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function buildTicketHtml(ticketText, logoUrl) {
+  const safeLogo = escapeHtml(logoUrl || '');
+  const safeText = escapeHtml(ticketText).replace(/\n/g, '<br/>');
+  return `
+    <html>
+      <head>
+        <style>
+          @page { margin: 0; }
+          body { margin: 0; padding: 0; background: #fff; color: #000; font-family: 'Courier New', Courier, monospace; }
+          .wrap { padding: 0; }
+          .logo { text-align: center; margin: 0 0 6px 0; }
+          .logo img { max-width: 160px; max-height: 72px; object-fit: contain; }
+          .ticket { font-size: 13px; line-height: 1.2; font-weight: 900; white-space: nowrap; }
+        </style>
+      </head>
+      <body>
+        <div class="wrap">
+          ${safeLogo ? `<div class="logo"><img src="${safeLogo}" alt="Logo" /></div>` : ''}
+          <div class="ticket">${safeText}</div>
+        </div>
+      </body>
+    </html>
+  `;
+}
+
+async function printHtml(html, requestedPrinterName) {
+  let targetPrinters = [];
+  try {
+    const { BrowserWindow } = require('electron');
+    const wins = BrowserWindow.getAllWindows();
+    if (wins.length > 0) {
+      const printers = await wins[0].webContents.getPrintersAsync();
+      const realPrinters = printers.filter(p =>
+        !p.name.toLowerCase().includes('pdf') &&
+        !p.name.toLowerCase().includes('onenote') &&
+        !p.name.toLowerCase().includes('fax') &&
+        !p.name.toLowerCase().includes('xps') &&
+        !p.name.toLowerCase().includes('anydesk')
+      );
+      if (realPrinters.length > 0) {
+        if (requestedPrinterName && realPrinters.find(p => p.name === requestedPrinterName)) targetPrinters = [requestedPrinterName];
+        else targetPrinters = realPrinters.map(p => p.name);
+      }
+    }
+  } catch {}
+  if (targetPrinters.length === 0) return { success: false, message: "Aucune imprimante physique n'est connectée" };
+
+  return new Promise((resolve) => {
+    const { BrowserWindow } = require('electron');
+    const win = new BrowserWindow({ show: false, webPreferences: { nodeIntegration: false } });
+    win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
+    win.webContents.on('did-finish-load', async () => {
+      let printedSuccessfully = false;
+      let errors = [];
+      for (const printer of targetPrinters) {
+        if (printedSuccessfully) break;
+        await new Promise((resume) => {
+          win.webContents.print({
+            silent: true,
+            printBackground: true,
+            deviceName: printer,
+            margins: { marginType: 'none' },
+          }, (success, errorType) => {
+            if (success) printedSuccessfully = true;
+            else errors.push(errorType || "Erreur inconnue");
+            resume();
+          });
+        });
+      }
+      setTimeout(() => { try { win.close(); } catch {} }, 1000);
+      resolve(printedSuccessfully ? { success: true } : { success: false, message: errors.join(' | ') });
+    });
+  });
+}
+
   module.exports = function (ipcMain, db) {
 
     // ── LISTE DES IMPRIMANTES ─────────────────────────────────────────────
@@ -356,13 +438,15 @@ async function printText(text, requestedPrinterName) {
         entrepriseNif: p['entreprise.nif'] || '',
         entrepriseStat: p['entreprise.stat'] || '',
         slogan: p['entreprise.slogan'] || '',
+        logoUrl: p['entreprise.logo_url'] || '',
         devise: p['caisse.devise'] || 'Ar',
       };
 
       const text = formatTicket(ticketData, largeur);
+      const html = buildTicketHtml(text, ticketData.logoUrl);
       let success = false;
       for (let i = 0; i < copies; i++) {
-        const r = await printText(text, printerName);
+        const r = ticketData.logoUrl ? await printHtml(html, printerName) : await printText(text, printerName);
         if (r.success) success = true;
       }
       return { success, text };

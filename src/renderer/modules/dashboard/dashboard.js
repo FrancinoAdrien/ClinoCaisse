@@ -9,12 +9,14 @@
     container.innerHTML = `
       <!-- Topbar -->
       <div id="dashboard-topbar">
-        <div class="dash-logo">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round">
-            <rect x="2" y="7" width="20" height="14" rx="2"/>
-            <path d="M16 7V5a2 2 0 0 0-4 0v2M8 7V5a2 2 0 0 0-4 0v2"/>
-            <line x1="12" y1="12" x2="12" y2="17"/><line x1="9" y1="14.5" x2="15" y2="14.5"/>
-          </svg>
+        <div class="dash-logo" id="dash-logo-container">
+          <div id="dash-logo-img">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round">
+              <rect x="2" y="7" width="20" height="14" rx="2"/>
+              <path d="M16 7V5a2 2 0 0 0-4 0v2M8 7V5a2 2 0 0 0-4 0v2"/>
+              <line x1="12" y1="12" x2="12" y2="17"/><line x1="9" y1="14.5" x2="15" y2="14.5"/>
+            </svg>
+          </div>
           <span id="dash-poste-name">Poste n°1</span>
         </div>
 
@@ -170,7 +172,7 @@
 
           <!-- Panneau latéral droit : bouton Terrain -->
           <div class="dash-side-panel">
-            <button class="module-btn dash-terrain-btn" id="btn-terrain" data-perm="perm_reserv">
+            <button class="module-btn dash-terrain-btn" id="btn-terrain" data-perm="perm_reserv" style="display:none">
               <svg class="mod-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
                 <polyline points="9 22 9 12 15 12 15 22"/>
@@ -250,6 +252,15 @@
       const ver = document.getElementById('dash-version');
       if (ver && params['caisse.version']) ver.textContent = 'Version ' + params['caisse.version'];
       if (params['caisse.devise']) localStorage.setItem('cc_devise', params['caisse.devise']);
+      
+      const topLogo = document.getElementById('dash-logo-img');
+
+      if (params['entreprise.logo_url']) {
+        const url = params['entreprise.logo_url'];
+        if (topLogo) {
+          topLogo.innerHTML = `<img src="${Utils.esc(url)}" style="width:32px; height:32px; object-fit:contain; filter:drop-shadow(0 0 8px rgba(255,255,255,0.2))">`;
+        }
+      }
     } catch {}
   }
 

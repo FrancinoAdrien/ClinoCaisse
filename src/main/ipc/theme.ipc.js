@@ -10,7 +10,11 @@ module.exports = function(ipcMain, db) {
 
   ipcMain.handle('theme:save', (e, userId, themeName) => {
     try {
-      db.prepare("UPDATE utilisateurs SET theme = ? WHERE id = ? OR uuid = ?").run(themeName, userId, userId);
+      db.prepare(`
+        UPDATE utilisateurs
+        SET theme = ?, last_modified_at = ?, sync_status = 0
+        WHERE id = ? OR uuid = ?
+      `).run(themeName, Date.now(), userId, userId);
       return { success: true };
     } catch (err) {
       return { success: false, message: err.message };

@@ -582,3 +582,7 @@ select option {
   opacity: 0.7;
   flex-shrink: 0;
 }
+
+.dash-side-panel {
+  display: hidden !important;
+}

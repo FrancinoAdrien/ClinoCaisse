@@ -42,6 +42,30 @@ class SyncEngine {
     }
   }
 
+  async uploadAsset({ data, bucket = 'clinocaisse-assets', path: objectPath, contentType = 'application/octet-stream' }) {
+    if (!this.configured || !this.supabase) {
+      return { success: false, message: 'Synchronisation cloud non configurée.' };
+    }
+    if (!data || !objectPath) {
+      return { success: false, message: 'Fichier invalide.' };
+    }
+    try {
+      const { error } = await this.supabase.storage
+        .from(bucket)
+        .upload(objectPath, data, { contentType, upsert: true, cacheControl: '3600' });
+      if (error) {
+        if (String(error.message || '').toLowerCase().includes('bucket')) {
+          return { success: false, message: `Bucket Supabase introuvable: "${bucket}". Créez-le en mode public dans Storage.` };
+        }
+        return { success: false, message: error.message };
+      }
+      const { data: pub } = this.supabase.storage.from(bucket).getPublicUrl(objectPath);
+      return { success: true, url: pub?.publicUrl || null, bucket, path: objectPath };
+    } catch (err) {
+      return { success: false, message: err.message };
+    }
+  }
+
   // ── TEST CONNEXION ────────────────────────────────────────────────────────
 
   async testConnexion() {
@@ -213,6 +237,8 @@ class SyncEngine {
         // Nettoyer les colonnes purement locales non présentes dans le Cloud
         // ou dont la valeur nulle provoquerait des erreurs de contrainte côté Supabase
         if ('image_data' in row) delete row.image_data;
+        // Colonne locale ajoutée pour l'UI de réservation, non présente sur certains schémas cloud
+        if ('duree_heures' in row) delete row.duree_heures;
         // On n'envoie JAMAIS l'id local (SQLite AUTOINCREMENT) — uuid est la PK cloud
         delete row.id;
 

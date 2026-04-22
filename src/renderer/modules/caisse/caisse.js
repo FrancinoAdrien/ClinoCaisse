@@ -170,7 +170,8 @@
         email: params['entreprise.email'] || '',
         nif: params['entreprise.nif'] || '',
         stat: params['entreprise.stat'] || '',
-        slogan: params['entreprise.slogan'] || ''
+        slogan: params['entreprise.slogan'] || '',
+        logo_url: params['entreprise.logo_url'] || ''
       };
 
       // Charger préf impression (localStorage pour persistance inter-session)
@@ -850,7 +851,12 @@
       id: visId,
       title: 'Aperçu du ticket',
       width: '520px',
-      content: `<div class="ticket-preview-paper">${Utils.esc(lignes).replace(/\*\*(.*?)\*\*/g, '<strong style="color:#000; font-weight:bold">$1</strong>')}</div>`,
+      content: `
+        <div class="ticket-preview-paper">
+          ${state.entreprise.logo_url ? `<div style="text-align:center;margin-bottom:10px;"><img src="${Utils.esc(state.entreprise.logo_url)}" style="max-height:60px; max-width: 150px; object-fit: contain;"></div>` : ''}
+          ${Utils.esc(lignes).replace(/\*\*(.*?)\*\*/g, '<strong style="color:#000; font-weight:bold">$1</strong>')}
+        </div>
+      `,
       footer: `
         <button class="btn btn-ghost" data-close="${visId}">Fermer</button>
         <button class="btn btn-primary" id="btn-go-ticket">Enregistrer →</button>
@@ -910,7 +916,12 @@
       id: bonId,
       title: `Addition — ${nom_table}`,
       width: '520px',
-      content: `<div class="ticket-preview-paper">${Utils.esc(texte).replace(/\*\*(.*?)\*\*/g, '<strong style="color:#000; font-weight:bold">$1</strong>')}</div>`,
+      content: `
+        <div class="ticket-preview-paper">
+          ${state.entreprise.logo_url ? `<div style="text-align:center;margin-bottom:10px;"><img src="${Utils.esc(state.entreprise.logo_url)}" style="max-height:60px; max-width: 150px; object-fit: contain;"></div>` : ''}
+          ${Utils.esc(texte).replace(/\*\*(.*?)\*\*/g, '<strong style="color:#000; font-weight:bold">$1</strong>')}
+        </div>
+      `,
       footer: `
         <button class="btn btn-ghost" data-close="${bonId}">Fermer</button>
         <button class="btn btn-primary" id="btn-print-bon">Imprimer</button>
@@ -1248,7 +1259,7 @@
       renderPanier();
 
       // Recharger produits (stocks)
-      state.produits = await window.api.produits.getAll();
+      state.produits = (await window.api.produits.getAll()).filter(p => !p.is_ingredient);
       renderProducts();
 
       Modal.close(modalId);
@@ -1312,7 +1323,12 @@
       id: visId,
       title: `Ticket ${t.numero_ticket}`,
       width: '540px',
-      content: `<div class="ticket-preview-paper">${Utils.esc(lignes).replace(/\*\*(.*?)\*\*/g, '<strong style="font-size:1.15em; color:#000; font-weight:900">$1</strong>')}</div>`,
+      content: `
+        <div class="ticket-preview-paper">
+          ${state.entreprise.logo_url ? `<div style="text-align:center;margin-bottom:10px;"><img src="${Utils.esc(state.entreprise.logo_url)}" style="max-height:60px; max-width: 150px; object-fit: contain;"></div>` : ''}
+          ${Utils.esc(lignes).replace(/\*\*(.*?)\*\*/g, '<strong style="font-size:1.15em; color:#000; font-weight:900">$1</strong>')}
+        </div>
+      `,
       footer: `
         <button class="btn btn-ghost" data-close="${visId}">Fermer</button>
         <button class="btn btn-primary" id="btn-reimprimer">Réimprimer</button>

@@ -110,7 +110,7 @@ module.exports = function(ipcMain, db) {
       db.transaction(() => {
         db.prepare(`
           INSERT INTO flux_tresorerie (uuid, type_flux, montant, motif, date_flux, operateur, last_modified_at, sync_status)
-          VALUES (?, ?, ?, ?, datetime('now'), ?, ?, 1)
+          VALUES (?, ?, ?, ?, datetime('now'), ?, ?, 0)
         `).run(uuid, type_flux, montant, motif, operateur, Date.now());
         
         adjustCapital(delta);
@@ -159,7 +159,7 @@ module.exports = function(ipcMain, db) {
       const { uuid, categorie, description, montant, fournisseur_nom, date_depense, operateur } = data;
       db.prepare(`
         INSERT INTO depenses (uuid, categorie, description, montant, fournisseur_nom, date_depense, statut, operateur, last_modified_at, sync_status) 
-        VALUES (?, ?, ?, ?, ?, ?, 'commande', ?, ?, 1)
+        VALUES (?, ?, ?, ?, ?, ?, 'commande', ?, ?, 0)
       `).run(uuid, categorie, description, montant, fournisseur_nom || '', date_depense, operateur, Date.now());
 
       logAction(db, {
@@ -182,7 +182,7 @@ module.exports = function(ipcMain, db) {
   ipcMain.handle('finances:payerDepense', async (event, uuid) => {
     try {
       const dep = db.prepare("SELECT montant, description, operateur FROM depenses WHERE uuid = ?").get(uuid);
-      db.prepare("UPDATE depenses SET statut = 'payee', last_modified_at = ? WHERE uuid = ?")
+      db.prepare("UPDATE depenses SET statut = 'payee', last_modified_at = ?, sync_status = 0 WHERE uuid = ?")
         .run(Date.now(), uuid);
       if (dep?.montant) adjustCapital(-dep.montant);
 
@@ -208,7 +208,7 @@ module.exports = function(ipcMain, db) {
       const { uuid, categorie, description, montant, date_depense, operateur } = data;
       db.prepare(`
         INSERT INTO depenses (uuid, categorie, description, montant, date_depense, statut, operateur, last_modified_at, sync_status) 
-        VALUES (?, ?, ?, ?, ?, 'payee', ?, ?, 1)
+        VALUES (?, ?, ?, ?, ?, 'payee', ?, ?, 0)
       `).run(uuid, categorie, description, montant, date_depense, operateur, Date.now());
       adjustCapital(-montant);
 
@@ -261,7 +261,7 @@ module.exports = function(ipcMain, db) {
       const { uuid, client_nom, montant, description, date_echeance, operateur } = data;
       db.prepare(`
         INSERT INTO creances_clients (uuid, client_nom, montant, description, date_creation, date_echeance, statut, operateur, last_modified_at, sync_status)
-        VALUES (?, ?, ?, ?, ?, ?, 'en_attente', ?, ?, 1)
+        VALUES (?, ?, ?, ?, ?, ?, 'en_attente', ?, ?, 0)
       `).run(uuid, client_nom, montant, description || '', new Date().toISOString().slice(0,10), date_echeance || '', operateur, Date.now());
 
       logAction(db, {
@@ -284,7 +284,7 @@ module.exports = function(ipcMain, db) {
   ipcMain.handle('finances:encaisserCreance', async (event, uuid) => {
     try {
       const cr = db.prepare("SELECT montant, client_nom FROM creances_clients WHERE uuid = ?").get(uuid);
-      db.prepare("UPDATE creances_clients SET statut = 'encaissee', last_modified_at = ? WHERE uuid = ?")
+      db.prepare("UPDATE creances_clients SET statut = 'encaissee', last_modified_at = ?, sync_status = 0 WHERE uuid = ?")
         .run(Date.now(), uuid);
       if (cr?.montant) adjustCapital(cr.montant);
 
@@ -394,7 +394,7 @@ module.exports = function(ipcMain, db) {
       db.transaction(() => {
         db.prepare(`
           INSERT INTO achats (uuid, fournisseur_uuid, total_ttc, statut, date_achat, last_modified_at, sync_status) 
-          VALUES (?, ?, ?, ?, ?, ?, 1)
+          VALUES (?, ?, ?, ?, ?, ?, 0)
         `).run(uuid, fournisseur_uuid, total_ttc, statut, date_achat, Date.now());
         if (statut === 'non_paye' && fournisseur_uuid) {
           db.prepare('UPDATE fournisseurs SET dettes_actuelles = dettes_actuelles + ? WHERE uuid = ?')

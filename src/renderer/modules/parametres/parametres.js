@@ -7,6 +7,9 @@
     activeSection: 'entreprise',
     printerList: { supported: [], system: [] },
     selectedPrinter: 'XPrinter XP80C',
+    logoUrl: '',
+    logoDataUrl: null,
+    logoFileName: '',
   };
 
   function render() {
@@ -75,6 +78,20 @@
               <div class="form-group">
                 <label>Message pied de ticket (slogan)</label>
                 <input type="text" class="input" id="p-slogan" placeholder="Merci de votre visite !" />
+              </div>
+              <div class="form-group" style="margin-top:14px">
+                <label>Logo de l'entreprise (impression ticket)</label>
+                <div style="display:flex;gap:14px;align-items:flex-start">
+                  <div id="p-logo-preview" style="width:96px;height:96px;border:1px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;background:var(--surface-2);overflow:hidden">
+                    ${state.logoUrl ? `<img src="${Utils.esc(state.logoUrl)}" alt="Logo" style="width:100%;height:100%;object-fit:contain" />` : '🖼️'}
+                  </div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <button class="btn btn-sm" id="btn-logo-choose" type="button">Choisir une image</button>
+                    <button class="btn btn-ghost btn-sm" id="btn-logo-clear" type="button">Supprimer</button>
+                    <span id="p-logo-hint" style="font-size:12px;opacity:0.75;display:block">Le logo est envoyé sur Supabase Storage.</span>
+                  </div>
+                </div>
+                <input type="file" id="p-logo-file" accept="image/*" style="display:none" />
               </div>
             </div>
             <div class="params-save-bar">
@@ -268,6 +285,10 @@
     setValue('p-tel',    state.params['entreprise.telephone'] || '');
     setValue('p-email',  state.params['entreprise.email']     || '');
     setValue('p-slogan', state.params['entreprise.slogan']    || '');
+    state.logoUrl = state.params['entreprise.logo_url'] || '';
+    state.logoDataUrl = null;
+    state.logoFileName = '';
+    renderLogoPreview(state.logoUrl);
 
     // Impression
     state.selectedPrinter = state.params['impression.imprimante'] || 'XPrinter XP80C';
@@ -374,8 +395,38 @@
       });
     });
 
+    document.getElementById('btn-logo-choose')?.addEventListener('click', () => {
+      document.getElementById('p-logo-file')?.click();
+    });
+    document.getElementById('btn-logo-clear')?.addEventListener('click', () => {
+      state.logoDataUrl = null;
+      state.logoFileName = '';
+      state.logoUrl = '';
+      renderLogoPreview('');
+    });
+    document.getElementById('p-logo-file')?.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        state.logoDataUrl = ev.target.result;
+        state.logoFileName = file.name || 'logo.png';
+        renderLogoPreview(state.logoDataUrl);
+      };
+      reader.readAsDataURL(file);
+    });
+
     // Save entreprise
     document.getElementById('btn-save-entreprise')?.addEventListener('click', async () => {
+      let logoUrl = state.logoUrl || '';
+      if (state.logoDataUrl) {
+        const up = await window.api.parametres.uploadLogo(state.logoDataUrl, state.logoFileName || 'logo.png');
+        if (!up.success) {
+          Toast.error(up.message || 'Upload logo impossible.');
+          return;
+        }
+        logoUrl = up.url || '';
+      }
       const res = await window.api.parametres.setBulk({
         'entreprise.nom':       getValue('p-nom'),
         'entreprise.nif':       getValue('p-nif'),
@@ -385,8 +436,16 @@
         'entreprise.telephone': getValue('p-tel'),
         'entreprise.email':     getValue('p-email'),
         'entreprise.slogan':    getValue('p-slogan'),
+        'entreprise.logo_url':  logoUrl,
       });
-      res.success ? Toast.success('Informations entreprise enregistrées') : Toast.error(res.message);
+      if (res.success) {
+        state.logoUrl = logoUrl;
+        state.logoDataUrl = null;
+        state.logoFileName = '';
+        Toast.success('Informations entreprise enregistrées');
+      } else {
+        Toast.error(res.message);
+      }
     });
 
     // Save impression
@@ -601,6 +660,14 @@
         Toast.success('Code copié !');
       });
     }
+  }
+
+  function renderLogoPreview(src) {
+    const el = document.getElementById('p-logo-preview');
+    if (!el) return;
+    el.innerHTML = src
+      ? `<img src="${Utils.esc(src)}" alt="Logo" style="width:100%;height:100%;object-fit:contain" />`
+      : '🖼️';
   }
 
   document.addEventListener('view:activate', (e) => {

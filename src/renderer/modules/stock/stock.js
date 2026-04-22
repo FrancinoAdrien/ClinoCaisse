@@ -12,6 +12,8 @@
     imageData: null,
     currentTab: 'produits',
     recipeIngredients: [],
+    imageFileName: '',
+    imagePendingDataUrl: null,
   };
 
   function categoryDepth(cat) {
@@ -252,6 +254,8 @@
     try {
       const isEdit = !!produit;
       state.imageData = produit?.image_data || null;
+      state.imageFileName = '';
+      state.imagePendingDataUrl = null;
       state.recipeIngredients = [];
 
       // Si c'est un produit préparé, on charge ses ingrédients avant d'ouvrir
@@ -396,7 +400,9 @@
         if (!file) return;
         const reader = new FileReader();
         reader.onload = (ev) => {
-          state.imageData = ev.target.result;
+          state.imagePendingDataUrl = ev.target.result;
+          state.imageFileName = file.name || 'produit.png';
+          state.imageData = state.imagePendingDataUrl;
           document.getElementById('img-preview-btn').innerHTML = `<img src="${state.imageData}" />`;
         };
         reader.readAsDataURL(file);
@@ -520,6 +526,20 @@
       document.getElementById('btn-save-produit')?.addEventListener('click', async () => {
         const nom = document.getElementById('pf-nom').value.trim();
         if (!nom) { Toast.warn('Nom requis'); return; }
+        let productImageValue = state.imageData || null;
+        if (state.imagePendingDataUrl) {
+          const up = await window.api.produits.uploadImage(
+            state.imagePendingDataUrl,
+            state.imageFileName || 'produit.png',
+            produit?.uuid || null
+          );
+          if (!up.success) {
+            Toast.error(up.message || 'Upload image produit impossible.');
+            return;
+          }
+          productImageValue = up.url || null;
+        }
+
         const data = {
           nom,
           prix_vente_ttc: parseFloat(document.getElementById('pf-prix')?.value) || 0,
@@ -529,7 +549,7 @@
           stock_bar: document.getElementById('pf-illimite')?.checked ? -1 : (parseFloat(document.getElementById('pf-stock')?.value) || 0),
           stock_alerte: document.getElementById('pf-illimite')?.checked ? 0 : (parseFloat(document.getElementById('pf-alerte')?.value) || 0),
           description: document.getElementById('pf-desc')?.value?.trim() || null,
-          image_data: state.imageData || null,
+          image_data: productImageValue,
           
           unite_base: document.getElementById('pf-unit-d')?.value?.trim() || 'Unité',
           is_alcool: document.getElementById('pf-alcool')?.checked ? 1 : 0,

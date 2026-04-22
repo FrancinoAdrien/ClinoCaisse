@@ -3,7 +3,33 @@ const { randomUUID } = require('crypto');
 const { logAction } = require('./journal.ipc');
 const { notifyChange } = require('../sync/notifier');
 
-module.exports = function(ipcMain, db) {
+module.exports = function(ipcMain, db, syncEngine) {
+
+  function parseDataUrl(dataUrl) {
+    if (!dataUrl || typeof dataUrl !== 'string') return null;
+    const m = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+    if (!m) return null;
+    return { contentType: m[1], buffer: Buffer.from(m[2], 'base64') };
+  }
+
+  ipcMain.handle('produits:uploadImage', async (e, dataUrl, fileName = '', produitId = '') => {
+    try {
+      const parsed = parseDataUrl(dataUrl);
+      if (!parsed) return { success: false, message: 'Image invalide.' };
+      const ext = (fileName.split('.').pop() || '').toLowerCase();
+      const safeExt = ext && /^[a-z0-9]+$/.test(ext) ? ext : (parsed.contentType.split('/')[1] || 'png');
+      const slug = String(produitId || randomUUID()).replace(/[^a-zA-Z0-9_-]/g, '_');
+      const objectPath = `produits/${slug}.${safeExt}`;
+      return await syncEngine.uploadAsset({
+        data: parsed.buffer,
+        contentType: parsed.contentType,
+        bucket: 'clinocaisse-assets',
+        path: objectPath
+      });
+    } catch (err) {
+      return { success: false, message: err.message };
+    }
+  });
 
   // ── HELPER: ajuster le capital ─────────────────────────────────────────────
   function adjustCapital(delta) {
@@ -126,8 +152,8 @@ module.exports = function(ipcMain, db) {
       // Gestion des ingrédients si produit préparé
       if (isPrepared && data.ingredients && Array.isArray(data.ingredients)) {
         const insRecette = db.prepare(`
-          INSERT INTO recettes_lignes (uuid, plat_uuid, ingredient_uuid, quantite_requise, last_modified_at)
-          VALUES (?, ?, ?, ?, ?)
+          INSERT INTO recettes_lignes (uuid, plat_uuid, ingredient_uuid, quantite_requise, last_modified_at, sync_status)
+          VALUES (?, ?, ?, ?, ?, 0)
         `);
         for (const ing of data.ingredients) {
           // On a besoin du UUID de l'ingrédient (on cherche par id ou uuid fourni)
@@ -222,8 +248,8 @@ module.exports = function(ipcMain, db) {
         
         if (isPrepared && data.ingredients && Array.isArray(data.ingredients)) {
           const insRecette = db.prepare(`
-            INSERT INTO recettes_lignes (uuid, plat_uuid, ingredient_uuid, quantite_requise, last_modified_at)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO recettes_lignes (uuid, plat_uuid, ingredient_uuid, quantite_requise, last_modified_at, sync_status)
+            VALUES (?, ?, ?, ?, ?, 0)
           `);
           for (const ing of data.ingredients) {
             const ingProd = db.prepare('SELECT uuid FROM produits WHERE id = ? OR uuid = ?').get(ing.ingredient_id || ing.ingredient_uuid, ing.ingredient_id || ing.ingredient_uuid);
