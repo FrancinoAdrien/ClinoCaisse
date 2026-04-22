@@ -421,9 +421,6 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-.module-btn .mod-icon {
-  /* Animation supprimée pour performances */
-}
 
 @keyframes iconFloat {
   0%, 100% { transform: translateY(0); }
@@ -459,82 +456,28 @@
 }
 
 /* ---- Couleurs des tuiles sombres et adaptatives aux thèmes ---- */
-#btn-caisse       { 
-  background: linear-gradient(to bottom, 
-    rgba(var(--accent-rgb), 0.8), 
-    rgba(var(--accent-rgb), 0.6)
-  ); 
-}
+#btn-caisse       { background: var(--btn-caisse); }
 
-#btn-grossiste    { 
-  background: linear-gradient(to bottom, 
-    rgba(46, 204, 113, 0.7), 
-    rgba(39, 174, 96, 0.5)
-  ); 
-}
+#btn-journal      { background: var(--btn-journal); }
 
-#btn-cuisine      { 
-  background: linear-gradient(to bottom, 
-    rgba(155, 89, 182, 0.7), 
-    rgba(142, 68, 173, 0.5)
-  ); 
-}
+#btn-cuisine      { background: var(--btn-cuisine); }
 
-#btn-reservations { 
-  background: linear-gradient(to bottom, 
-    rgba(52, 152, 219, 0.7), 
-    rgba(41, 128, 185, 0.5)
-  ); 
-}
+#btn-reservations { background: var(--btn-reservations); }
 
-#btn-stock        { 
-  background: linear-gradient(to bottom, 
-    rgba(241, 196, 15, 0.7), 
-    rgba(243, 156, 18, 0.5)
-  ); 
-}
+#btn-stock        { background: var(--btn-stock); }
 
-#btn-finances     { 
-  background: linear-gradient(to bottom, 
-    rgba(231, 76, 60, 0.7), 
-    rgba(192, 57, 43, 0.5)
-  ); 
-}
+#btn-finances     { background: var(--btn-finances); }
 
-#btn-rh           { 
-  background: linear-gradient(to bottom, 
-    rgba(26, 188, 156, 0.7), 
-    rgba(22, 160, 133, 0.5)
-  ); 
-}
+#btn-rh           { background: var(--btn-rh); }
 
-#btn-users        { 
-  background: linear-gradient(to bottom, 
-    rgba(230, 126, 34, 0.7), 
-    rgba(211, 84, 0, 0.5)
-  ); 
-}
+#btn-users        { background: var(--btn-users); }
 
-#btn-param        { 
-  background: linear-gradient(to bottom, 
-    rgba(149, 165, 166, 0.6), 
-    rgba(127, 140, 141, 0.4)
-  ); 
-}
+#btn-param        { background: var(--btn-param); }
 
-#btn-cloture      { 
-  background: linear-gradient(to bottom, 
-    rgba(155, 89, 182, 0.6), 
-    rgba(142, 68, 173, 0.4)
-  ); 
-}
+#btn-cloture      { background: var(--btn-cloture); }
 
-#btn-analytique   { 
-  background: linear-gradient(to bottom, 
-    rgba(46, 204, 113, 0.6), 
-    rgba(39, 174, 96, 0.4)
-  ); 
-}
+#btn-analytique   { background: var(--btn-analytique); }
+#btn-terrain      { background: var(--btn-terrain); }
 
 #dash-clock {
   background: var(--clock-gradient);
