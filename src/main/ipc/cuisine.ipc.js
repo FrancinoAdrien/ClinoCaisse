@@ -1,4 +1,5 @@
 'use strict';
+const { broadcastChange } = require('../realtime/broadcast');
 
 module.exports = function(ipcMain, db) {
 
@@ -61,6 +62,7 @@ module.exports = function(ipcMain, db) {
         db.prepare(`
           UPDATE lignes_vente SET statut_cuisine = ?, last_modified_at = ?, sync_status = 0 WHERE uuid = ?
         `).run(statut, Date.now(), ligneUuid);
+        broadcastChange({ scope: 'cuisine', ts: Date.now() });
         return { success: true };
       } 
       
@@ -78,6 +80,7 @@ module.exports = function(ipcMain, db) {
           db.prepare(`
             UPDATE tickets_table SET lignes_json = ?, date_modification = datetime('now') WHERE uuid = ?
           `).run(JSON.stringify(lignes), ticketUuid);
+          broadcastChange({ scope: 'cuisine', ts: Date.now() });
           return { success: true };
         }
         return { success: false, message: 'Article introuvable sur la table' };
@@ -88,6 +91,7 @@ module.exports = function(ipcMain, db) {
         db.prepare(`
           UPDATE lignes_vente SET statut_cuisine = ?, last_modified_at = ?, sync_status = 0 WHERE uuid = ?
         `).run(statut, Date.now(), idStrSafe);
+        broadcastChange({ scope: 'cuisine', ts: Date.now() });
         return { success: true };
       }
 

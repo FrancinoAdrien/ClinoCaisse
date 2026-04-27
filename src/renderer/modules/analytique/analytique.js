@@ -68,33 +68,98 @@
 
         <!-- KPIs -->
         <div class="ana-kpi-grid" id="ana-kpis">
+
+          <!-- Ventes caisse -->
           <div class="ana-kpi-card ana-kpi-card-sales">
-            <div class="ana-kpi-label">Ventes caisse</div>
-            <div class="ana-kpi-value" id="kpi-sales-val">—</div>
-            <div class="ana-kpi-sub" id="kpi-sales-sub"></div>
+            <div class="ana-kpi-top-bar" style="background:linear-gradient(90deg,#3b82f6,#60a5fa)"></div>
+            <div class="ana-kpi-geo"></div>
+            <div class="ana-kpi-glass"></div>
+            <div class="ana-kpi-reflection"></div>
+            <div class="ana-kpi-content">
+              <div class="ana-kpi-header">
+                <div class="ana-kpi-title-group">
+                  <div class="ana-kpi-icon-badge">
+                    <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3z M3 9h18M9 21V9"/></svg>
+                  </div>
+                  <span class="ana-kpi-label">Ventes caisse</span>
+                </div>
+                <div class="ana-kpi-dot"></div>
+              </div>
+              <div class="ana-kpi-value" id="kpi-sales-val">—</div>
+              <div class="ana-kpi-sub" id="kpi-sales-sub"></div>
+            </div>
           </div>
+
+          <!-- Terrain -->
           <div class="ana-kpi-card ana-kpi-card-terrain">
-            <div class="ana-kpi-label">Terrain</div>
-            <div class="ana-kpi-value" id="kpi-terrain-val">—</div>
-            <div class="ana-kpi-sub" id="kpi-terrain-sub"></div>
+            <div class="ana-kpi-top-bar" style="background:linear-gradient(90deg,#14b8a6,#2dd4bf)"></div>
+            <div class="ana-kpi-geo"></div>
+            <div class="ana-kpi-glass"></div>
+            <div class="ana-kpi-reflection"></div>
+            <div class="ana-kpi-content">
+              <div class="ana-kpi-header">
+                <div class="ana-kpi-title-group">
+                  <div class="ana-kpi-icon-badge">
+                    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                  </div>
+                  <span class="ana-kpi-label">Terrain</span>
+                </div>
+                <div class="ana-kpi-dot"></div>
+              </div>
+              <div class="ana-kpi-value" id="kpi-terrain-val">—</div>
+              <div class="ana-kpi-sub" id="kpi-terrain-sub"></div>
+            </div>
           </div>
+
+          <!-- Flux finance -->
           <div class="ana-kpi-card ana-kpi-card-flow">
-            <div class="ana-kpi-label">Entrées / sorties finance</div>
-            <div class="ana-kpi-value" id="kpi-flow-val">—</div>
-            <div class="ana-kpi-sub" id="kpi-flow-sub"></div>
+            <div class="ana-kpi-top-bar" style="background:linear-gradient(90deg,#f59e0b,#fbbf24)"></div>
+            <div class="ana-kpi-geo"></div>
+            <div class="ana-kpi-glass"></div>
+            <div class="ana-kpi-reflection"></div>
+            <div class="ana-kpi-content">
+              <div class="ana-kpi-header">
+                <div class="ana-kpi-title-group">
+                  <div class="ana-kpi-icon-badge">
+                    <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                  </div>
+                  <span class="ana-kpi-label">Entrées / Sorties</span>
+                </div>
+                <div class="ana-kpi-dot"></div>
+              </div>
+              <div class="ana-kpi-value" id="kpi-flow-val">—</div>
+              <div class="ana-kpi-sub" id="kpi-flow-sub"></div>
+            </div>
           </div>
+
+          <!-- Résultat net -->
           <div class="ana-kpi-card ana-kpi-card-net">
-            <div class="ana-kpi-label">Résultat net période</div>
-            <div class="ana-kpi-value" id="kpi-net-val">—</div>
-            <div class="ana-kpi-sub" id="kpi-net-sub"></div>
+            <div class="ana-kpi-top-bar" style="background:linear-gradient(90deg,#22c55e,#4ade80)"></div>
+            <div class="ana-kpi-geo"></div>
+            <div class="ana-kpi-glass"></div>
+            <div class="ana-kpi-reflection"></div>
+            <div class="ana-kpi-content">
+              <div class="ana-kpi-header">
+                <div class="ana-kpi-title-group">
+                  <div class="ana-kpi-icon-badge">
+                    <svg viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+                  </div>
+                  <span class="ana-kpi-label">Résultat net</span>
+                </div>
+                <div class="ana-kpi-dot"></div>
+              </div>
+              <div class="ana-kpi-value" id="kpi-net-val">—</div>
+              <div class="ana-kpi-sub" id="kpi-net-sub"></div>
+            </div>
           </div>
+
         </div>
 
         <!-- Graphique CA -->
         <div class="ana-card">
-          <div class="ana-card-title">Evolution journalière (caisse + terrain)</div>
+          <div class="ana-card-title">Évolution journalière (caisse)</div>
           <div class="ana-chart-wrap">
-            <canvas id="ana-chart-ca" width="900" height="280"></canvas>
+            <canvas id="ana-chart-ca" height="260"></canvas>
           </div>
         </div>
 
@@ -110,13 +175,13 @@
           </div>
         </div>
 
-        <div class="ana-card">
+        <div id="ana-section-terrains" class="ana-card">
           <div class="ana-card-title">Top terrains réservés</div>
           <div id="ana-top-terrains"></div>
         </div>
 
         <!-- Tableau ventes récentes -->
-        <div class="ana-card">
+        <div class="ana-card" style="overflow:visible;">
           <div class="ana-card-title">Dernières ventes</div>
           <div id="ana-ventes-table"></div>
         </div>
@@ -202,75 +267,83 @@
   function renderChartCA(caParJour, caTerrainParJour) {
     const canvas = document.getElementById('ana-chart-ca');
     if (!canvas) return;
+
+    // Ajuster la résolution du canvas à sa taille CSS réelle
+    const rect = canvas.getBoundingClientRect();
+    const W = Math.max(rect.width || canvas.parentElement.clientWidth || 600, 200);
+    const H = 260;
+    canvas.width  = W;
+    canvas.height = H;
+
     const ctx = canvas.getContext('2d');
     const venteMap = {};
     (caParJour || []).forEach((r) => { venteMap[r.jour] = Number(r.ca || 0); });
     (caTerrainParJour || []).forEach((r) => {
-      const day = r.jour;
-      venteMap[day] = (venteMap[day] || 0) + Number(r.ca_terrain || 0);
+      venteMap[r.jour] = (venteMap[r.jour] || 0) + Number(r.ca_terrain || 0);
     });
-    const dates = Object.keys(venteMap).sort();
+    const dates  = Object.keys(venteMap).sort();
     const values = dates.map((d) => venteMap[d]);
     const maxVal = Math.max(...values, 1);
 
-    const W = canvas.width, H = canvas.height;
-    const padL = 70, padR = 20, padT = 20, padB = 50;
+    const padL = 64, padR = 16, padT = 16, padB = 44;
     const chartW = W - padL - padR;
     const chartH = H - padT - padB;
 
     ctx.clearRect(0, 0, W, H);
 
-    // Couleurs CSS variables
     const style  = getComputedStyle(document.documentElement);
-    const accent = style.getPropertyValue('--accent').trim() || '#4a9fd4';
-    const text   = style.getPropertyValue('--text').trim() || '#ccc';
-    const border = style.getPropertyValue('--border').trim() || '#333';
+    const accent = style.getPropertyValue('--accent').trim() || '#5ab4ff';
+    const accentRgb = style.getPropertyValue('--accent-rgb').trim() || '90,180,255';
+    const textCol   = style.getPropertyValue('--text').trim()   || '#e8f2ff';
 
-    // Grille horizontale
-    ctx.strokeStyle = border;
+    // Grille + labels Y
     ctx.lineWidth = 0.5;
     for (let i = 0; i <= 4; i++) {
       const y = padT + (chartH / 4) * i;
+      ctx.strokeStyle = 'rgba(255,255,255,0.07)';
       ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
       const val = maxVal * (1 - i / 4);
-      ctx.fillStyle = text;
-      ctx.font = '11px Inter, sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,0.3)';
+      ctx.font = '10px Inter,system-ui,sans-serif';
       ctx.textAlign = 'right';
       ctx.fillText(Math.round(val).toLocaleString('fr-FR'), padL - 6, y + 4);
     }
 
     if (!dates.length) {
-      ctx.fillStyle = text;
-      ctx.font = '12px Inter, sans-serif';
-      ctx.fillText('Aucune donnée sur la période', padL, padT + 20);
+      ctx.fillStyle = 'rgba(255,255,255,0.25)';
+      ctx.font = '13px Inter,system-ui,sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Aucune donnée sur la période', W / 2, H / 2);
       return;
     }
 
-    const barW = Math.min(Math.floor(chartW / dates.length) - 4, 50);
+    const slot = chartW / dates.length;
+    const barW = Math.min(Math.max(Math.floor(slot * 0.55), 4), 48);
 
     dates.forEach((d, i) => {
-      const x  = padL + (chartW / dates.length) * i + (chartW / dates.length - barW) / 2;
-      let h  = (values[i] / maxVal) * chartH;
-      if (h <= 0) h = 1; // Sécurité anti-crash Skia Canvas
-      const y  = padT + chartH - h;
+      const x = padL + slot * i + (slot - barW) / 2;
+      let h = (values[i] / maxVal) * chartH;
+      if (h < 2) h = 2;
+      const y = padT + chartH - h;
 
-      // Barre avec dégradé
+      // Barre dégradé
       const grad = ctx.createLinearGradient(0, y, 0, y + h);
       grad.addColorStop(0, accent);
-      grad.addColorStop(1, accent + '44');
+      grad.addColorStop(1, `rgba(${accentRgb},0.15)`);
       ctx.fillStyle = grad;
       ctx.beginPath();
-      ctx.roundRect ? ctx.roundRect(x, y, barW, h, 4) : ctx.rect(x, y, barW, h);
+      if (ctx.roundRect) { ctx.roundRect(x, y, barW, h, [4, 4, 2, 2]); }
+      else { ctx.rect(x, y, barW, h); }
       ctx.fill();
 
       // Label date
-      ctx.fillStyle = text;
-      ctx.font = '10px Inter, sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,0.3)';
+      ctx.font = '9.5px Inter,system-ui,sans-serif';
       ctx.textAlign = 'center';
-      const label = d.slice(5);
-      ctx.fillText(label, x + barW / 2, padT + chartH + 16);
+      ctx.fillText(d.slice(5), x + barW / 2, padT + chartH + 14);
     });
   }
+
 
   // ── TOP PRODUITS ──────────────────────────────────────────────────────────
   function renderTopProduits(produits) {
@@ -303,20 +376,24 @@
     const canvas = document.getElementById('ana-chart-paiements');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    const W = canvas.width, H = canvas.height;
-    ctx.clearRect(0, 0, W, H);
+    const SIZE = 240;
+    canvas.width  = SIZE;
+    canvas.height = SIZE;
+    ctx.clearRect(0, 0, SIZE, SIZE);
+
     if (!data || !data.length) {
-      ctx.fillStyle = '#9aa4b2';
-      ctx.font = '12px Inter, sans-serif';
-      ctx.fillText('Aucune donnee', 14, 20);
+      ctx.fillStyle = 'rgba(255,255,255,0.25)';
+      ctx.font = '12px Inter,system-ui,sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Aucune donnée', SIZE/2, SIZE/2);
       return;
     }
 
-    const COLORS = ['#4a9fd4','#2ecc71','#f39c12','#e74c3c','#9b59b6','#1abc9c'];
+    const COLORS = ['#5ab4ff','#4ade80','#fbbf24','#f87171','#c084fc','#2dd4bf'];
     const total  = data.reduce((s, d) => s + (d.total || 0), 0);
     if (!total) return;
 
-    const cx = W / 2, cy = H / 2 - 20, radius = Math.min(cx, cy) - 10;
+    const cx = SIZE/2, cy = SIZE/2 - 16, radius = 82;
     let angleStart = -Math.PI / 2;
 
     data.forEach((d, i) => {
@@ -327,27 +404,30 @@
       ctx.closePath();
       ctx.fillStyle = COLORS[i % COLORS.length];
       ctx.fill();
-      ctx.strokeStyle = '#1a1a2e'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
       angleStart += slice;
     });
 
     // Trou donut
-    ctx.beginPath(); ctx.arc(cx, cy, radius * 0.55, 0, 2 * Math.PI);
-    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--surface').trim() || '#1e2a40';
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius * 0.52, 0, 2 * Math.PI);
+    ctx.fillStyle = 'rgba(0,0,0,0.0)';
     ctx.fill();
 
     // Légende
-    const style = getComputedStyle(document.documentElement);
-    const textColor = style.getPropertyValue('--text').trim() || '#ccc';
-    ctx.font = '11px Inter, sans-serif';
+    ctx.font = '10.5px Inter,system-ui,sans-serif';
     data.forEach((d, i) => {
-      const y = H - (data.length - i) * 18 - 4;
+      const y = SIZE - (data.length - i) * 17 - 2;
       ctx.fillStyle = COLORS[i % COLORS.length];
-      ctx.fillRect(8, y - 8, 12, 12);
-      ctx.fillStyle = textColor;
+      ctx.beginPath();
+      ctx.roundRect ? ctx.roundRect(6, y - 7, 10, 10, 3) : ctx.rect(6, y - 7, 10, 10);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.55)';
       ctx.textAlign = 'left';
       const pct = Math.round((d.total / total) * 100);
-      ctx.fillText(`${d.mode_paiement} — ${pct}% (${Number(d.total).toLocaleString('fr-FR')} ${DEVISE()})`, 26, y + 2);
+      ctx.fillText(`${d.mode_paiement} ${pct}%`, 22, y + 1);
     });
   }
 
@@ -381,7 +461,7 @@
     const el = document.getElementById('ana-ventes-table');
     if (!el) return;
     if (!ventes || !ventes.length) {
-      el.innerHTML = '<div class="ana-empty">Aucune vente sur la période</div>';
+      el.innerHTML = '<div class="ana-empty"><div class="ana-empty-icon">🧾</div>Aucune vente sur la période</div>';
       return;
     }
     el.innerHTML = `
@@ -393,12 +473,12 @@
           <tbody>
             ${ventes.map(v => `
               <tr>
-                <td>${Utils.esc(v.numero_ticket)}</td>
+                <td style="font-weight:600;font-size:11px;opacity:.55;">${Utils.esc(v.numero_ticket)}</td>
                 <td>${new Date(v.date_vente).toLocaleString('fr-FR')}</td>
                 <td>${Utils.esc(v.nom_caissier || '—')}</td>
                 <td><span class="ana-badge">${Utils.esc(v.mode_paiement || 'CASH')}</span></td>
-                <td><strong>${Number(v.total_ttc).toLocaleString('fr-FR')} ${DEVISE()}</strong></td>
-                <td><span class="ana-status ${v.statut === 'annule' ? 'ana-status-cancel' : 'ana-status-ok'}">${v.statut || 'valide'}</span></td>
+                <td class="ana-table-amount">${Number(v.total_ttc).toLocaleString('fr-FR')} ${DEVISE()}</td>
+                <td><span class="ana-status ${v.statut === 'annule' ? 'ana-status-cancel' : 'ana-status-ok'}">${v.statut === 'annule' ? '✕ Annulé' : '✓ Validé'}</span></td>
               </tr>
             `).join('')}
           </tbody>

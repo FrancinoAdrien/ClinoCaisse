@@ -1,255 +1,10 @@
 /* ══════════════════════════════════════════════════════════════════
-   Analytique — Tableau de bord admin
+   Analytique — Design System Premium
+   Animations GPU uniquement : transform + opacity + will-change
+   Aucun re-paint pendant les transitions
    ══════════════════════════════════════════════════════════════════ */
 
-.ana-layout {
-  height: 100%;
-  min-height: 0;
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-}
-
-/* ── TOPBAR ─────────────────────────────────────────────────────────── */
-.ana-topbar {
-  display: grid;
-  grid-template-columns: minmax(220px, auto) minmax(420px, 1fr);
-  align-items: center;
-  gap: 12px 18px;
-  padding: 14px 20px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 100%), var(--surface);
-  border-bottom: 1px solid var(--border);
-}
-.ana-topbar-left {
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-.ana-topbar-right {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-.ana-topbar-title {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.ana-period-selector {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  padding: 5px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: var(--surface-2);
-}
-.ana-period-btn {
-  padding: 6px 12px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text-muted);
-  border-radius: 9px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all .18s ease;
-}
-.ana-period-btn:hover   { background: var(--surface-2); color: var(--text); }
-.ana-period-btn.active  { background: var(--accent); color: #fff; border-color: var(--accent); }
-
-.ana-custom-range {
-  display: none;
-  align-items: center;
-  gap: 7px;
-  padding: 5px 9px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface);
-}
-.ana-custom-range.active {
-  display: inline-flex;
-}
-.ana-custom-range input[type='date'] {
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--surface-2);
-  color: var(--text);
-  padding: 5px 8px;
-  font-size: 12px;
-}
-
-/* ── BODY ────────────────────────────────────────────────────────────── */
-.ana-body {
-  overflow-y: auto;
-  padding: 18px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 14px;
-}
-
-/* ── KPI CARDS ───────────────────────────────────────────────────────── */
-.ana-kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-}
-.ana-kpi-card {
-  background:
-    radial-gradient(circle at right top, rgba(255,255,255,0.06), transparent 45%),
-    var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 17px 18px;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.15);
-}
-.ana-kpi-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 4px;
-  background: #6daeea;
-  border-radius: 14px 14px 0 0;
-}
-.ana-kpi-card-sales::before { background: #3b82f6; }
-.ana-kpi-card-terrain::before { background: #14b8a6; }
-.ana-kpi-card-flow::before { background: #f59e0b; }
-.ana-kpi-card-net::before { background: #22c55e; }
-.ana-kpi-card:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.25); }
-.ana-kpi-label  { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 7px; font-weight: 700; }
-.ana-kpi-value  { font-size: clamp(20px, 1.8vw, 30px); font-weight: 800; color: var(--text); line-height: 1.15; }
-.ana-kpi-sub    { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
-
-/* ── GENERAL CARD ────────────────────────────────────────────────────── */
-.ana-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 15px 16px;
-  min-width: 0;
-  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.12);
-}
-.ana-card-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text);
-  margin-bottom: 12px;
-  padding-bottom: 9px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  border-bottom: 1px solid var(--border);
-}
-
-/* ── CHART ───────────────────────────────────────────────────────────── */
-.ana-chart-wrap {
-  width: 100%;
-  overflow-x: auto;
-  min-width: 0;
-}
-#ana-chart-ca          { display: block; width: 100%; height: 280px; }
-#ana-chart-paiements   { display: block; margin: 0 auto; }
-
-/* ── 2-COLUMN ROW ────────────────────────────────────────────────────── */
-.ana-row-2 {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(290px, 340px);
-  gap: 14px;
-}
-
-/* ── TOP PRODUITS ────────────────────────────────────────────────────── */
-.ana-top-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 9px 4px;
-  border-bottom: 1px solid var(--border);
-}
-.ana-top-row:last-child { border-bottom: none; }
-.ana-top-rank  { font-size: 12px; font-weight: 700; color: var(--accent); width: 26px; flex-shrink: 0; }
-.ana-top-info  { flex: 1; min-width: 0; }
-.ana-top-name  { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ana-top-bar-wrap {
-  height: 6px;
-  background: var(--surface-2);
-  border-radius: 999px;
-  margin-top: 5px;
-}
-.ana-top-bar {
-  height: 100%;
-  background: linear-gradient(90deg, var(--accent), #58c2ff);
-  border-radius: 999px;
-}
-.ana-top-stats { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-size: 11px; }
-.ana-top-qty   { color: var(--text-muted); }
-.ana-top-ca    { font-weight: 700; color: var(--text); }
-
-/* ── VENTES TABLE ────────────────────────────────────────────────────── */
-.ana-table-wrap {
-  overflow-x: auto;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-}
-.ana-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12.5px;
-  min-width: 760px;
-}
-.ana-table th {
-  text-align: left;
-  padding: 10px 12px;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-muted);
-  background: rgba(255,255,255,0.03);
-  border-bottom: 1px solid var(--border);
-}
-.ana-table td {
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--border);
-  color: var(--text);
-}
-.ana-table tr:last-child td { border-bottom: none; }
-.ana-table tr:hover td { background: rgba(255,255,255,0.04); }
-
-.ana-badge {
-  display: inline-block;
-  padding: 2px 8px;
-  background: var(--surface-2);
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-muted);
-}
-.ana-status {
-  display: inline-block;
-  padding: 2px 9px;
-  border-radius: 10px;
-  font-size: 11px;
-  font-weight: 600;
-}
-.ana-status-ok      { background: rgba(46,204,113,0.15); color: #2ecc71; }
-.ana-status-cancel  { background: rgba(231,76,60,0.15);  color: #e74c3c; }
-
-/* ── EMPTY ───────────────────────────────────────────────────────────── */
-.ana-empty {
-  text-align: center;
-  color: var(--text-muted);
-  padding: 28px 0;
-  font-size: 13px;
-}
-
-/* ── VIEW LAYOUT ─────────────────────────────────────────────────────── */
+/* ── VUE PRINCIPALE ─────────────────────────────────────────────── */
 #view-analytique {
   height: 100%;
   overflow: hidden;
@@ -258,22 +13,654 @@
   background: var(--bg);
 }
 
-@media (max-width: 1100px) {
-  .ana-kpi-grid { grid-template-columns: repeat(2, 1fr); }
-  .ana-row-2    { grid-template-columns: 1fr; }
-  .ana-topbar {
-    grid-template-columns: 1fr;
-    padding: 12px;
-  }
-  .ana-topbar-right {
-    justify-content: flex-start;
-  }
-  .ana-custom-range { width: 100%; justify-content: flex-start; }
-  .ana-body { padding: 12px; }
+.ana-layout {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
-@media (max-width: 680px) {
+/* ══════════════════════════════════════════════════════════════════
+   TOPBAR
+   ══════════════════════════════════════════════════════════════════ */
+.ana-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 24px;
+  height: 60px;
+  min-height: 60px;
+  background: rgba(255,255,255,0.02);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  backdrop-filter: blur(12px);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.ana-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ana-topbar-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.01em;
+}
+
+.ana-topbar-title svg {
+  opacity: 0.7;
+}
+
+.ana-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Sélecteur période */
+.ana-period-selector {
+  display: flex;
+  gap: 3px;
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
+}
+
+.ana-period-btn {
+  padding: 5px 13px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted, rgba(255,255,255,0.45));
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.16s ease, color 0.16s ease;
+  white-space: nowrap;
+}
+
+.ana-period-btn:hover {
+  background: rgba(255,255,255,0.07);
+  color: var(--text);
+}
+
+.ana-period-btn.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(var(--accent-rgb, 90,180,255), 0.35);
+}
+
+/* Range personnalisé */
+.ana-custom-range {
+  display: none;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 10px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.04);
+}
+
+.ana-custom-range.active { display: inline-flex; }
+
+.ana-custom-range input[type='date'] {
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 7px;
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
+  padding: 4px 8px;
+  font-size: 12px;
+  outline: none;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   BODY SCROLLABLE
+   ══════════════════════════════════════════════════════════════════ */
+.ana-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+}
+
+.ana-body::-webkit-scrollbar { width: 5px; }
+.ana-body::-webkit-scrollbar-track { background: transparent; }
+.ana-body::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   KPI CARDS GRID
+   ══════════════════════════════════════════════════════════════════ */
+.ana-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+/* ── Carte KPI — base ─────────────────────────────────────────── */
+.ana-kpi-card {
+  background: var(--ana-kpi-card-base);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 18px;
+  padding: 20px 18px 18px;
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.05) inset,
+    0 16px 32px -10px rgba(0,0,0,0.5);
+  will-change: transform;
+  transform: translateZ(0);
+  transition:
+    transform   0.3s cubic-bezier(0.22,0.9,0.36,1),
+    box-shadow  0.3s ease,
+    border-color 0.3s ease,
+    background  0.3s ease;
+}
+
+/* Reflet miroir diagonale — glisse au hover */
+.ana-kpi-card::before {
+  content: '';
+  position: absolute;
+  top: -25%; left: -15%;
+  width: 155%; height: 145%;
+  background: linear-gradient(
+    122deg,
+    transparent 38%,
+    rgba(255,248,240,0.035) 44%,
+    rgba(255,252,248,0.10)  50%,
+    rgba(255,248,240,0.045) 56%,
+    transparent 62%
+  );
+  transform: rotate(14deg) translateX(-18%) translateZ(0);
+  pointer-events: none;
+  filter: blur(0.5px);
+  z-index: 1;
+  will-change: transform;
+  transition: transform 0.5s cubic-bezier(0.22,0.9,0.36,1);
+}
+
+/* Lueur coin bas */
+.ana-kpi-card::after {
+  content: '';
+  position: absolute;
+  bottom: -10px; right: -10px;
+  width: 50%; height: 50%;
+  background: radial-gradient(ellipse at 100% 100%, rgba(var(--accent-rgb,90,180,255),0.07), transparent 65%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.ana-kpi-card:hover {
+  transform: translateY(-5px) translateZ(0);
+  background: var(--ana-kpi-card-hover);
+  border-color: rgba(255,255,255,0.16);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.07) inset,
+    0 24px 48px -14px rgba(0,0,0,0.65);
+}
+
+.ana-kpi-card:hover::before {
+  transform: rotate(14deg) translateX(9%) translateY(-4%) translateZ(0);
+}
+
+/* ── Éléments décoratifs ────────────────────────────────────────── */
+/* Barre couleur en haut */
+.ana-kpi-top-bar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2.5px;
+  border-radius: 18px 18px 0 0;
+  z-index: 3;
+  opacity: 0.9;
+}
+
+/* Motif trellis très discret */
+.ana-kpi-geo {
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(45deg,  rgba(255,255,255,0.007) 0, rgba(255,255,255,0.007) 1px, transparent 1px, transparent 13px),
+    repeating-linear-gradient(135deg, rgba(255,255,255,0.005) 0, rgba(255,255,255,0.005) 1px, transparent 1px, transparent 18px);
+  pointer-events: none;
+  z-index: 0;
+  border-radius: inherit;
+}
+
+/* Reflet verre haut */
+.ana-kpi-glass {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 45%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.025) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 1;
+  border-radius: 18px 18px 0 0;
+}
+
+/* Ligne miroir basse */
+.ana-kpi-reflection {
+  position: absolute;
+  bottom: 10px; left: 16px; right: 16px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,248,235,0.15), rgba(var(--accent-rgb,90,180,255),0.18), transparent);
+  z-index: 2;
+  pointer-events: none;
+  border-radius: 100%;
+}
+
+/* ── Contenu KPI ───────────────────────────────────────────────── */
+.ana-kpi-content {
+  position: relative;
+  z-index: 3;
+}
+
+.ana-kpi-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.ana-kpi-title-group {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.ana-kpi-icon-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.06);
+  border: 0.5px solid rgba(255,255,255,0.1);
+  backdrop-filter: blur(4px);
+  flex-shrink: 0;
+}
+
+.ana-kpi-icon-badge svg {
+  width: 15px;
+  height: 15px;
+  stroke: var(--accent-light, #8ac5ff);
+  stroke-width: 1.8;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ana-kpi-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.45);
+}
+
+.ana-kpi-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(var(--accent-rgb,90,180,255),0.4);
+  flex-shrink: 0;
+}
+
+/* Valeur principale — gradient text */
+.ana-kpi-value {
+  font-size: clamp(20px, 2vw, 30px);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  background: linear-gradient(
+    135deg,
+    var(--text, #fff) 10%,
+    rgba(255,255,255,0.7) 60%,
+    rgba(var(--accent-rgb,90,180,255),0.85) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  line-height: 1.1;
+  margin-bottom: 6px;
+}
+
+.ana-kpi-sub {
+  font-size: 11px;
+  color: rgba(255,255,255,0.35);
+  line-height: 1.4;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   CARD GÉNÉRIQUE (graphiques, tableaux, top-produits)
+   ══════════════════════════════════════════════════════════════════ */
+.ana-card {
+  background: var(--ana-kpi-card-base);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 16px;
+  padding: 18px 20px;
+  min-width: 0;
+  position: relative;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+  will-change: transform;
+  transform: translateZ(0);
+  transition:
+    transform    0.28s cubic-bezier(0.22,0.9,0.36,1),
+    box-shadow   0.28s ease,
+    border-color 0.28s ease,
+    background   0.28s ease;
+}
+
+/* Reflet miroir sur les cards générique */
+.ana-card::before {
+  content: '';
+  position: absolute;
+  top: -35%; left: -10%;
+  width: 130%; height: 130%;
+  background: linear-gradient(
+    115deg,
+    transparent 44%,
+    rgba(255,250,245,0.03) 50%,
+    rgba(255,255,250,0.08) 53%,
+    rgba(255,248,240,0.03) 57%,
+    transparent 63%
+  );
+  transform: rotate(18deg) translateX(-14%) translateZ(0);
+  pointer-events: none;
+  z-index: 1;
+  will-change: transform;
+  transition: transform 0.45s ease-out;
+}
+
+.ana-card:hover {
+  transform: translateY(-2px) translateZ(0);
+  background: var(--ana-kpi-card-hover);
+  border-color: rgba(255,255,255,0.12);
+  box-shadow: 0 16px 36px rgba(0,0,0,0.26);
+}
+
+.ana-card:hover::before {
+  transform: rotate(18deg) translateX(5%) translateY(-3%) translateZ(0);
+}
+
+/* Titre de card */
+.ana-card-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.ana-card-title::before {
+  content: '';
+  display: inline-block;
+  width: 3px;
+  height: 13px;
+  border-radius: 2px;
+  background: var(--accent);
+  opacity: 0.8;
+  flex-shrink: 0;
+}
+
+/* ── 2-COL ROW ─────────────────────────────────────────────────── */
+.ana-row-2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+  gap: 16px;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   GRAPHIQUE CA (Canvas)
+   ══════════════════════════════════════════════════════════════════ */
+.ana-chart-wrap {
+  width: 100%;
+  min-width: 0;
+  position: relative;
+  z-index: 2;
+}
+
+#ana-chart-ca {
+  display: block;
+  width: 100% !important;
+  height: 260px;
+}
+
+#ana-chart-paiements {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   TOP PRODUITS
+   ══════════════════════════════════════════════════════════════════ */
+.ana-top-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 8px 4px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  position: relative;
+  z-index: 2;
+}
+
+.ana-top-row:last-child { border-bottom: none; }
+
+.ana-top-rank {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--accent);
+  width: 22px;
+  flex-shrink: 0;
+  text-align: center;
+  opacity: 0.8;
+}
+
+.ana-top-info { flex: 1; min-width: 0; }
+
+.ana-top-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 4px;
+}
+
+.ana-top-bar-wrap {
+  height: 4px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 999px;
+}
+
+.ana-top-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), rgba(var(--accent-rgb,90,180,255),0.35));
+  border-radius: 999px;
+  transition: width 0.5s cubic-bezier(0.22,0.9,0.36,1);
+}
+
+.ana-top-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.ana-top-qty { color: rgba(255,255,255,0.3); }
+
+.ana-top-ca {
+  font-weight: 700;
+  color: var(--text);
+  font-size: 12px;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   TABLE VENTES RÉCENTES
+   Overflow visible sur la card pour que le tableau scroll horizontalement
+   ══════════════════════════════════════════════════════════════════ */
+.ana-card-overflow {
+  overflow: visible !important;
+}
+
+.ana-table-wrap {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.06);
+  position: relative;
+  z-index: 2;
+}
+
+.ana-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  min-width: 680px;
+}
+
+.ana-table th {
+  text-align: left;
+  padding: 10px 13px;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.025);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  font-weight: 700;
+}
+
+.ana-table td {
+  padding: 11px 13px;
+  border-bottom: 1px solid rgba(255,255,255,0.035);
+  color: var(--text);
+  vertical-align: middle;
+}
+
+.ana-table tr:last-child td { border-bottom: none; }
+
+.ana-table tbody tr {
+  transition: background 0.12s ease;
+}
+
+.ana-table tbody tr:hover td {
+  background: rgba(255,255,255,0.03);
+}
+
+/* Badges */
+.ana-badge {
+  display: inline-block;
+  padding: 2px 9px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 5px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.55);
+  letter-spacing: 0.04em;
+}
+
+.ana-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.ana-status-ok {
+  background: rgba(34,197,94,0.12);
+  color: #4ade80;
+  border: 1px solid rgba(34,197,94,0.2);
+}
+
+.ana-status-cancel {
+  background: rgba(239,68,68,0.12);
+  color: #f87171;
+  border: 1px solid rgba(239,68,68,0.2);
+}
+
+/* Montant fort */
+.ana-table-amount {
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--text);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   EMPTY STATE
+   ══════════════════════════════════════════════════════════════════ */
+.ana-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 36px 20px;
+  gap: 8px;
+  color: rgba(255,255,255,0.25);
+  font-size: 13px;
+  position: relative;
+  z-index: 2;
+}
+
+.ana-empty-icon {
+  font-size: 32px;
+  opacity: 0.4;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   SECTION TOP TERRAINS — cachée pour l'instant
+   ══════════════════════════════════════════════════════════════════ */
+#ana-section-terrains {
+  display: none;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ══════════════════════════════════════════════════════════════════ */
+@media (max-width: 1200px) {
+  .ana-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 900px) {
+  .ana-row-2 { grid-template-columns: 1fr; }
+  .ana-topbar {
+    padding: 10px 16px;
+    height: auto;
+  }
+  .ana-body { padding: 14px 16px 20px; gap: 12px; }
+}
+
+@media (max-width: 640px) {
   .ana-kpi-grid { grid-template-columns: 1fr; }
-  .ana-period-selector { width: 100%; }
+  .ana-period-selector { flex-wrap: wrap; }
   .ana-period-btn { flex: 1; text-align: center; }
 }

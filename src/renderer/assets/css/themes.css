@@ -28,6 +28,18 @@
   --accent-light:       #8ac5ff;
   --border:             rgba(90,180,255,0.3);
   --shadow:             0 8px 32px rgba(0,0,0,0.6);
+  --ana-kpi-card-base:   radial-gradient(ellipse at 20% 30%, rgba(74, 122, 144, 0.3), transparent 40%),
+                        radial-gradient(ellipse at 80% 70%, rgba(42, 74, 96, 0.4), transparent 50%),
+                        radial-gradient(ellipse at 60% 20%, rgba(30, 58, 80, 0.3), transparent 45%),
+                        linear-gradient(135deg, #2a4a70, #1e3a50, #152a40);
+  --ana-title-gradient: linear-gradient(120deg, var(--text), var(--accent));
+  --ana-trend-up: #4ade80;
+  --ana-trend-down: #f87171;
+  --ana-trend-neutral: #fbbf24;
+  --ana-badge-bg: rgba(var(--accent-rgb), 0.15);
+  --ana-badge-text: var(--accent-light);
+  --ana-icon-bg: rgba(var(--accent-rgb), 0.15);
+  --ana-icon-color: var(--accent-light);
 }
 
 /* ── VULCAN — Rouge volcanique obsidien ────────────────────────────── */
@@ -55,6 +67,18 @@
   --accent-light:       #ff7777;
   --border:             rgba(255,85,85,0.3);
   --shadow:             0 8px 32px rgba(200,20,20,0.5);
+  --ana-kpi-card-base:   radial-gradient(ellipse at 25% 35%, rgba(106, 56, 56, 0.3), transparent 40%),
+                        radial-gradient(ellipse at 75% 65%, rgba(74, 40, 40, 0.4), transparent 50%),
+                        radial-gradient(ellipse at 55% 25%, rgba(58, 30, 30, 0.3), transparent 45%),
+                        linear-gradient(135deg, #4a2828, #3a1818, #2a1010);
+  --ana-title-gradient: linear-gradient(120deg, var(--text), var(--accent));
+  --ana-trend-up: #4ade80;
+  --ana-trend-down: #f87171;
+  --ana-trend-neutral: #fbbf24;
+  --ana-badge-bg: rgba(var(--accent-rgb), 0.15);
+  --ana-badge-text: var(--accent-light);
+  --ana-icon-bg: rgba(var(--accent-rgb), 0.15);
+  --ana-icon-color: var(--accent-light);
 }
 
 /* ── SIENNE — Terre brûlée luxe ────────────────────────────────────── */
@@ -82,6 +106,18 @@
   --accent-light:       #e0a060;
   --border:             rgba(212,136,72,0.3);
   --shadow:             0 8px 32px rgba(120,50,10,0.6);
+  --ana-kpi-card-base:   radial-gradient(ellipse at 22% 32%, rgba(138, 80, 48, 0.3), transparent 40%),
+                        radial-gradient(ellipse at 78% 68%, rgba(106, 64, 32, 0.4), transparent 50%),
+                        radial-gradient(ellipse at 58% 22%, rgba(90, 48, 24, 0.3), transparent 45%),
+                        linear-gradient(135deg, #6a4030, #5a3020, #4a2010);
+  --ana-title-gradient: linear-gradient(120deg, var(--text), var(--accent));
+  --ana-trend-up: #4ade80;
+  --ana-trend-down: #f87171;
+  --ana-trend-neutral: #fbbf24;
+  --ana-badge-bg: rgba(var(--accent-rgb), 0.15);
+  --ana-badge-text: var(--accent-light);
+  --ana-icon-bg: rgba(var(--accent-rgb), 0.15);
+  --ana-icon-color: var(--accent-light);
 }
 
 /* ── LILAS — Violet améthyste sombre ────────────────────────────────── */
@@ -109,6 +145,18 @@
   --accent-light:       #c8a0f0;
   --border:             rgba(176,128,224,0.3);
   --shadow:             0 8px 32px rgba(100,40,150,0.6);
+  --ana-kpi-card-base:   radial-gradient(ellipse at 24% 34%, rgba(154, 112, 160, 0.3), transparent 40%),
+                        radial-gradient(ellipse at 76% 66%, rgba(122, 80, 128, 0.4), transparent 50%),
+                        radial-gradient(ellipse at 56% 24%, rgba(106, 64, 96, 0.3), transparent 45%),
+                        linear-gradient(135deg, #6a5080, #5a4070, #4a3060);
+  --ana-title-gradient: linear-gradient(120deg, var(--text), var(--accent));
+  --ana-trend-up: #4ade80;
+  --ana-trend-down: #f87171;
+  --ana-trend-neutral: #fbbf24;
+  --ana-badge-bg: rgba(var(--accent-rgb), 0.15);
+  --ana-badge-text: var(--accent-light);
+  --ana-icon-bg: rgba(var(--accent-rgb), 0.15);
+  --ana-icon-color: var(--accent-light);
 }
 
 /* ── MAUVE — Rose vieilli premium ─────────────────────────────────── */
@@ -136,6 +184,18 @@
   --accent-light:       #e080d0;
   --border:             rgba(208,96,184,0.3);
   --shadow:             0 8px 32px rgba(120,30,110,0.6);
+  --ana-kpi-card-base:   radial-gradient(ellipse at 23% 33%, rgba(186, 96, 140, 0.3), transparent 40%),
+                        radial-gradient(ellipse at 77% 67%, rgba(154, 80, 112, 0.4), transparent 50%),
+                        radial-gradient(ellipse at 57% 23%, rgba(138, 64, 96, 0.3), transparent 45%),
+                        linear-gradient(135deg, #7a5070, #6a4060, #5a3050);
+  --ana-title-gradient: linear-gradient(120deg, var(--text), var(--accent));
+  --ana-trend-up: #4ade80;
+  --ana-trend-down: #f87171;
+  --ana-trend-neutral: #fbbf24;
+  --ana-badge-bg: rgba(var(--accent-rgb), 0.15);
+  --ana-badge-text: var(--accent-light);
+  --ana-icon-bg: rgba(var(--accent-rgb), 0.15);
+  --ana-icon-color: var(--accent-light);
 }
 
 /* ── MOUSE GREY — Ardoise architecturale ────────────────────────────── */
@@ -163,6 +223,18 @@
   --accent-light:       #a0d0d0;
   --border:             rgba(128,176,176,0.3);
   --shadow:             0 8px 32px rgba(0,40,40,0.7);
+  --ana-kpi-card-base:   radial-gradient(ellipse at 26% 36%, rgba(122, 138, 138, 0.3), transparent 40%),
+                        radial-gradient(ellipse at 74% 64%, rgba(90, 106, 106, 0.4), transparent 50%),
+                        radial-gradient(ellipse at 54% 26%, rgba(74, 90, 90, 0.3), transparent 45%),
+                        linear-gradient(135deg, #5a6a6a, #4a5a5a, #3a4a4a);
+  --ana-title-gradient: linear-gradient(120deg, var(--text), var(--accent));
+  --ana-trend-up: #4ade80;
+  --ana-trend-down: #f87171;
+  --ana-trend-neutral: #fbbf24;
+  --ana-badge-bg: rgba(var(--accent-rgb), 0.15);
+  --ana-badge-text: var(--accent-light);
+  --ana-icon-bg: rgba(var(--accent-rgb), 0.15);
+  --ana-icon-color: var(--accent-light);
 }
 
 /* ── LIGHT BLUE — Saphir ocean deep ─────────────────────────────────── */
@@ -190,6 +262,18 @@
   --accent-light:       #70b8ff;
   --border:             rgba(80,160,255,0.3);
   --shadow:             0 8px 32px rgba(0,30,100,0.7);
+  --ana-kpi-card-base:   radial-gradient(ellipse at 27% 37%, rgba(80, 160, 224, 0.3), transparent 40%),
+                        radial-gradient(ellipse at 73% 63%, rgba(64, 128, 192, 0.4), transparent 50%),
+                        radial-gradient(ellipse at 53% 27%, rgba(48, 96, 160, 0.3), transparent 45%),
+                        linear-gradient(135deg, #2a5580, #1f4570, #143560);
+  --ana-title-gradient: linear-gradient(120deg, var(--text), var(--accent));
+  --ana-trend-up: #4ade80;
+  --ana-trend-down: #f87171;
+  --ana-trend-neutral: #fbbf24;
+  --ana-badge-bg: rgba(var(--accent-rgb), 0.15);
+  --ana-badge-text: var(--accent-light);
+  --ana-icon-bg: rgba(var(--accent-rgb), 0.15);
+  --ana-icon-color: var(--accent-light);
 }
 
 /* ── CANDIES — Chocolat Bordeaux gourmet ─────────────────────────────── */
@@ -217,6 +301,18 @@
   --accent-light:       #e07070;
   --border:             rgba(208,80,80,0.3);
   --shadow:             0 8px 32px rgba(120,15,15,0.7);
+  --ana-kpi-card-base:   radial-gradient(ellipse at 28% 38%, rgba(186, 96, 96, 0.3), transparent 40%),
+                        radial-gradient(ellipse at 72% 62%, rgba(154, 80, 80, 0.4), transparent 50%),
+                        radial-gradient(ellipse at 52% 28%, rgba(138, 64, 64, 0.3), transparent 45%),
+                        linear-gradient(135deg, #6a4545, #5a3535, #4a2525);
+  --ana-title-gradient: linear-gradient(120deg, var(--text), var(--accent));
+  --ana-trend-up: #4ade80;
+  --ana-trend-down: #f87171;
+  --ana-trend-neutral: #fbbf24;
+  --ana-badge-bg: rgba(var(--accent-rgb), 0.15);
+  --ana-badge-text: var(--accent-light);
+  --ana-icon-bg: rgba(var(--accent-rgb), 0.15);
+  --ana-icon-color: var(--accent-light);
 }
 
 /* ── OCEAN — Profondeur pélagique ─────────────────────────────────────── */
@@ -244,6 +340,18 @@
   --accent-light:       #60d8b0;
   --border:             rgba(64,200,152,0.3);
   --shadow:             0 8px 32px rgba(0,60,40,0.7);
+  --ana-kpi-card-base:   radial-gradient(ellipse at 29% 39%, rgba(96, 200, 176, 0.3), transparent 40%),
+                        radial-gradient(ellipse at 71% 61%, rgba(64, 160, 144, 0.4), transparent 50%),
+                        radial-gradient(ellipse at 51% 29%, rgba(48, 128, 112, 0.3), transparent 45%),
+                        linear-gradient(135deg, #245855, #184845, #0a3835);
+  --ana-title-gradient: linear-gradient(120deg, var(--text), var(--accent));
+  --ana-trend-up: #4ade80;
+  --ana-trend-down: #f87171;
+  --ana-trend-neutral: #fbbf24;
+  --ana-badge-bg: rgba(var(--accent-rgb), 0.15);
+  --ana-badge-text: var(--accent-light);
+  --ana-icon-bg: rgba(var(--accent-rgb), 0.15);
+  --ana-icon-color: var(--accent-light);
 }
 
 /* ── SUNSET — Coucher de soleil cuivré ─────────────────────────────────── */
@@ -271,6 +379,18 @@
   --accent-light:       #ff9060;
   --border:             rgba(240,112,64,0.3);
   --shadow:             0 8px 32px rgba(140,50,10,0.7);
+  --ana-kpi-card-base:   radial-gradient(ellipse at 31% 41%, rgba(226, 96, 64, 0.3), transparent 40%),
+                        radial-gradient(ellipse at 69% 59%, rgba(186, 80, 48, 0.4), transparent 50%),
+                        radial-gradient(ellipse at 49% 31%, rgba(166, 64, 32, 0.3), transparent 45%),
+                        linear-gradient(135deg, #6a2a2a, #5a1a1a, #4a0a0a);
+  --ana-title-gradient: linear-gradient(120deg, var(--text), var(--accent));
+  --ana-trend-up: #4ade80;
+  --ana-trend-down: #f87171;
+  --ana-trend-neutral: #fbbf24;
+  --ana-badge-bg: rgba(var(--accent-rgb), 0.15);
+  --ana-badge-text: var(--accent-light);
+  --ana-icon-bg: rgba(var(--accent-rgb), 0.15);
+  --ana-icon-color: var(--accent-light);
 }
 
 /* ── FOREST — Forêt ancienne ────────────────────────────────────────── */
@@ -298,6 +418,18 @@
   --accent-light:       #7ac87a;
   --border:             rgba(90,168,90,0.3);
   --shadow:             0 8px 32px rgba(15,50,15,0.7);
+  --ana-kpi-card-base:   radial-gradient(ellipse at 30% 40%, rgba(96, 168, 96, 0.3), transparent 40%),
+                        radial-gradient(ellipse at 70% 60%, rgba(64, 136, 64, 0.4), transparent 50%),
+                        radial-gradient(ellipse at 50% 30%, rgba(48, 112, 48, 0.3), transparent 45%),
+                        linear-gradient(135deg, #2a3830, #1e3028, #0a1a18);
+  --ana-title-gradient: linear-gradient(120deg, var(--text), var(--accent));
+  --ana-trend-up: #4ade80;
+  --ana-trend-down: #f87171;
+  --ana-trend-neutral: #fbbf24;
+  --ana-badge-bg: rgba(var(--accent-rgb), 0.15);
+  --ana-badge-text: var(--accent-light);
+  --ana-icon-bg: rgba(var(--accent-rgb), 0.15);
+  --ana-icon-color: var(--accent-light);
 }
 
 /* ── MIDNIGHT — Cosmos étoilé ───────────────────────────────────────── */
@@ -325,6 +457,18 @@
   --accent-light:       #9090f0;
   --border:             rgba(112,112,224,0.3);
   --shadow:             0 8px 32px rgba(15,15,80,0.8);
+  --ana-kpi-card-base:   radial-gradient(ellipse at 32% 42%, rgba(112, 112, 224, 0.3), transparent 40%),
+                        radial-gradient(ellipse at 68% 58%, rgba(80, 80, 160, 0.4), transparent 50%),
+                        radial-gradient(ellipse at 48% 32%, rgba(64, 64, 128, 0.3), transparent 45%),
+                        linear-gradient(135deg, #1a1a40, #0f0f30, #0a0a20);
+  --ana-title-gradient: linear-gradient(120deg, var(--text), var(--accent));
+  --ana-trend-up: #4ade80;
+  --ana-trend-down: #f87171;
+  --ana-trend-neutral: #fbbf24;
+  --ana-badge-bg: rgba(var(--accent-rgb), 0.15);
+  --ana-badge-text: var(--accent-light);
+  --ana-icon-bg: rgba(var(--accent-rgb), 0.15);
+  --ana-icon-color: var(--accent-light);
 }
 
 /* ── COFFEE — Expresso velours ─────────────────────────────────────── */
@@ -341,7 +485,6 @@
   --btn-finances:       linear-gradient(135deg, #bcaaa4, #a1887f, #8d6e63);
   --btn-rh:             linear-gradient(135deg, #d7ccc8, #bcaaa4, #a1887f);
   --btn-users:          linear-gradient(135deg, #f5f5f5, #eeeeee, #e0e0e0);
-  --btn-param:          linear-gradient(135deg, #a1887f, #8d6e63, #795548);
   --btn-cloture:        linear-gradient(135deg, #bcaaa4, #a1887f, #8d6e63);
   --btn-analytique:     linear-gradient(135deg, #d7ccc8, #bcaaa4, #a1887f);
   --btn-terrain:        linear-gradient(135deg, #f5f5f5, #eeeeee, #e0e0e0);
@@ -352,12 +495,23 @@
   --accent-light:       #c89060;
   --border:             rgba(168,112,72,0.3);
   --shadow:             0 8px 32px rgba(70,35,10,0.7);
+  --ana-kpi-card-base:   radial-gradient(ellipse at 33% 43%, rgba(168, 112, 48, 0.3), transparent 40%),
+                        radial-gradient(ellipse at 67% 57%, rgba(136, 80, 32, 0.4), transparent 50%),
+                        radial-gradient(ellipse at 47% 33%, rgba(120, 64, 16, 0.3), transparent 45%),
+                        linear-gradient(135deg, #432820, #3c2a18, #2c1a10);
+  --ana-title-gradient: linear-gradient(120deg, var(--text), var(--accent));
+  --ana-trend-up: #4ade80;
+  --ana-trend-down: #f87171;
+  --ana-trend-neutral: #fbbf24;
+  --ana-badge-bg: rgba(var(--accent-rgb), 0.15);
+  --ana-badge-text: var(--accent-light);
+  --ana-icon-bg: rgba(var(--accent-rgb), 0.15);
+  --ana-icon-color: var(--accent-light);
 }
 
 /* ── CORAL — Corail abyssal ─────────────────────────────────────────── */
 [data-theme="coral"] {
   --bg-gradient:        linear-gradient(135deg, #4e1a0a, #3e1808, #2c0e05, #1a0802);
-  --topbar-gradient:    linear-gradient(135deg, #2a0f04, #3e1508, #2a0f04);
   --bottombar-gradient: linear-gradient(135deg, #1a0802, #280c04, #1a0802);
   --card-gradient:      linear-gradient(135deg, #561c0a, #461c0a, #2e1005);
   --btn-caisse:         linear-gradient(135deg, #ff7043, #ff5722, #e64a19);
@@ -379,6 +533,18 @@
   --accent-light:       #ff8060;
   --border:             rgba(240,96,64,0.3);
   --shadow:             0 8px 32px rgba(160,50,20,0.7);
+  --ana-kpi-card-base:   radial-gradient(ellipse at 34% 44%, rgba(226, 96, 48, 0.3), transparent 40%),
+                        radial-gradient(ellipse at 66% 56%, rgba(186, 80, 32, 0.4), transparent 50%),
+                        radial-gradient(ellipse at 46% 34%, rgba(166, 64, 16, 0.3), transparent 45%),
+                        linear-gradient(135deg, #6a2c20, #5a1c10, #4a0a08);
+  --ana-title-gradient: linear-gradient(120deg, var(--text), var(--accent));
+  --ana-trend-up: #4ade80;
+  --ana-trend-down: #f87171;
+  --ana-trend-neutral: #fbbf24;
+  --ana-badge-bg: rgba(var(--accent-rgb), 0.15);
+  --ana-badge-text: var(--accent-light);
+  --ana-icon-bg: rgba(var(--accent-rgb), 0.15);
+  --ana-icon-color: var(--accent-light);
 }
 
 /* ── ROYAL — Pourpre & Or impérial ─────────────────────────────────── */
@@ -406,4 +572,16 @@
   --accent-light:       #e0b850;
   --border:             rgba(208,160,64,0.3);
   --shadow:             0 8px 32px rgba(80,20,100,0.7);
+  --ana-kpi-card-base:   radial-gradient(ellipse at 35% 45%, rgba(184, 96, 224, 0.3), transparent 40%),
+                        radial-gradient(ellipse at 65% 55%, rgba(144, 80, 160, 0.4), transparent 50%),
+                        radial-gradient(ellipse at 45% 35%, rgba(128, 64, 128, 0.3), transparent 45%),
+                        linear-gradient(135deg, #381850, #281040, #180830);
+  --ana-title-gradient: linear-gradient(120deg, var(--text), var(--accent));
+  --ana-trend-up: #4ade80;
+  --ana-trend-down: #f87171;
+  --ana-trend-neutral: #fbbf24;
+  --ana-badge-bg: rgba(var(--accent-rgb), 0.15);
+  --ana-badge-text: var(--accent-light);
+  --ana-icon-bg: rgba(var(--accent-rgb), 0.15);
+  --ana-icon-color: var(--accent-light);
 }

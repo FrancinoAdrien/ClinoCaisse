@@ -322,6 +322,7 @@ CREATE TABLE IF NOT EXISTS reservations (
     table_numero INTEGER,
     statut TEXT DEFAULT 'en_attente',
     tables_json TEXT DEFAULT '[]',
+    duree_heures REAL,
     last_modified_at BIGINT DEFAULT 0,
     sync_status INTEGER DEFAULT 0,
     poste_source TEXT
@@ -352,6 +353,9 @@ CREATE TABLE IF NOT EXISTS employes (
     salaire_base REAL DEFAULT 0,
     date_embauche TEXT,
     actif INTEGER DEFAULT 1,
+    mode_premier_salaire TEXT DEFAULT 'ce_mois',
+    montant_premier_salaire REAL DEFAULT 0,
+    premier_mois_paye INTEGER DEFAULT 0,
     last_modified_at BIGINT DEFAULT 0,
     sync_status INTEGER DEFAULT 0,
     poste_source TEXT

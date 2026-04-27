@@ -43,7 +43,7 @@
           </button>
         </div>
 
-        <div class="login-version">ClinoCaisse v1.0 — ClinoKeys © 2026</div>
+        <div class="login-version">ClinoCaisse v1.7 — ClinoKeys © 2026</div>
       </div>
     `;
 

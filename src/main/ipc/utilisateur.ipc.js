@@ -46,14 +46,14 @@ module.exports = function(ipcMain, db) {
         INSERT INTO utilisateurs (uuid, nom, prenom, pin, role, last_modified_at, sync_status, ${PERM_COLS})
         VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
-        randomUUID(), data.nom, data.prenom || null, data.pin, data.role || 'vendeur', Date.now(),
+        randomUUID(), data.nom, data.prenom || null, data.pin, data.role || 'employe', Date.now(),
         ...pv
       );
 
       logAction(db, {
         categorie: 'UTILISATEUR',
         action: 'Utilisateur créé',
-        detail: `${data.nom}${data.prenom ? ' ' + data.prenom : ''} — Rôle: ${data.role || 'vendeur'}`,
+        detail: `${data.nom}${data.prenom ? ' ' + data.prenom : ''} — Rôle: ${data.role || 'employe'}`,
         icone: '👥'
       });
 
@@ -83,7 +83,7 @@ module.exports = function(ipcMain, db) {
           ${data.pin ? ', pin = ?' : ''}
         WHERE id = ? OR uuid = ?
       `).run(
-        data.nom, data.prenom || null, data.role || 'vendeur',
+        data.nom, data.prenom || null, data.role || 'employe',
         ...pv,
         Date.now(),
         ...(data.pin ? [data.pin] : []),
@@ -93,7 +93,7 @@ module.exports = function(ipcMain, db) {
       logAction(db, {
         categorie: 'UTILISATEUR',
         action: 'Utilisateur modifié',
-        detail: `${data.nom}${data.prenom ? ' ' + data.prenom : ''} — Rôle: ${data.role || 'vendeur'}`,
+        detail: `${data.nom}${data.prenom ? ' ' + data.prenom : ''} — Rôle: ${data.role || 'employe'}`,
         icone: '✏️'
       });
 

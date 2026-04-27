@@ -82,19 +82,53 @@
 
 .journal-stat-card {
   flex: 1;
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 12px 16px;
+  background: var(--ana-kpi-card-base);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px;
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.2);
+  will-change: transform;
+  transform: translateZ(0);
+  transition: transform 0.26s cubic-bezier(0.22,0.9,0.36,1),
+              box-shadow 0.26s ease,
+              border-color 0.26s ease,
+              background 0.26s ease;
+}
+
+.journal-stat-card::before {
+  content: '';
+  position: absolute;
+  top: -30%; left: -15%;
+  width: 150%; height: 140%;
+  background: linear-gradient(
+    120deg,
+    transparent 43%,
+    rgba(255,250,245,0.04) 49%,
+    rgba(255,255,250,0.09) 52%,
+    rgba(255,248,240,0.04) 56%,
+    transparent 62%
+  );
+  transform: rotate(14deg) translateX(-15%) translateZ(0);
+  pointer-events: none;
+  z-index: 0;
+  transition: transform 0.4s ease-out;
+  will-change: transform;
 }
 
 .journal-stat-card:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  background: var(--ana-kpi-card-hover);
+  border-color: rgba(255,255,255,0.14);
+  transform: translateY(-3px) translateZ(0);
+  box-shadow: 0 18px 36px rgba(0,0,0,0.28);
+}
+
+.journal-stat-card:hover::before {
+  transform: rotate(14deg) translateX(6%) translateY(-3%) translateZ(0);
 }
 
 .journal-stat-label {
@@ -103,19 +137,28 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--text-muted);
+  position: relative;
+  z-index: 1;
 }
 
 .journal-stat-value {
   font-size: 1.8rem;
   font-weight: 800;
-  color: var(--accent);
+  background: linear-gradient(135deg, var(--text, #fff) 20%, var(--accent-light, #8ac5ff) 90%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
   line-height: 1;
+  position: relative;
+  z-index: 1;
 }
 
 .journal-stat-sub {
   font-size: 11px;
   color: var(--text-muted);
   margin-top: 2px;
+  position: relative;
+  z-index: 1;
 }
 
 /* ── FILTRES ──────────────────────────────────────────────────────── */
@@ -293,23 +336,32 @@
   align-items: flex-start;
   gap: 12px;
   padding: 10px 14px;
-  border-radius: 10px;
+  border-radius: 12px;
   margin-bottom: 6px;
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+  background: var(--ana-kpi-card-base);
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.14);
+  position: relative;
+  overflow: hidden;
+  will-change: transform;
+  transform: translateZ(0);
+  transition: transform 0.22s cubic-bezier(0.22,0.9,0.36,1),
+              box-shadow 0.22s ease,
+              border-color 0.22s ease,
+              background 0.22s ease;
   animation: journalEntryIn 0.2s ease both;
 }
 
 @keyframes journalEntryIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(6px) translateZ(0); }
+  to   { opacity: 1; transform: translateY(0) translateZ(0); }
 }
 
 .journal-entry:hover {
-  transform: translateX(3px);
-  border-color: var(--accent);
-  box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+  transform: translateX(3px) translateZ(0);
+  background: var(--ana-kpi-card-hover);
+  border-color: rgba(255,255,255,0.13);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.22);
 }
 
 /* Couleurs par catégorie (ligne gauche) */

@@ -851,6 +851,15 @@
     if (e.detail.view === 'stock') {
       if (!document.querySelector('.stock-body')) render();
       else loadData();
+
+      // Notification dashboard → ouvrir alertes automatiquement
+      if (window._stockScrollToAlertes) {
+        window._stockScrollToAlertes = false;
+        setTimeout(() => {
+          const btn = document.getElementById('btn-alertes-stock');
+          if (btn) btn.click();
+        }, 400);
+      }
     }
   });
 

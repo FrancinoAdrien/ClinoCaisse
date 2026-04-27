@@ -16,33 +16,122 @@ module.exports = function(ipcMain, db) {
   // Stats Globales RH
   ipcMain.handle('rh:getStats', async () => {
     try {
-      const currentMonth = new Date().toISOString().slice(0, 7) + '-01'; // premier du mois
+      const currentMonth = new Date().toISOString().slice(0, 7);
       
       const nbEmp = db.prepare('SELECT COUNT(*) as n FROM employes WHERE actif = 1').get();
-      const masse = db.prepare('SELECT COALESCE(SUM(salaire_base), 0) as t FROM employes WHERE actif = 1').get();
       
-      const avances = db.prepare(`
+      // Masse salariale théorique (en considérant les premiers salaires)
+      const employes = db.prepare('SELECT * FROM employes WHERE actif = 1').all();
+      let masseSalariale = 0;
+      let resteAPayer = 0;
+      let totalAvancesMois = 0;
+
+      for (const emp of employes) {
+        let salaireDu = emp.salaire_base;
+        if (emp.premier_mois_paye === 0) {
+           salaireDu = emp.mode_premier_salaire === 'ce_mois' ? emp.montant_premier_salaire : 0;
+        }
+        masseSalariale += salaireDu;
+
+        // A-t-il été payé ce mois-ci ?
+        const paye = db.prepare(`
+          SELECT COUNT(*) as c FROM salaires_paiements 
+          WHERE employe_uuid = ? AND type_paiement = 'Salaire' AND strftime('%Y-%m', date_paiement) = ?
+        `).get(emp.uuid, currentMonth);
+
+        if (!paye || paye.c === 0) {
+          // Non payé, on calcule le net (Salaire - Avances non déduites)
+          // On cherche la date du dernier paiement de "Salaire"
+          const lastSalaire = db.prepare(`
+            SELECT date_paiement FROM salaires_paiements 
+            WHERE employe_uuid = ? AND type_paiement = 'Salaire' 
+            ORDER BY date_paiement DESC LIMIT 1
+          `).get(emp.uuid);
+          
+          let dateDepuis = emp.date_embauche;
+          if (lastSalaire) dateDepuis = lastSalaire.date_paiement;
+
+          const avances = db.prepare(`
+            SELECT COALESCE(SUM(montant), 0) as t 
+            FROM salaires_paiements 
+            WHERE employe_uuid = ? AND type_paiement = 'Avance' AND date(date_paiement) >= date(?)
+          `).get(emp.uuid, dateDepuis);
+
+          let net = salaireDu - (avances?.t || 0);
+          if (net < 0) net = 0;
+          resteAPayer += net;
+        }
+      }
+
+      // Avances du mois en cours
+      const avancesMoisQuery = db.prepare(`
         SELECT COALESCE(SUM(montant), 0) as t 
         FROM salaires_paiements 
-        WHERE type_paiement = 'Avance' AND date(date_paiement) >= ?
+        WHERE type_paiement = 'Avance' AND strftime('%Y-%m', date_paiement) = ?
       `).get(currentMonth);
-
-      const payeMois = db.prepare(`
-        SELECT COALESCE(SUM(montant), 0) as t 
-        FROM salaires_paiements 
-        WHERE type_paiement = 'Salaire' AND date(date_paiement) >= ?
-      `).get(currentMonth);
-
-      const resteAPayer = (masse?.t || 0) - (payeMois?.t || 0);
 
       return {
         nb_employes: nbEmp?.n || 0,
-        masse_salariale: masse?.t || 0,
-        avances_mois: avances?.t || 0,
+        masse_salariale: masseSalariale,
+        avances_mois: avancesMoisQuery?.t || 0,
         reste_a_payer_mois: resteAPayer
       };
     } catch (e) {
       console.error('IPC rh:getStats error:', e.message);
+      throw e;
+    }
+  });
+
+  // Liste des employés avec leur statut de paie ce mois-ci
+  ipcMain.handle('rh:getSalairesAPayer', async () => {
+    try {
+      const currentMonth = new Date().toISOString().slice(0, 7);
+      const employes = db.prepare('SELECT * FROM employes WHERE actif = 1 ORDER BY nom ASC').all();
+      
+      const resultat = [];
+      for (const emp of employes) {
+        let salaireBaseEffective = emp.salaire_base;
+        if (emp.premier_mois_paye === 0) {
+           salaireBaseEffective = emp.mode_premier_salaire === 'ce_mois' ? emp.montant_premier_salaire : 0;
+        }
+
+        const paye = db.prepare(`
+          SELECT COUNT(*) as c FROM salaires_paiements 
+          WHERE employe_uuid = ? AND type_paiement = 'Salaire' AND strftime('%Y-%m', date_paiement) = ?
+        `).get(emp.uuid, currentMonth);
+
+        const estPaye = (paye && paye.c > 0);
+
+        const lastSalaire = db.prepare(`
+          SELECT date_paiement FROM salaires_paiements 
+          WHERE employe_uuid = ? AND type_paiement = 'Salaire' 
+          ORDER BY date_paiement DESC LIMIT 1
+        `).get(emp.uuid);
+        
+        let dateDepuis = emp.date_embauche;
+        if (lastSalaire) dateDepuis = lastSalaire.date_paiement;
+
+        const avances = db.prepare(`
+          SELECT COALESCE(SUM(montant), 0) as t 
+          FROM salaires_paiements 
+          WHERE employe_uuid = ? AND type_paiement = 'Avance' AND date(date_paiement) >= date(?)
+        `).get(emp.uuid, dateDepuis);
+
+        const totalAvances = avances?.t || 0;
+        let net = estPaye ? 0 : (salaireBaseEffective - totalAvances);
+        if (net < 0) net = 0;
+
+        resultat.push({
+          ...emp,
+          salaire_effectif: salaireBaseEffective,
+          total_avances: totalAvances,
+          net_a_payer: net,
+          est_paye_ce_mois: estPaye
+        });
+      }
+      return resultat;
+    } catch (e) {
+      console.error('IPC rh:getSalairesAPayer error:', e.message);
       throw e;
     }
   });
@@ -75,11 +164,11 @@ module.exports = function(ipcMain, db) {
   // Ajouter un employé
   ipcMain.handle('rh:addEmploye', async (event, data) => {
     try {
-      const { uuid, nom, poste, salaire_base, date_embauche } = data;
+      const { uuid, nom, poste, salaire_base, date_embauche, mode_premier_salaire, montant_premier_salaire } = data;
       const result = db.prepare(`
-        INSERT INTO employes (uuid, nom, poste, salaire_base, date_embauche, last_modified_at, sync_status) 
-        VALUES (?, ?, ?, ?, ?, ?, 1)
-      `).run(uuid, nom, poste, salaire_base, date_embauche, Date.now());
+        INSERT INTO employes (uuid, nom, poste, salaire_base, date_embauche, mode_premier_salaire, montant_premier_salaire, premier_mois_paye, last_modified_at, sync_status) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, 1)
+      `).run(uuid, nom, poste, salaire_base, date_embauche, mode_premier_salaire || 'ce_mois', montant_premier_salaire || 0, Date.now());
 
       logAction(db, {
         categorie: 'RH',
@@ -111,20 +200,34 @@ module.exports = function(ipcMain, db) {
     }
   });
 
-  // Calculer le salaire net (Salaire - Avances du mois)
+  // Calculer le salaire net (Salaire Effectif - Avances non déduites)
   ipcMain.handle('rh:getEmployeeNetSalary', async (event, uuid) => {
     try {
-      const emp = db.prepare('SELECT salaire_base FROM employes WHERE uuid = ?').get(uuid);
+      const emp = db.prepare('SELECT * FROM employes WHERE uuid = ?').get(uuid);
       if (!emp) return 0;
       
-      const firstDayStr = new Date().toISOString().slice(0, 7) + '-01';
+      let salaireEffectif = emp.salaire_base;
+      if (emp.premier_mois_paye === 0) {
+         salaireEffectif = emp.mode_premier_salaire === 'ce_mois' ? emp.montant_premier_salaire : 0;
+      }
+
+      const lastSalaire = db.prepare(`
+        SELECT date_paiement FROM salaires_paiements 
+        WHERE employe_uuid = ? AND type_paiement = 'Salaire' 
+        ORDER BY date_paiement DESC LIMIT 1
+      `).get(uuid);
+      
+      let dateDepuis = emp.date_embauche;
+      if (lastSalaire) dateDepuis = lastSalaire.date_paiement;
+
       const avances = db.prepare(`
         SELECT COALESCE(SUM(montant), 0) as t 
         FROM salaires_paiements 
-        WHERE employe_uuid = ? AND type_paiement = 'Avance' AND date(date_paiement) >= ?
-      `).get(uuid, firstDayStr);
+        WHERE employe_uuid = ? AND type_paiement = 'Avance' AND date(date_paiement) >= date(?)
+      `).get(uuid, dateDepuis);
 
-      return emp.salaire_base - (avances?.t || 0);
+      let net = salaireEffectif - (avances?.t || 0);
+      return net < 0 ? 0 : net;
     } catch (e) {
       console.error('IPC rh:getEmployeeNetSalary error:', e.message);
       throw e;
@@ -134,10 +237,19 @@ module.exports = function(ipcMain, db) {
   // Supprimer un paiement (annulation) → restituer au capital
   ipcMain.handle('rh:deletePaiement', async (event, uuid) => {
     try {
-      const pmt = db.prepare('SELECT montant, type_paiement, operateur FROM salaires_paiements WHERE uuid = ?').get(uuid);
+      const pmt = db.prepare('SELECT montant, type_paiement, operateur, employe_uuid FROM salaires_paiements WHERE uuid = ?').get(uuid);
       const result = db.prepare('DELETE FROM salaires_paiements WHERE uuid = ?').run(uuid);
-      // Restituer le montant au capital
+      
       if (pmt?.montant) adjustCapital(pmt.montant);
+
+      // Si on annule un salaire, on doit potentiellement re-basculer premier_mois_paye à 0 si c'était le premier
+      // Mais c'est complexe sans historique. En général, on peut vérifier combien de salaires restent.
+      if (pmt?.type_paiement === 'Salaire') {
+         const count = db.prepare("SELECT COUNT(*) as c FROM salaires_paiements WHERE employe_uuid = ? AND type_paiement = 'Salaire'").get(pmt.employe_uuid);
+         if (count.c === 0) {
+            db.prepare('UPDATE employes SET premier_mois_paye = 0 WHERE uuid = ?').run(pmt.employe_uuid);
+         }
+      }
 
       logAction(db, {
         categorie: 'RH',
@@ -163,8 +275,14 @@ module.exports = function(ipcMain, db) {
         INSERT INTO salaires_paiements (uuid, employe_uuid, type_paiement, montant, date_paiement, operateur, last_modified_at, sync_status) 
         VALUES (?, ?, ?, ?, ?, ?, ?, 1)
       `).run(uuid, employe_uuid, type_paiement, montant, date_paiement, operateur, Date.now());
+      
       // Déduire du capital (salaire + avance = sortie d'argent)
       if (montant > 0) adjustCapital(-montant);
+
+      // Si c'est un salaire, on met à jour le fait que le premier mois est payé
+      if (type_paiement === 'Salaire') {
+         db.prepare('UPDATE employes SET premier_mois_paye = 1 WHERE uuid = ?').run(employe_uuid);
+      }
 
       const emp = db.prepare('SELECT nom FROM employes WHERE uuid = ?').get(employe_uuid);
       logAction(db, {

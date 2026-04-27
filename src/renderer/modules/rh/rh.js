@@ -16,7 +16,8 @@
         <span class="module-topbar-title">Employés & Salaires</span>
         <div class="fin-tabs">
           <button class="fin-tab active" data-tab="employes">Employés</button>
-          <button class="fin-tab" data-tab="salaires">Paiements</button>
+          <button class="fin-tab" data-tab="paie">Paie du mois</button>
+          <button class="fin-tab" data-tab="salaires">Historique</button>
         </div>
         <div style="flex:1"></div>
         <button class="mod-action-btn" id="rh-add-btn">
@@ -47,6 +48,7 @@
 
         <div class="fin-content-panel">
           <div id="rh-list-employes" class="fin-list"></div>
+          <div id="rh-list-paie" class="fin-list" style="display:none"></div>
           <div id="rh-list-salaires" class="fin-list" style="display:none"></div>
         </div>
       </div>
@@ -60,7 +62,7 @@
   function bindEvents() {
     document.getElementById('rh-back')?.addEventListener('click', () => Router.go('dashboard'));
     document.getElementById('rh-add-btn')?.addEventListener('click', () => {
-      currentTab === 'employes' ? showEmployeModal() : showPaiementModal();
+      currentTab === 'salaires' ? showPaiementModal() : showEmployeModal();
     });
     document.querySelectorAll('#view-rh .fin-tab').forEach(tab => {
       tab.addEventListener('click', () => {
@@ -74,8 +76,10 @@
   function switchTab(tab) {
     currentTab = tab;
     document.getElementById('rh-list-employes').style.display = tab === 'employes' ? '' : 'none';
+    document.getElementById('rh-list-paie').style.display = tab === 'paie' ? '' : 'none';
     document.getElementById('rh-list-salaires').style.display = tab === 'salaires' ? '' : 'none';
     if (tab === 'employes') loadEmployes();
+    else if (tab === 'paie') loadPaieDuMois();
     else loadSalaires();
   }
 
@@ -107,8 +111,8 @@
             <button class="mod-action-btn mod-action-btn-ghost rh-btn-edit" data-uuid="${e.uuid}" title="Modifier">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             </button>
-            <button class="mod-action-btn mod-action-btn-secondary rh-btn-pay" data-uuid="${e.uuid}" data-nom="${Utils.esc(e.nom)}" ${!e.actif ? 'disabled' : ''}>
-              Payer
+            <button class="mod-action-btn mod-action-btn-ghost rh-btn-avance" data-uuid="${e.uuid}" data-nom="${Utils.esc(e.nom)}" ${!e.actif ? 'disabled' : ''} style="color: var(--warning)">
+              Avance
             </button>
           </div>
         </div>
@@ -118,10 +122,43 @@
       el.querySelectorAll('.rh-btn-edit').forEach(btn => {
         btn.addEventListener('click', () => showEditEmployeModal(btn.dataset.uuid));
       });
+      el.querySelectorAll('.rh-btn-avance').forEach(btn => {
+        btn.addEventListener('click', () => {
+          showPaiementModal(btn.dataset.uuid, btn.dataset.nom, null, 'Avance');
+        });
+      });
+    } catch(e) { console.error(e); }
+  }
+
+  async function loadPaieDuMois() {
+    try {
+      const items = await window.api.rh.getSalairesAPayer();
+      const el = document.getElementById('rh-list-paie');
+      if (!el) return;
+      if (items.length === 0) { el.innerHTML = '<div class="empty-state">Aucun employé actif trouvé</div>'; return; }
+      
+      el.innerHTML = items.map(e => `
+        <div class="rh-emp-row">
+          <div class="rh-emp-avatar">${e.nom?.[0]?.toUpperCase() || '?'}</div>
+          <div class="rh-emp-info">
+            <div class="rh-emp-nom">${Utils.esc(e.nom)}</div>
+            <div class="rh-emp-poste" style="opacity:0.7">Salaire: ${Utils.formatMontant(e.salaire_effectif)} ${e.total_avances > 0 ? '| Avances: ' + Utils.formatMontant(e.total_avances) : ''}</div>
+          </div>
+          <div class="rh-emp-salaire">
+             ${e.est_paye_ce_mois ? '<span style="color:var(--success);font-weight:bold">Payé</span>' : Utils.formatMontant(e.net_a_payer) + '<span class="rh-emp-period"> Net à payer</span>'}
+          </div>
+          <div class="rh-emp-actions">
+            <button class="mod-action-btn mod-action-btn-secondary rh-btn-pay" data-uuid="${e.uuid}" data-nom="${Utils.esc(e.nom)}" data-net="${e.net_a_payer}" ${e.est_paye_ce_mois || e.net_a_payer <= 0 ? 'disabled' : ''}>
+              Payer Salaire
+            </button>
+          </div>
+        </div>
+      `).join('');
+
       el.querySelectorAll('.rh-btn-pay').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          const net = await window.api.rh.getEmployeeNetSalary(btn.dataset.uuid).catch(() => null);
-          showPaiementModal(btn.dataset.uuid, btn.dataset.nom, net);
+        btn.addEventListener('click', () => {
+          const net = parseFloat(btn.dataset.net);
+          showPaiementModal(btn.dataset.uuid, btn.dataset.nom, net, 'Salaire');
         });
       });
     } catch(e) { console.error(e); }
@@ -167,8 +204,24 @@
             <option>Vendeur grossiste</option><option>Comptable</option><option>Gérant</option><option>Autre</option>
           </select>
         </div>
-        <div class="form-group"><label>Salaire de base (Ar/mois)</label><input type="number" id="emp-salaire" class="form-input" value="0" /></div>
+        <div class="form-group"><label>Salaire de base (Ar/mois) *</label><input type="number" id="emp-salaire" class="form-input" value="0" /></div>
         <div class="form-group"><label>Date d'embauche</label><input type="date" id="emp-date" class="form-input" value="${new Date().toISOString().slice(0,10)}" /></div>
+        
+        <div style="padding:10px; background:var(--bg-card); border-radius:8px; margin-bottom:15px; border:1px solid var(--border)">
+          <div style="font-weight:600; margin-bottom:10px; font-size:0.9rem">Premier Salaire</div>
+          <div class="form-group">
+            <label>Paiement du premier salaire</label>
+            <select id="emp-mode-premier" class="form-input">
+              <option value="ce_mois">Payé ce mois-ci</option>
+              <option value="mois_prochain">Prorata le mois prochain</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Montant du premier salaire (Ar)</label>
+            <input type="number" id="emp-montant-premier" class="form-input" value="0" />
+            <div style="font-size:0.8rem; opacity:0.7; margin-top:4px">Montant exact qui sera versé lors de sa première paie.</div>
+          </div>
+        </div>
       `,
       footer: `
         <button class="mod-action-btn mod-action-btn-secondary" id="emp-cancel">Annuler</button>
@@ -188,7 +241,9 @@
             nom, 
             poste: document.getElementById('emp-poste')?.value,
             salaire_base: parseFloat(document.getElementById('emp-salaire')?.value || '0'),
-            date_embauche: document.getElementById('emp-date')?.value
+            date_embauche: document.getElementById('emp-date')?.value,
+            mode_premier_salaire: document.getElementById('emp-mode-premier')?.value,
+            montant_premier_salaire: parseFloat(document.getElementById('emp-montant-premier')?.value || '0')
           });
           Toast.success(`Employé "${nom}" ajouté !`);
           Modal.close(mid);
@@ -199,11 +254,11 @@
     }, 50);
   }
 
-  async function showPaiementModal(preUUID = '', preNom = '', suggestedAmount = null) {
+  async function showPaiementModal(preUUID = '', preNom = '', suggestedAmount = null, forceType = null) {
     try {
       const employes = await window.api.rh.getEmployes();
       const mid = Modal.open({
-        title: 'Enregistrer un paiement',
+        title: forceType === 'Avance' ? 'Enregistrer une Avance' : 'Enregistrer un paiement',
         content: `
           <div class="form-group">
             <label>Employé *</label>
@@ -211,12 +266,12 @@
               ${employes.map(e => `<option value="${e.uuid}" ${e.uuid===preUUID?'selected':''}>${e.nom} — ${e.poste}</option>`).join('')}
             </select>
           </div>
-          <div class="form-group">
+          <div class="form-group" style="${forceType ? 'display:none;' : ''}">
             <label>Type</label>
             <select id="pay-type" class="form-input">
-              <option value="Salaire" ${suggestedAmount !== null ? 'selected' : '' }>Salaire du mois</option>
-              <option value="Avance" ${suggestedAmount === null ? 'selected' : '' }>Avance sur salaire</option>
-              <option value="Prime">Prime</option>
+              <option value="Salaire" ${forceType === 'Salaire' || (!forceType && suggestedAmount !== null) ? 'selected' : '' }>Salaire (paiement intégral)</option>
+              <option value="Avance" ${forceType === 'Avance' || (!forceType && suggestedAmount === null) ? 'selected' : '' }>Avance sur salaire</option>
+              <option value="Prime" ${forceType === 'Prime' ? 'selected' : ''}>Prime</option>
             </select>
           </div>
           <div class="form-group">
@@ -227,7 +282,7 @@
         `,
         footer: `
           <button class="mod-action-btn mod-action-btn-secondary" id="pay-cancel">Annuler</button>
-          <button class="mod-action-btn" id="pay-save">Valider paiement</button>
+          <button class="mod-action-btn" id="pay-save">Valider</button>
         `
       });
 
@@ -243,14 +298,16 @@
             await window.api.rh.addPaiement({
               uuid, 
               employe_uuid: empUUID, 
-              type_paiement: document.getElementById('pay-type')?.value, 
+              type_paiement: forceType || document.getElementById('pay-type')?.value, 
               montant,
               date_paiement: document.getElementById('pay-date')?.value, 
               operateur: user?.nom || ''
             });
             Toast.success('Paiement enregistré !');
             Modal.close(mid);
-            loadSalaires();
+            if(currentTab === 'paie') loadPaieDuMois();
+            else if(currentTab === 'employes') loadEmployes();
+            else loadSalaires();
             loadStats();
           } catch(e) { Toast.error('Erreur: ' + e.message); }
         });
@@ -320,7 +377,9 @@
     try {
       await window.api.rh.deletePaiement(uuid);
       Toast.success('Paiement annulé');
-      loadSalaires();
+      if(currentTab === 'paie') loadPaieDuMois();
+      else if(currentTab === 'employes') loadEmployes();
+      else loadSalaires();
       loadStats();
     } catch(e) { Toast.error('Erreur: ' + e.message); }
   }

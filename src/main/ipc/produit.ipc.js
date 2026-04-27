@@ -2,6 +2,7 @@
 const { randomUUID } = require('crypto');
 const { logAction } = require('./journal.ipc');
 const { notifyChange } = require('../sync/notifier');
+const { broadcastChange } = require('../realtime/broadcast');
 
 module.exports = function(ipcMain, db, syncEngine) {
 
@@ -302,7 +303,10 @@ module.exports = function(ipcMain, db, syncEngine) {
       else if (operation === 'sub')   newStock = Math.max(0, produit.stock_actuel - qty);
       else                            newStock = produit.stock_actuel;
 
-      db.prepare('UPDATE produits SET stock_actuel = ?, stock_bar = ? WHERE id = ? OR uuid = ?').run(newStock, newStock, id, id);
+      db.prepare('UPDATE produits SET stock_actuel = ?, stock_bar = ?, last_modified_at = ?, sync_status = 0 WHERE id = ? OR uuid = ?')
+        .run(newStock, newStock, Date.now(), id, id);
+      notifyChange();
+      broadcastChange({ scope: 'stock', ts: Date.now() });
       return { success: true, newStock };
     } catch (err) {
       return { success: false, message: err.message };

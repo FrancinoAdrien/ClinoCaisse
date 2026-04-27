@@ -2,7 +2,9 @@
 
 (function DashboardModule() {
 
-  let clockInterval = null;
+  let clockInterval  = null;
+  let notifInterval  = null;
+  let realtimeBound  = false;
 
   function render() {
     const container = document.getElementById('view-dashboard');
@@ -30,6 +32,26 @@
           </svg>
           Thème
         </button>
+
+        <!-- Notifications centrées -->
+        <div id="dash-notif-bar">
+          <button id="dash-notif-reserv" class="dash-notif-pill dash-notif-pill--reserv" style="display:none">
+            <span class="dash-notif-pill-dot"></span>
+            <span id="dash-notif-reserv-txt">Réservations en attente</span>
+          </button>
+          <button id="dash-notif-stock" class="dash-notif-pill dash-notif-pill--warn" style="display:none">
+            <span class="dash-notif-pill-dot"></span>
+            <span id="dash-notif-stock-txt">Alertes stock</span>
+          </button>
+          <button id="dash-notif-cuisine-attente" class="dash-notif-pill dash-notif-pill--cuisine-attente" style="display:none">
+            <span class="dash-notif-pill-dot"></span>
+            <span id="dash-notif-cuisine-attente-txt">Commandes en attente</span>
+          </button>
+          <button id="dash-notif-cuisine-pret" class="dash-notif-pill dash-notif-pill--cuisine-pret" style="display:none">
+            <span class="dash-notif-pill-dot"></span>
+            <span id="dash-notif-cuisine-pret-txt">Plats prêts</span>
+          </button>
+        </div>
 
         <div style="flex:1"></div>
 
@@ -199,6 +221,10 @@
     updateUserInfo();
     updateClock();
     loadParams();
+    checkNotifications();
+    if (notifInterval) clearInterval(notifInterval);
+    // Temps réel: stock/réservations doivent apparaître/disparaître rapidement
+    notifInterval = setInterval(checkNotifications, 5000);
   }
 
   function updateUserInfo() {
@@ -264,6 +290,60 @@
     } catch {}
   }
 
+  async function checkNotifications() {
+    try {
+      const [overdue, stockCount, cuisineLignes] = await Promise.all([
+        window.api.reservations.getOverdue().catch(() => []),
+        window.api.stock.getAlertesCount().catch(() => 0),
+        window.api.cuisine.getLignes().catch(() => []),
+      ]);
+
+      const pillR = document.getElementById('dash-notif-reserv');
+      const txtR  = document.getElementById('dash-notif-reserv-txt');
+      if (pillR) {
+        const n = (overdue || []).length;
+        pillR.style.display = n > 0 ? 'flex' : 'none';
+        if (txtR) txtR.textContent = n === 1
+          ? '1 réservation en attente d\'arrivée'
+          : `${n} réservations en attente d\'arrivée`;
+      }
+
+      const pillS = document.getElementById('dash-notif-stock');
+      const txtS  = document.getElementById('dash-notif-stock-txt');
+      if (pillS) {
+        pillS.style.display = stockCount > 0 ? 'flex' : 'none';
+        if (txtS) txtS.textContent = stockCount === 1
+          ? '1 produit en alerte de stock'
+          : `${stockCount} produits en alerte de stock`;
+      }
+
+      let attenteCount = 0;
+      let pretCount = 0;
+      (cuisineLignes || []).forEach(l => {
+        if (l.statut_cuisine === 'en_attente') attenteCount++;
+        else if (l.statut_cuisine === 'pret') pretCount++;
+      });
+
+      const pillCuisineAttente = document.getElementById('dash-notif-cuisine-attente');
+      const txtCuisineAttente  = document.getElementById('dash-notif-cuisine-attente-txt');
+      if (pillCuisineAttente) {
+        pillCuisineAttente.style.display = attenteCount > 0 ? 'flex' : 'none';
+        if (txtCuisineAttente) txtCuisineAttente.textContent = attenteCount === 1
+          ? '1 commande en attente'
+          : `${attenteCount} commandes en attente`;
+      }
+
+      const pillCuisinePret = document.getElementById('dash-notif-cuisine-pret');
+      const txtCuisinePret  = document.getElementById('dash-notif-cuisine-pret-txt');
+      if (pillCuisinePret) {
+        pillCuisinePret.style.display = pretCount > 0 ? 'flex' : 'none';
+        if (txtCuisinePret) txtCuisinePret.textContent = pretCount === 1
+          ? '1 plat prêt à servir'
+          : `${pretCount} plats prêts à servir`;
+      }
+    } catch (e) { /* silencieux */ }
+  }
+
   function updateClock() {
     const updateFn = () => {
       const now  = new Date();
@@ -314,6 +394,25 @@
       Router.go('analytique');
     });
 
+    document.getElementById('dash-notif-reserv')?.addEventListener('click', () => {
+      window._reservScrollToAlert = true;
+      window._reservOpenOverdueModal = true;
+      Router.go('reservations');
+    });
+
+    document.getElementById('dash-notif-stock')?.addEventListener('click', () => {
+      window._stockScrollToAlertes = true;
+      Router.go('stock');
+    });
+
+    document.getElementById('dash-notif-cuisine-attente')?.addEventListener('click', () => {
+      Router.go('cuisine');
+    });
+
+    document.getElementById('dash-notif-cuisine-pret')?.addEventListener('click', () => {
+      Router.go('cuisine');
+    });
+
     document.getElementById('btn-theme-selector')?.addEventListener('click', () => {
       if (typeof ThemeSelectorModule !== 'undefined') ThemeSelectorModule.open();
     });
@@ -326,6 +425,21 @@
       Session.clear();
       Router.go('login');
     });
+
+    // Rafraîchir dès qu'on revient sur la fenêtre / onglet
+    window.addEventListener('focus', () => { checkNotifications(); });
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) checkNotifications();
+    });
+
+    // Temps réel: rafraîchir dès qu'une écriture DB survient
+    if (!realtimeBound && window.api?.events?.onDataChanged) {
+      realtimeBound = true;
+      window.api.events.onDataChanged(() => {
+        // On ne fait que recalculer les pastilles; pas de re-render complet
+        checkNotifications();
+      });
+    }
   }
 
   document.addEventListener('view:activate', (e) => {
@@ -335,6 +449,7 @@
     }
     if (e.detail.view !== 'dashboard' && e.detail.view !== 'login') {
       if (clockInterval) { clearInterval(clockInterval); clockInterval = null; }
+      if (notifInterval) { clearInterval(notifInterval); notifInterval = null; }
     }
   });
 

@@ -2,6 +2,7 @@
 const { randomUUID } = require('crypto');
 const { logAction } = require('./journal.ipc');
 const { notifyChange } = require('../sync/notifier');
+const { broadcastChange } = require('../realtime/broadcast');
 
 module.exports = function(ipcMain, db) {
 
@@ -19,9 +20,19 @@ module.exports = function(ipcMain, db) {
       SELECT p.*, c.nom as categorie_nom
       FROM produits p LEFT JOIN categories c ON p.categorie_id = c.id
       WHERE p.actif = 1 AND p.stock_actuel != -1
-        AND p.stock_actuel <= p.stock_alerte 
-      ORDER BY p.stock_actuel ASC
+        AND p.stock_bar <= p.stock_alerte AND p.stock_alerte > 0
+      ORDER BY p.stock_bar ASC
     `).all();
+  });
+
+  // Compte rapide pour notification dashboard
+  ipcMain.handle('stock:getAlertesCount', () => {
+    const row = db.prepare(`
+      SELECT COUNT(*) as n FROM produits
+      WHERE actif = 1 AND stock_actuel != -1
+        AND stock_bar <= stock_alerte AND stock_alerte > 0
+    `).get();
+    return row ? row.n : 0;
   });
 
   // ── AJUSTEMENT STOCK ─────────────────────────────────────────────────
@@ -73,6 +84,7 @@ module.exports = function(ipcMain, db) {
         icone: delta > 0 ? '📦' : '⚠️'
       });
       notifyChange();
+      broadcastChange({ scope: 'stock', ts: Date.now() });
 
       return { success: true, ancienneQty, nouvelleQty, delta };
     } catch (err) {

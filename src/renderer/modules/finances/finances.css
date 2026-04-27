@@ -34,15 +34,56 @@
   grid-template-columns: repeat(6, 1fr);
   gap: 14px;
   flex-shrink: 0;
-  
 }
 
+/* ── Stat card premium ─── */
 .gros-stat-card {
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 10px;
+  background: var(--ana-kpi-card-base);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 16px;
+  padding: 14px 16px;
   margin-bottom: 10px;
   margin-top: 10px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.22);
+  will-change: transform;
+  transform: translateZ(0);
+  transition: transform 0.26s cubic-bezier(0.22,0.9,0.36,1),
+              box-shadow 0.26s ease,
+              border-color 0.26s ease,
+              background 0.26s ease;
+}
+
+.gros-stat-card::before {
+  content: '';
+  position: absolute;
+  top: -30%; left: -15%;
+  width: 150%; height: 140%;
+  background: linear-gradient(
+    120deg,
+    transparent 42%,
+    rgba(255,250,245,0.04) 48%,
+    rgba(255,255,250,0.10) 52%,
+    rgba(255,248,240,0.04) 56%,
+    transparent 62%
+  );
+  transform: rotate(14deg) translateX(-18%) translateZ(0);
+  pointer-events: none;
+  z-index: 1;
+  transition: transform 0.4s ease-out;
+  will-change: transform;
+}
+
+.gros-stat-card:hover {
+  transform: translateY(-3px) translateZ(0);
+  background: var(--ana-kpi-card-hover);
+  border-color: rgba(255,255,255,0.14);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.32);
+}
+
+.gros-stat-card:hover::before {
+  transform: rotate(14deg) translateX(6%) translateY(-3%) translateZ(0);
 }
 
 @media (max-width: 1100px) {
@@ -61,11 +102,14 @@
 /* ── Content panel ─── */
 .fin-content-panel {
   flex: 1;
-  background: var(--card-gradient);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  background: var(--ana-kpi-card-base);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px;
   overflow-y: auto;
   min-height: 0;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.18);
+  position: relative;
+  overflow: hidden;
 }
 
 .fin-list {
@@ -90,12 +134,15 @@
   display: flex;
   align-items: center;
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
   gap: 12px;
-  transition: background 0.12s;
+  transition: background 0.14s ease, transform 0.14s ease;
 }
 
-.fin-row:hover { background: rgba(255,255,255,0.03); }
+.fin-row:hover {
+  background: rgba(255,255,255,0.04);
+  transform: translateX(2px);
+}
 .fin-row:last-child { border-bottom: none; }
 
 .fin-row-cat {

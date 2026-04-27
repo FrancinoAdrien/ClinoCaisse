@@ -58,5 +58,5 @@
   letter-spacing: 0.5px;
 }
 .role-badge.admin  { background: rgba(192,144,32,0.2); color: #c09020; }
-.role-badge.vendeur{ background: rgba(74,159,212,0.2); color: #4a9fd4; }
+.role-badge.employe{ background: rgba(74,159,212,0.2); color: #4a9fd4; }
 .role-badge.gerant { background: rgba(160,96,208,0.2); color: #a060d0; }

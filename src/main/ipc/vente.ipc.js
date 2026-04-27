@@ -2,6 +2,7 @@
 const { randomUUID } = require('crypto');
 const { logAction } = require('./journal.ipc');
 const { notifyChange } = require('../sync/notifier');
+const { broadcastChange } = require('../realtime/broadcast');
 
 module.exports = function(ipcMain, db) {
 
@@ -126,6 +127,10 @@ module.exports = function(ipcMain, db) {
           icone: '🛒'
         });
         notifyChange();
+        // Stock peut changer suite à la vente → notif dashboard instantanée
+        broadcastChange({ scope: 'stock', ts: Date.now() });
+        // Commandes cuisine peuvent être créées → notif caisse instantanée
+        broadcastChange({ scope: 'cuisine', ts: Date.now() });
       }
       return result;
     } catch (err) {
@@ -223,6 +228,7 @@ module.exports = function(ipcMain, db) {
             last_modified_at = ?, sync_status = 0
           WHERE uuid = ?
         `).run(data.nom_table || null, data.nom_caissier, total, lignesJson, now, existing.uuid);
+        broadcastChange({ scope: 'cuisine', ts: Date.now() });
         return { success: true, id: existing.uuid };
       } else {
         const uid = randomUUID();
@@ -230,6 +236,7 @@ module.exports = function(ipcMain, db) {
           INSERT INTO tickets_table (uuid, numero_table, nom_table, nom_caissier, montant_total, lignes_json, last_modified_at, sync_status)
           VALUES (?, ?, ?, ?, ?, ?, ?, 0)
         `).run(uid, data.numero_table, data.nom_table || null, data.nom_caissier, total, lignesJson, now);
+        broadcastChange({ scope: 'cuisine', ts: Date.now() });
         return { success: true, id: result.lastInsertRowid };
       }
     } catch (err) {

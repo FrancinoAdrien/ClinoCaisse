@@ -10,6 +10,7 @@ require('./src/main/database/migrations')(db);
 // Initialiser le moteur de synchronisation cloud
 const SyncEngine = require('./src/main/sync/syncEngine');
 const { initNotifier } = require('./src/main/sync/notifier');
+const { initBroadcast } = require('./src/main/realtime/broadcast');
 const syncEngine = new SyncEngine(db);
 initNotifier(syncEngine); // Connecter le notifieur singleton
 
@@ -76,6 +77,9 @@ function createWindow() {
   });
 
   mainWindow.loadFile(path.join(__dirname, 'src/renderer/index.html'));
+
+  // Brancher le broadcast Main -> Renderer (temps réel UI)
+  initBroadcast(mainWindow);
 
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();

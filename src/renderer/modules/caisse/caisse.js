@@ -41,6 +41,11 @@
         <span class="caisse-topbar-title">Caisse</span>
         <span class="caisse-vendeur" id="caisse-vendeur"></span>
         <div style="flex:1"></div>
+        <button class="btn btn-ghost btn-sm caisse-kitchen-bell" id="btn-caisse-cuisine" title="Cuisine & bar">
+          <span class="caisse-kitchen-ico">🔔</span>
+          <span class="caisse-kitchen-badge caisse-kitchen-badge--attente" id="caisse-kitchen-attente" style="display:none">0</span>
+          <span class="caisse-kitchen-badge caisse-kitchen-badge--pret" id="caisse-kitchen-pret" style="display:none">0</span>
+        </button>
         <span id="caisse-date" style="font-size:12px;opacity:0.55;color:var(--text)"></span>
       </div>
 
@@ -143,7 +148,54 @@
 
     bindEvents();
     loadData();
+    bindCuisineNotif();
+    updateCuisineNotif();
     updateDateDisplay();
+  }
+
+  let _cuisineNotifTimer = null;
+  let _cuisineNotifBound = false;
+
+  function bindCuisineNotif() {
+    if (_cuisineNotifBound) return;
+    _cuisineNotifBound = true;
+
+    document.getElementById('btn-caisse-cuisine')?.addEventListener('click', () => {
+      Router.go('cuisine');
+    });
+
+    if (_cuisineNotifTimer) clearInterval(_cuisineNotifTimer);
+    _cuisineNotifTimer = setInterval(() => {
+      const v = document.getElementById('view-caisse');
+      if (v?.classList.contains('active')) updateCuisineNotif();
+    }, 5000);
+
+    if (window.api?.events?.onDataChanged) {
+      window.api.events.onDataChanged((payload) => {
+        if (payload?.scope && payload.scope !== 'cuisine') return;
+        const v = document.getElementById('view-caisse');
+        if (v?.classList.contains('active')) updateCuisineNotif();
+      });
+    }
+  }
+
+  async function updateCuisineNotif() {
+    try {
+      const lignes = await window.api.cuisine.getLignes().catch(() => []) || [];
+      const attente = lignes.filter(l => (l.statut_cuisine || '') === 'en_attente').length;
+      const pret = lignes.filter(l => (l.statut_cuisine || '') === 'pret').length;
+
+      const bA = document.getElementById('caisse-kitchen-attente');
+      const bP = document.getElementById('caisse-kitchen-pret');
+      if (bA) {
+        bA.textContent = attente;
+        bA.style.display = attente > 0 ? 'inline-flex' : 'none';
+      }
+      if (bP) {
+        bP.textContent = pret;
+        bP.style.display = pret > 0 ? 'inline-flex' : 'none';
+      }
+    } catch { /* silencieux */ }
   }
 
   // ── CHARGEMENT DONNÉES ────────────────────────────────────────────────
@@ -417,17 +469,17 @@
       title: 'Tables',
       width: '860px',
       content: `
-        <div style="display:flex;gap:16px;min-height:380px">
-          <div>
-            <div style="color: #eee;font-size:11px;opacity:0.5;text-transform:uppercase;font-weight:700;margin-bottom:10px;letter-spacing:.5px">Choisir une table</div>
-            <div class="tables-modal-grid" id="tables-grid" style="max-width:400px">
+        <div style="display:flex;gap:16px;height:65vh;min-height:380px;max-height:600px;overflow:hidden;">
+          <div style="display:flex;flex-direction:column;flex:0 0 400px;max-width:400px;height:100%;">
+            <div style="color: #eee;font-size:11px;opacity:0.5;text-transform:uppercase;font-weight:700;margin-bottom:10px;letter-spacing:.5px;flex-shrink:0;">Choisir une table</div>
+            <div class="tables-modal-grid" id="tables-grid" style="overflow-y:auto;flex:1;align-content:flex-start;">
               ${tables.map(t => renderTableCell(t)).join('')}
             </div>
-            <div style="margin-top:12px;display:flex;gap:8px">
+            <div style="margin-top:12px;display:flex;gap:8px;flex-shrink:0;">
               <button class="btn btn-ghost btn-sm" id="btn-ajouter-table">+ Ajouter table</button>
             </div>
           </div>
-          <div style="flex:1;display:flex;flex-direction:column;gap:10px" id="table-detail-zone">
+          <div style="flex:1;display:flex;flex-direction:column;gap:10px;min-width:0;" id="table-detail-zone">
             <div style="font-size:12px;opacity:0.4;text-align:center;padding:40px; color: #eee;">Cliquez sur une table pour voir son contenu</div>
           </div>
         </div>
@@ -712,11 +764,24 @@
             </div>
           </div>
           <div class="table-detail-actions">
-            <button class="btn btn-success btn-sm" id="tbl-ticket" style="flex:1">Ticket</button>
-            <button class="btn btn-ghost btn-sm" id="tbl-bon" style="flex:1">ADDITION</button>
+            <button class="btn btn-success btn-sm" id="tbl-ticket">Ticket</button>
+            <button class="btn btn-ghost btn-sm" id="tbl-bon">ADDITION</button>
             <button class="btn btn-danger btn-sm" id="tbl-suppr-art">Suppr. article</button>
             <button class="btn btn-ghost btn-sm" id="tbl-charger">Charger panier</button>
+            <button class="btn btn-warning btn-sm" id="tbl-transferer" title="Déplacer la commande vers une autre table">⇄ Transférer</button>
+            <button class="btn btn-info btn-sm" id="tbl-fusionner" title="Fusionner avec une autre table">⊕ Fusionner</button>
           </div>`;
+
+        // Événement molette pour scroller horizontalement les boutons rapidement
+        const actionsContainer = zone.querySelector('.table-detail-actions');
+        if (actionsContainer) {
+          actionsContainer.addEventListener('wheel', (evt) => {
+            if (evt.deltaY !== 0) {
+              evt.preventDefault();
+              actionsContainer.scrollLeft += evt.deltaY * 1.5; // Multiplicateur pour scroll rapide
+            }
+          });
+        }
 
         // Sélection article
         let tableSelectedItem = -1;
@@ -795,6 +860,236 @@
           Modal.close(modalId);
           Toast.info(`Table ${num} chargée`);
         });
+
+        // ── TRANSFÉRER ─────────────────────────────────────────────────────
+        document.getElementById('tbl-transferer')?.addEventListener('click', async () => {
+          const allTables = await window.api.tables.getAll();
+          // Tables disponibles = toutes les tables SAUF la table source
+          const cibles = allTables.filter(tb => {
+            const tbTicketId = tb.ticket?.id || tb.ticket?.uuid || null;
+            return tbTicketId !== ticketId;
+          });
+
+          if (!cibles.length) {
+            Toast.warn('Aucune autre table disponible pour le transfert');
+            return;
+          }
+
+          const trId = 'transfert-' + Date.now();
+          Modal.open({
+            id: trId,
+            title: `Transférer — ${Utils.esc(t.nom_table || `Table ${num}`)}`,
+            width: '540px',
+            content: `
+              <p style="font-size:13px;opacity:0.65;margin-bottom:14px">
+                Choisissez la table <strong>destination</strong>. La commande sera déplacée intégralement.
+                Si la table cible est <strong style="color:#2ecc71">occupée</strong>, les articles seront fusionnés.
+              </p>
+              <div class="tables-modal-grid" id="tr-tables-grid">
+                ${cibles.map(tb => {
+                  const occ = !!tb.ticket;
+                  const nom = tb.ticket?.nom_table || `Table ${tb.numero}`;
+                  const ttl = tb.ticket?.montant_total || 0;
+                  return `
+                    <div class="table-cell ${occ ? 'occupee' : 'libre'}"
+                         data-trnum="${tb.numero}"
+                         data-trticket="${tb.ticket?.id || tb.ticket?.uuid || ''}">
+                      <div class="tc-icon">${occ ? '🟢' : '⬜'}</div>
+                      <div class="tc-nom">${Utils.esc(nom)}</div>
+                      <div class="tc-statut">${occ ? 'OCCUPÉE' : 'LIBRE'}</div>
+                      ${occ ? `<div class="tc-total">${Math.round(ttl).toLocaleString('fr-FR')} ${state.devise}</div>` : ''}
+                    </div>`;
+                }).join('')}
+              </div>
+            `,
+            footer: `<button class="btn btn-ghost" data-close="${trId}">Annuler</button>`,
+          });
+
+          setTimeout(() => {
+            document.querySelectorAll('#tr-tables-grid .table-cell').forEach(card => {
+              card.addEventListener('click', async () => {
+                const destNum   = parseInt(card.dataset.trnum);
+                const destTicketId = card.dataset.trticket || null;
+
+                // Demande de confirmation et du nom
+                const destNom = card.querySelector('.tc-nom')?.textContent || `Table ${destNum}`;
+                const sourceNom = t.nom_table || `Table ${num}`;
+                const nomPropose = destTicketId ? destNom : sourceNom;
+
+                const nomFinal = await new Promise(r => Modal.prompt(
+                  'Confirmer transfert & Nommer',
+                  `Transférer « ${Utils.esc(sourceNom)} » vers « ${Utils.esc(destNom)} ».\nQuel nom donner à cette table ?`,
+                  nomPropose,
+                  r
+                ));
+                if (nomFinal === null) return;
+
+                // Construire les lignes finales pour la destination
+                let lignesFinales = [...lignes];
+                let nomDest = nomFinal.trim() || nomPropose;
+
+                if (destTicketId) {
+                  // Table destination occupée → fusionner
+                  const destTicket = await window.api.tables.charger(destTicketId);
+                  const destLignes = JSON.parse(destTicket?.lignes_json || '[]');
+                  for (const nl of lignes) {
+                    const found = destLignes.find(el =>
+                      el.produit_id === nl.produit_id &&
+                      el.remise === nl.remise &&
+                      el.est_offert === nl.est_offert
+                    );
+                    if (found) {
+                      found.quantite  += nl.quantite;
+                      found.total_ttc += nl.total_ttc;
+                    } else {
+                      destLignes.push(nl);
+                    }
+                  }
+                  lignesFinales = destLignes;
+                }
+
+                // Sauvegarder dans la table destination
+                const user = Session.getUser();
+                const resSave = await window.api.tables.sauvegarder({
+                  numero_table: destNum,
+                  nom_table: nomDest,
+                  nom_caissier: user?.nom || t.nom_caissier || '-',
+                  lignes: lignesFinales,
+                });
+
+                if (!resSave.success) { Toast.error('Erreur transfert : ' + resSave.message); return; }
+
+                // Libérer la table source
+                await window.api.tables.supprimer(ticketId);
+                if (state.tableActive?.id === ticketId) {
+                  state.tableActive = null;
+                  updateTableBadge();
+                }
+
+                Modal.close(trId);
+                Modal.close(modalId);
+                Toast.success(`Commande transférée vers ${nomDest}`);
+
+                // Rafraîchir la grille
+                const t2 = await window.api.tables.getAll();
+                document.getElementById('tables-grid').innerHTML = t2.map(tc => renderTableCell(tc)).join('');
+                bindTableModal(modalId, t2);
+              });
+            });
+          }, 20);
+        });
+
+        // ── FUSIONNER ──────────────────────────────────────────────────────
+        document.getElementById('tbl-fusionner')?.addEventListener('click', async () => {
+          const allTables = await window.api.tables.getAll();
+          // Tables disponibles = uniquement les tables OCCUPÉES sauf la table source
+          const ciblesOcc = allTables.filter(tb => {
+            const tbTicketId = tb.ticket?.id || tb.ticket?.uuid || null;
+            return tbTicketId && tbTicketId !== ticketId;
+          });
+
+          if (!ciblesOcc.length) {
+            Toast.warn('Aucune autre table occupée pour la fusion');
+            return;
+          }
+
+          const fuId = 'fusion-' + Date.now();
+          Modal.open({
+            id: fuId,
+            title: `Fusionner — ${Utils.esc(t.nom_table || `Table ${num}`)}`,
+            width: '540px',
+            content: `
+              <p style="font-size:13px;opacity:0.65;margin-bottom:14px">
+                Choisissez une table avec laquelle <strong>fusionner</strong>.
+                Les articles des deux tables seront regroupés et la table source sera libérée.
+              </p>
+              <div class="tables-modal-grid" id="fu-tables-grid">
+                ${ciblesOcc.map(tb => {
+                  const nom = tb.ticket?.nom_table || `Table ${tb.numero}`;
+                  const ttl = tb.ticket?.montant_total || 0;
+                  return `
+                    <div class="table-cell occupee"
+                         data-funum="${tb.numero}"
+                         data-futicket="${tb.ticket?.id || tb.ticket?.uuid || ''}">
+                      <div class="tc-icon">🟢</div>
+                      <div class="tc-nom">${Utils.esc(nom)}</div>
+                      <div class="tc-statut">OCCUPÉE</div>
+                      <div class="tc-total">${Math.round(ttl).toLocaleString('fr-FR')} ${state.devise}</div>
+                    </div>`;
+                }).join('')}
+              </div>
+            `,
+            footer: `<button class="btn btn-ghost" data-close="${fuId}">Annuler</button>`,
+          });
+
+          setTimeout(() => {
+            document.querySelectorAll('#fu-tables-grid .table-cell').forEach(card => {
+              card.addEventListener('click', async () => {
+                const destNum      = parseInt(card.dataset.funum);
+                const destTicketId = card.dataset.futicket;
+
+                const destNom = card.querySelector('.tc-nom')?.textContent || `Table ${destNum}`;
+                const sourceNom = t.nom_table || `Table ${num}`;
+
+                const nomFinal = await new Promise(r => Modal.prompt(
+                  'Confirmer fusion & Nommer',
+                  `Fusionner « ${Utils.esc(sourceNom)} » avec « ${Utils.esc(destNom)} ».\nQuel nom donner à la table finale ?`,
+                  destNom,
+                  r
+                ));
+                if (nomFinal === null) return;
+
+                // Charger la table destination
+                const destTicket  = await window.api.tables.charger(destTicketId);
+                const destLignes  = JSON.parse(destTicket?.lignes_json || '[]');
+                const nomDest     = nomFinal.trim() || destNom;
+
+                // Fusionner les lignes
+                for (const nl of lignes) {
+                  const found = destLignes.find(el =>
+                    el.produit_id === nl.produit_id &&
+                    el.remise     === nl.remise &&
+                    el.est_offert === nl.est_offert
+                  );
+                  if (found) {
+                    found.quantite  += nl.quantite;
+                    found.total_ttc += nl.total_ttc;
+                  } else {
+                    destLignes.push(nl);
+                  }
+                }
+
+                // Sauvegarder la table destination fusionnée
+                const user = Session.getUser();
+                const resSave = await window.api.tables.sauvegarder({
+                  numero_table: destNum,
+                  nom_table: nomDest,
+                  nom_caissier: user?.nom || t.nom_caissier || '-',
+                  lignes: destLignes,
+                });
+
+                if (!resSave.success) { Toast.error('Erreur fusion : ' + resSave.message); return; }
+
+                // Libérer la table source
+                await window.api.tables.supprimer(ticketId);
+                if (state.tableActive?.id === ticketId) {
+                  state.tableActive = null;
+                  updateTableBadge();
+                }
+
+                Modal.close(fuId);
+                Modal.close(modalId);
+                Toast.success(`Tables fusionnées dans ${nomDest}`);
+
+                // Rafraîchir la grille
+                const t2 = await window.api.tables.getAll();
+                document.getElementById('tables-grid').innerHTML = t2.map(tc => renderTableCell(tc)).join('');
+                bindTableModal(modalId, t2);
+              });
+            });
+          }, 20);
+        });
+
       });
     });
   }
@@ -1400,7 +1695,7 @@
   document.addEventListener('view:activate', e => {
     if (e.detail.view === 'caisse') {
       if (!document.querySelector('.caisse-body')) render();
-      else loadData();
+      else { loadData(); updateCuisineNotif(); }
     }
   });
 

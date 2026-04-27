@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Statistiques Modernes | Dashboard attrayant</title>
+  <!-- Google Fonts: Inter pour un look moderne et lisible -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <!-- Font Awesome 6 (free icons) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- Chart.js pour des graphiques légers et stylés -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(135deg, #f0f5ff 0%, #e9eff8 100%);
+      font-family: 'Inter', sans-serif;
+      color: #1a2c3e;
+      padding: 2rem 1.5rem;
+    }
+
+    /* Conteneur principal */
+    .dashboard {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* Header avec titre et date dynamique */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+    }
+    .title-section h1 {
+      font-size: 1.9rem;
+      font-weight: 700;
+      background: linear-gradient(120deg, #1e3c72, #2a5298);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      letter-spacing: -0.5px;
+    }
+    .title-section p {
+      color: #4a627a;
+      font-weight: 500;
+      margin-top: 0.25rem;
+      font-size: 0.9rem;
+    }
+    .date-badge {
+      background: rgba(255,255,255,0.7);
+      backdrop-filter: blur(4px);
+      padding: 0.6rem 1.2rem;
+      border-radius: 60px;
+      font-weight: 500;
+      font-size: 0.85rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+      border: 1px solid rgba(255,255,255,0.8);
+      color: #1f3b4c;
+    }
+    .date-badge i {
+      margin-right: 8px;
+      color: #2c7da0;
+    }
+
+    /* Grille des cartes KPI */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+    .card {
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(2px);
+      border-radius: 32px;
+      padding: 1.4rem 1.2rem;
+      box-shadow: 0 12px 28px -8px rgba(0, 32, 64, 0.08);
+      transition: all 0.25s ease;
+      border: 1px solid rgba(255,255,255,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .card:hover {
+      transform: translateY(-3px);
+      background: white;
+      box-shadow: 0 20px 30px -12px rgba(0,0,0,0.12);
+      border-color: #cbddea;
+    }
+    .card-info h3 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #5e7c9c;
+      margin-bottom: 0.5rem;
+    }
+    .card-value {
+      font-size: 2.3rem;
+      font-weight: 800;
+      color: #0a2540;
+      line-height: 1.2;
+    }
+    .trend {
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-top: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .trend.up { color: #10b981; }
+    .trend.down { color: #ef4444; }
+    .trend.neutral { color: #f59e0b; }
+    .card-icon {
+      width: 52px;
+      height: 52px;
+      background: linear-gradient(135deg, #eef2ff, #e0e9fc);
+      border-radius: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      color: #2c6288;
+    }
+
+    /* Grille pour graphiques et tableaux */
+    .charts-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 1.8rem;
+      margin-bottom: 2rem;
+    }
+    .chart-card {
+      background: white;
+      border-radius: 28px;
+      padding: 1.3rem 1rem 1rem 1rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.02), 0 4px 12px rgba(0, 0, 0, 0.03);
+      transition: all 0.2s;
+      border: 1px solid #eef2f8;
+    }
+    .chart-card h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      padding-left: 0.5rem;
+      border-left: 4px solid #3b82f6;
+      color: #1e2f3e;
+    }
+    canvas {
+      max-height: 280px;
+      width: 100%;
+    }
+
+    /* tableau récent */
+    .table-wrapper {
+      background: white;
+      border-radius: 28px;
+      padding: 0rem 0rem 0.2rem 0rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.02);
+      border: 1px solid #eef2f8;
+      overflow-x: auto;
+    }
+    .table-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.2rem 1.5rem 0.5rem 1.5rem;
+    }
+    .table-header h3 {
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+    .badge-small {
+      background: #eef2ff;
+      padding: 4px 12px;
+      border-radius: 40px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #2563eb;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    th {
+      text-align: left;
+      padding: 1rem 1.5rem;
+      background-color: #fafcff;
+      font-weight: 600;
+      color: #2c4c6e;
+      border-bottom: 1px solid #e9edf2;
+    }
+    td {
+      padding: 0.9rem 1.5rem;
+      border-bottom: 1px solid #f0f4fa;
+      font-weight: 500;
+      color: #1f3a4b;
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+    .country-flag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .progress-bar {
+      width: 100px;
+      background: #e2e8f0;
+      border-radius: 20px;
+      height: 6px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      background: #3b82f6;
+      height: 6px;
+      border-radius: 20px;
+      width: 0%;
+    }
+    .value-highlight {
+      font-weight: 700;
+      color: #0f3b5c;
+    }
+
+    /* footer tiny */
+    .footer-note {
+      margin-top: 2rem;
+      text-align: center;
+      font-size: 0.7rem;
+      color: #6c8dae;
+    }
+
+    @media (max-width: 750px) {
+      body {
+        padding: 1rem;
+      }
+      .charts-row {
+        grid-template-columns: 1fr;
+      }
+      .card-value {
+        font-size: 1.8rem;
+      }
+      .kpi-grid {
+        gap: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="dashboard">
+  <div class="header">
+    <div class="title-section">
+      <h1><i class="fas fa-chart-line" style="color:#2c7da0; margin-right: 8px;"></i>StatHub · Vue d'ensemble</h1>
+      <p>Performance & indicateurs clés — analyse en temps réel</p>
+    </div>
+    <div class="date-badge">
+      <i class="far fa-calendar-alt"></i> 
+      <span id="liveDate"></span>
+    </div>
+  </div>
+
+  <!-- 4 Cartes KPI dynamiques (valeurs modernisées) -->
+  <div class="kpi-grid">
+    <div class="card">
+      <div class="card-info">
+        <h3><i class="fas fa-users"></i> UTILISATEURS ACTIFS</h3>
+        <div class="card-value" id="usersCount">18.4K</div>
+        <div class="trend up"><i class="fas fa-arrow-up"></i> +12.5%</div>
+      </div>
+      <div class="card-icon"><i class="fas fa-user-astronaut"></i></div>
+    </div>
+    <div class="card">
+      <div class="card-info">
+        <h3><i class="fas fa-chart-simple"></i> CONVERSION</h3>
+        <div class="card-value" id="conversionRate">8.42<small style="font-size:1rem;">%</small></div>
+        <div class="trend up"><i class="fas fa-arrow-up"></i> +2.1%</div>
+      </div>
+      <div class="card-icon"><i class="fas fa-percent"></i></div>
+    </div>
+    <div class="card">
+      <div class="card-info">
+        <h3><i class="fas fa-dollar-sign"></i> REVENU MENSUEL</h3>
+        <div class="card-value" id="revenueVal">$42.8K</div>
+        <div class="trend up"><i class="fas fa-arrow-up"></i> +8.3%</div>
+      </div>
+      <div class="card-icon"><i class="fas fa-chart-line"></i></div>
+    </div>
+    <div class="card">
+      <div class="card-info">
+        <h3><i class="fas fa-clock"></i> TEMPS SESSION</h3>
+        <div class="card-value" id="sessionTime">4m 32s</div>
+        <div class="trend neutral"><i class="fas fa-minus-circle"></i> Stable</div>
+      </div>
+      <div class="card-icon"><i class="fas fa-hourglass-half"></i></div>
+    </div>
+  </div>
+
+  <!-- Graphiques: ligne & barres -->
+  <div class="charts-row">
+    <div class="chart-card">
+      <h3><i class="fas fa-chart-line" style="margin-right: 8px;"></i> Évolution mensuelle (visites)</h3>
+      <canvas id="trendChart" width="400" height="200" style="max-height:250px;"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3><i class="fas fa-chart-pie"></i> Répartition des appareils</h3>
+      <canvas id="deviceChart" width="400" height="200" style="max-height:250px;"></canvas>
+    </div>
+  </div>
+
+  <!-- Tableau des performances internationales -->
+  <div class="table-wrapper">
+    <div class="table-header">
+      <h3><i class="fas fa-globe-americas"></i> Top pays · Trafic & engagement</h3>
+      <div class="badge-small">Mis à jour horairement</div>
+    </div>
+    <table>
+      <thead>
+        <tr><th>Pays</th><th>Visiteurs</th><th>Taux conversion</th><th>Engagement</th><th>Progression</th></tr>
+      </thead>
+      <tbody id="statsTableBody">
+        <!-- les données seront injectées en JS pour rester modernes et dynamiques -->
+      </tbody>
+    </table>
+  </div>
+  <div class="footer-note">
+    <i class="fas fa-chart-simple"></i> Statistiques simulées en temps réel — design moderne, responsive & interactif.
+  </div>
+</div>
+
+<script>
+  // Affichage date française dynamique
+  function updateDate() {
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    const today = new Date();
+    const formatted = today.toLocaleDateString('fr-FR', options);
+    document.getElementById('liveDate').innerHTML = `<i class="far fa-calendar-check"></i> ${formatted}`;
+  }
+  updateDate();
+
+  // ------------------------------------------------------------------
+  // 1. Graphique en ligne (tendance visites)
+  const ctxLine = document.getElementById('trendChart').getContext('2d');
+  const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+  // données actuelles (tendance moderne)
+  const visitsData = [3200, 4100, 4900, 5700, 6900, 8400, 9200, 10500, 11200, 12800, 14700, 16800];
+  
+  new Chart(ctxLine, {
+    type: 'line',
+    data: {
+      labels: months,
+      datasets: [
+        {
+          label: 'Visiteurs uniques',
+          data: visitsData,
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59,130,246,0.05)',
+          borderWidth: 3,
+          pointRadius: 3,
+          pointBackgroundColor: '#2563eb',
+          pointBorderColor: '#fff',
+          pointHoverRadius: 6,
+          tension: 0.3,
+          fill: true,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: { position: 'top', labels: { font: { family: 'Inter', size: 12 } } },
+        tooltip: { backgroundColor: '#0f2b3d', titleFont: { size: 13 } }
+      },
+      scales: {
+        y: { grid: { color: '#e9eef3' }, ticks: { callback: (val) => val.toLocaleString() } }
+      }
+    }
+  });
+
+  // 2. Graphique camembert (Répartition des appareils)
+  const ctxPie = document.getElementById('deviceChart').getContext('2d');
+  new Chart(ctxPie, {
+    type: 'doughnut',
+    data: {
+      labels: ['Mobile', 'Desktop', 'Tablette'],
+      datasets: [{
+        data: [58, 34, 8],
+        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b'],
+        borderWidth: 0,
+        hoverOffset: 8,
+        cutout: '60%',
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 12, family: 'Inter' }, usePointStyle: true } },
+        tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${ctx.raw}%` } }
+      }
+    }
+  });
+
+  // ------------------------------------------------------------------
+  // Tableau dynamique avec données réalistes et barre de progression
+  const countriesData = [
+    { country: "France", flag: "🇫🇷", visitors: "12.4K", conv: "6.2%", engagement: "4.2 min", progress: 82 },
+    { country: "États-Unis", flag: "🇺🇸", visitors: "28.9K", conv: "9.1%", engagement: "5.8 min", progress: 94 },
+    { country: "Allemagne", flag: "🇩🇪", visitors: "8.3K", conv: "5.4%", engagement: "3.9 min", progress: 67 },
+    { country: "Canada", flag: "🇨🇦", visitors: "5.7K", conv: "7.8%", engagement: "4.5 min", progress: 71 },
+    { country: "Royaume-Uni", flag: "🇬🇧", visitors: "9.2K", conv: "6.9%", engagement: "4.1 min", progress: 78 }
+  ];
+  
+  function renderTable() {
+    const tbody = document.getElementById('statsTableBody');
+    tbody.innerHTML = '';
+    countriesData.forEach(c => {
+      const row = document.createElement('tr');
+      // colonne pays avec flag
+      const countryCell = document.createElement('td');
+      countryCell.innerHTML = `<div class="country-flag"><span style="font-size:1.3rem;">${c.flag}</span> <strong>${c.country}</strong></div>`;
+      // colonne visiteurs
+      const visitorsCell = document.createElement('td');
+      visitorsCell.innerHTML = `<span class="value-highlight">${c.visitors}</span>`;
+      // colonne conversion
+      const convCell = document.createElement('td');
+      convCell.innerHTML = `<span style="font-weight:600;">${c.conv}</span>`;
+      // colonne engagement
+      const engCell = document.createElement('td');
+      engCell.innerHTML = `${c.engagement}`;
+      // colonne progression (barre + valeur)
+      const progCell = document.createElement('td');
+      progCell.innerHTML = `
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div class="progress-bar"><div class="progress-fill" style="width: ${c.progress}%;"></div></div>
+          <span style="font-size:0.7rem; font-weight:600;">${c.progress}%</span>
+        </div>
+      `;
+      row.appendChild(countryCell);
+      row.appendChild(visitorsCell);
+      row.appendChild(convCell);
+      row.appendChild(engCell);
+      row.appendChild(progCell);
+      tbody.appendChild(row);
+    });
+  }
+  renderTable();
+
+  // ------------------------------------------------------------------
+  // Animation fluide des KPI (mise à jour simulée pour un effet "live" moderne)
+  // on incrémente légèrement certaines valeurs toutes les 14 secondes pour un feeling dynamique
+  let baseUsers = 18400;
+  let baseRevenue = 42800;
+  let baseConversion = 8.42;
+  let incrementInterval;
+  
+  function updateKPI() {
+    // variation réaliste entre -1% et +2% (sauf conversion)
+    const userVariation = Math.floor(Math.random() * 180) - 30;   // -30 -> +150
+    let newUsers = baseUsers + userVariation;
+    if (newUsers < 16500) newUsers = 16500;
+    baseUsers = newUsers;
+    document.getElementById('usersCount').innerText = (baseUsers / 1000).toFixed(1) + 'K';
+    
+    // variation revenus
+    const revVariation = Math.floor(Math.random() * 600) - 100;
+    let newRevenue = baseRevenue + revVariation;
+    if (newRevenue < 39000) newRevenue = 39000;
+    baseRevenue = newRevenue;
+    document.getElementById('revenueVal').innerText = '$' + (baseRevenue / 1000).toFixed(1) + 'K';
+    
+    // variation conversion (entre 7.8 et 9.5)
+    let convShift = (Math.random() * 0.2) - 0.05;
+    let newConv = baseConversion + convShift;
+    if (newConv > 9.3) newConv = 9.3;
+    if (newConv < 7.6) newConv = 7.6;
+    baseConversion = parseFloat(newConv.toFixed(2));
+    document.getElementById('conversionRate').innerHTML = baseConversion + '<small style="font-size:1rem;">%</small>';
+    
+    // temps session reste presque stable mais petite variation sympathique
+    const secs = Math.floor(Math.random() * 10) - 2; // -2s à +7s
+    let currentMin = 4;
+    let currentSec = 32;
+    let totalSec = currentMin*60 + currentSec + secs;
+    if(totalSec < 210) totalSec = 210;
+    if(totalSec > 320) totalSec = 320;
+    let newMin = Math.floor(totalSec/60);
+    let newSec = totalSec % 60;
+    document.getElementById('sessionTime').innerText = `${newMin}m ${newSec.toString().padStart(2,'0')}s`;
+  }
+  
+  // mettre à jour toutes les 14 secondes (effet micro live)
+  incrementInterval = setInterval(() => {
+    updateKPI();
+    // on change également une ligne du tableau pour des données fraîches (par ex update visiteurs aléatoire)
+    // optionnel: petites mises à jour du tableau pour le moderniser (progress bars dynamiques)
+    const newVisitors = ['11.9K', '29.4K', '8.6K', '5.9K', '9.7K'];
+    const newConversions = ['6.0%', '9.3%', '5.7%', '7.9%', '7.1%'];
+    const rows = document.querySelectorAll('#statsTableBody tr');
+    if(rows.length === countriesData.length) {
+      for(let i=0; i<rows.length; i++) {
+        // changer uniquement les visites et conversion pour rester cohérent
+        const visitorsSpan = rows[i].querySelector('td:nth-child(2) .value-highlight');
+        if(visitorsSpan) visitorsSpan.innerText = newVisitors[i % newVisitors.length];
+        const convTd = rows[i].querySelector('td:nth-child(3) span');
+        if(convTd) convTd.innerText = newConversions[i % newConversions.length];
+        // progression random subtile
+        const progFill = rows[i].querySelector('.progress-fill');
+        if(progFill) {
+          let newProg = parseInt(progFill.style.width) + (Math.floor(Math.random() * 5) - 1);
+          if(newProg > 97) newProg = 97;
+          if(newProg < 40) newProg = 45;
+          progFill.style.width = newProg + '%';
+          const progSpan = rows[i].querySelector('td:last-child span:last-child');
+          if(progSpan) progSpan.innerText = newProg + '%';
+        }
+      }
+    }
+  }, 14000);
+  
+  // Optionnel : Pour éviter accumulation d'interval si par hasard on quitte la page (propre)
+  window.addEventListener('beforeunload', () => {
+    if(incrementInterval) clearInterval(incrementInterval);
+  });
+
+  // Légère surprise : adaptation des couleurs personnalisée pour le tableau et les graphiques déjà beaux
+  // ajout petite animation sur les cartes au chargement
+  document.querySelectorAll('.card').forEach((card, idx) => {
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(12px)';
+    setTimeout(() => {
+      card.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+      card.style.opacity = '1';
+      card.style.transform = 'translateY(0px)';
+    }, idx * 80);
+  });
+  
+  // Les graphiques sont déjà chargés, on met un mini effet de chargement sur les conteneurs
+  console.log('Template dashboard moderne et interactif chargé — statistiques stylisées');
+</script>
+</body>
+</html>

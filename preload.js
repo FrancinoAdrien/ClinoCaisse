@@ -54,16 +54,21 @@ contextBridge.exposeInMainWorld('api', {
 
   // ── STOCK ────────────────────────────────────────────────────────────
   stock: {
-    getAlertes: ()                    => ipcRenderer.invoke('stock:getAlertes'),
-    ajustement: (id, qty, motif, op, pu, pt) => ipcRenderer.invoke('stock:ajustement', id, qty, motif, op, pu, pt),
-    historique: (id)                  => ipcRenderer.invoke('stock:historique', id),
+    getAlertes:      ()                           => ipcRenderer.invoke('stock:getAlertes'),
+    getAlertesCount: ()                           => ipcRenderer.invoke('stock:getAlertesCount'),
+    ajustement:      (id, qty, motif, op, pu, pt) => ipcRenderer.invoke('stock:ajustement', id, qty, motif, op, pu, pt),
+    historique:      (id)                          => ipcRenderer.invoke('stock:historique', id),
   },
 
   reservations: {
-    getAll: (filter)                  => ipcRenderer.invoke('reservations:getAll', filter),
-    getTodayMarkers: ()              => ipcRenderer.invoke('reservations:getTodayMarkers'),
-    create: (data)                    => ipcRenderer.invoke('reservations:create', data),
-    updateStatus: (id, status)       => ipcRenderer.invoke('reservations:updateStatus', id, status),
+    getAll:              (filter)      => ipcRenderer.invoke('reservations:getAll', filter),
+    getTodayMarkers:     ()            => ipcRenderer.invoke('reservations:getTodayMarkers'),
+    create:              (data)        => ipcRenderer.invoke('reservations:create', data),
+    updateStatus:        (id, status)  => ipcRenderer.invoke('reservations:updateStatus', id, status),
+    marquerArrive:       (id)          => ipcRenderer.invoke('reservations:marquerArrive', id),
+    reporter:            (id, data)    => ipcRenderer.invoke('reservations:reporter', id, data),
+    getOverdue:          ()            => ipcRenderer.invoke('reservations:getOverdue'),
+    checkDisponibilite:  (data)        => ipcRenderer.invoke('reservations:checkDisponibilite', data),
   },
 
   cuisine: {
@@ -175,6 +180,7 @@ contextBridge.exposeInMainWorld('api', {
     getStats:              ()      => ipcRenderer.invoke('rh:getStats'),
     getEmployes:           ()      => ipcRenderer.invoke('rh:getEmployes'),
     getSalaires:           (limit) => ipcRenderer.invoke('rh:getSalaires', limit),
+    getSalairesAPayer:     ()      => ipcRenderer.invoke('rh:getSalairesAPayer'),
     addEmploye:            (data)  => ipcRenderer.invoke('rh:addEmploye', data),
     addPaiement:           (data)  => ipcRenderer.invoke('rh:addPaiement', data),
     updateEmploye:         (data)  => ipcRenderer.invoke('rh:updateEmploye', data),
@@ -201,6 +207,14 @@ contextBridge.exposeInMainWorld('api', {
     status:   ()          => ipcRenderer.invoke('license:status'),
     activate: (key)       => ipcRenderer.invoke('license:activate', key),
     sync:     ()          => ipcRenderer.invoke('license:sync'),
+  }
+  ,
+  // ── EVENTS (Main -> Renderer) ─────────────────────────────────────────
+  events: {
+    onDataChanged: (cb) => {
+      if (typeof cb !== 'function') return;
+      ipcRenderer.on('app:dataChanged', (_e, payload) => cb(payload));
+    },
   }
 });
 

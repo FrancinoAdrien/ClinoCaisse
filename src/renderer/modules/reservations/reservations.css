@@ -1,13 +1,15 @@
-/* ── RÉSERVATIONS CSS ───────────────────────────────────────────── */
+/* ── RÉSERVATIONS CSS ─────────────────────────────────────────────────────── */
 
+/* ── FILTRES / ONGLETS ───────────────────────────────────────────────────── */
 .reserv-filters {
   display: flex;
   gap: 8px;
   flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
 .reserv-filter-btn {
-  background: rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.06);
   border: 1px solid var(--border);
   border-radius: 20px;
   padding: 6px 16px;
@@ -15,9 +17,9 @@
   cursor: pointer;
   font-size: 12px;
   font-weight: 500;
-  transition: background 0.15s, border-color 0.15s;
+  transition: background 0.18s, border-color 0.18s, color 0.18s;
+  white-space: nowrap;
 }
-
 .reserv-filter-btn.active,
 .reserv-filter-btn:hover {
   background: var(--accent);
@@ -25,6 +27,27 @@
   color: #fff;
 }
 
+/* ── BANNIÈRE ALERTE RETARD ──────────────────────────────────────────────── */
+.reserv-overdue-banner {
+  background: linear-gradient(135deg, rgba(231,76,60,0.18), rgba(192,57,43,0.12));
+  border: 1px solid rgba(231,76,60,0.5);
+  border-radius: 10px;
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  animation: bannerPulse 2.5s ease-in-out infinite;
+}
+@keyframes bannerPulse {
+  0%, 100% { border-color: rgba(231,76,60,0.45); box-shadow: 0 0 0 0 rgba(231,76,60,0); }
+  50%       { border-color: rgba(231,76,60,0.8);  box-shadow: 0 0 0 3px rgba(231,76,60,0.12); }
+}
+.reserv-overdue-banner-icon { font-size: 22px; flex-shrink: 0; }
+.reserv-overdue-banner-text { flex: 1; font-size: 13px; font-weight: 600; color: #e74c3c; }
+.reserv-overdue-banner-sub  { font-size: 11px; font-weight: 400; opacity: 0.85; display: block; margin-top: 2px; }
+
+/* ── LISTE ──────────────────────────────────────────────────────────────── */
 .reserv-list {
   flex: 1;
   overflow-y: auto;
@@ -32,87 +55,192 @@
   flex-direction: column;
   gap: 10px;
   min-height: 0;
+  padding-right: 4px;
 }
 
+/* ── CARTE RÉSERVATION ───────────────────────────────────────────────────── */
 .reserv-card {
   background: var(--card-gradient);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 14px 16px;
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: 14px;
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow 0.18s, transform 0.18s;
+}
+.reserv-card:hover {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+  transform: translateY(-1px);
 }
 
-.reserv-card-status {
-  width: 6px;
-  height: 50px;
+/* Bande colorée gauche */
+.reserv-card-bar {
+  width: 5px;
   border-radius: 3px;
   flex-shrink: 0;
+  align-self: stretch;
+  min-height: 52px;
 }
 
-.reserv-card-info { flex: 1; }
+/* Couleur de bande par statut */
+.reserv-card[data-statut="en_attente"]   .reserv-card-bar { background: #f39c12; }
+.reserv-card[data-statut="confirmee"]    .reserv-card-bar { background: #3498db; }
+.reserv-card[data-statut="client_arrive"].reserv-card-bar { background: #27ae60; }
+.reserv-card[data-statut="reporter"]     .reserv-card-bar { background: #9b59b6; }
+.reserv-card[data-statut="annulee"]      .reserv-card-bar { background: rgba(231,76,60,0.5); }
+
+/* Fond teinté discret */
+.reserv-card[data-statut="en_attente"]    { border-color: rgba(243,156,18,0.25); }
+.reserv-card[data-statut="confirmee"]     { border-color: rgba(52,152,219,0.25); }
+.reserv-card[data-statut="client_arrive"] { border-color: rgba(39,174,96,0.25); }
+.reserv-card[data-statut="reporter"]      { border-color: rgba(155,89,182,0.25); }
+.reserv-card[data-statut="annulee"]       { opacity: 0.65; }
+
+/* Pastille "En retard" */
+.reserv-card.is-overdue {
+  border-color: rgba(231,76,60,0.45) !important;
+  box-shadow: 0 0 0 1px rgba(231,76,60,0.2) inset;
+}
+.reserv-card.is-overdue .reserv-card-bar { background: #e74c3c !important; }
+
+/* Corps de la carte */
+.reserv-card-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
 
 .reserv-name {
   font-size: 15px;
   font-weight: 700;
   color: var(--text);
-}
-
-.reserv-meta {
-  font-size: 12px;
-  color: var(--text);
-  opacity: 0.6;
-  margin-top: 4px;
-  display: flex;
-  gap: 4px;
-}
-
-.reserv-actions {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.reserv-badge {
+/* Badge "Réservé" discret */
+.reserv-badge-reserv {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 10px;
+  background: rgba(52,152,219,0.15);
+  color: #3498db;
+  border: 1px solid rgba(52,152,219,0.3);
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+}
+
+.reserv-time {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-light);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.reserv-time-icon { font-size: 14px; }
+.reserv-time.overdue-time { color: #e74c3c; }
+
+.reserv-phone{
+  font-size: 12px;
+  opacity: 0.75;
+  margin-top: -2px;
+}
+
+.reserv-meta {
+  font-size: 12px;
+  color: var(--text);
+  opacity: 0.65;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.reserv-meta-sep { opacity: 0.4; }
+
+.reserv-acompte {
+  font-size: 11px;
+  font-weight: 600;
+  color: #27ae60;
+  background: rgba(39,174,96,0.1);
+  border: 1px solid rgba(39,174,96,0.25);
+  border-radius: 8px;
+  padding: 2px 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.reserv-note-report {
+  font-size: 11px;
+  font-style: italic;
+  color: #9b59b6;
+  opacity: 0.9;
+}
+
+/* Zone actions */
+.reserv-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 7px;
+  flex-shrink: 0;
+}
+
+.reserv-status-badge {
   font-size: 11px;
   font-weight: 700;
-  padding: 3px 10px;
+  padding: 4px 11px;
   border-radius: 12px;
   white-space: nowrap;
+  text-align: center;
+}
+.reserv-status-badge.s-en_attente   { background: rgba(243,156,18,0.15);  color: #f39c12; border: 1px solid rgba(243,156,18,0.35); }
+.reserv-status-badge.s-confirmee    { background: rgba(52,152,219,0.15);  color: #3498db; border: 1px solid rgba(52,152,219,0.35); }
+.reserv-status-badge.s-client_arrive{ background: rgba(39,174,96,0.15);  color: #27ae60; border: 1px solid rgba(39,174,96,0.35); }
+.reserv-status-badge.s-reporter     { background: rgba(155,89,182,0.15); color: #9b59b6; border: 1px solid rgba(155,89,182,0.35); }
+.reserv-status-badge.s-annulee      { background: rgba(231,76,60,0.1);   color: #e74c3c; border: 1px solid rgba(231,76,60,0.25); }
+
+/* Boutons d'action */
+.reserv-btn-row {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
-.btn-reserv-confirm {
-  background: rgba(39,174,96,0.15);
-  border: 1px solid #27ae60;
-  color: #27ae60;
-  border-radius: 6px;
-  padding: 5px 12px;
-  font-size: 12px;
+.btn-reserv-action {
+  border: 1px solid;
+  border-radius: 7px;
+  padding: 5px 11px;
+  font-size: 11px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.15s, color 0.15s, transform 0.1s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
 }
-.btn-reserv-confirm:hover { background: #27ae60; color: #fff; }
+.btn-reserv-action:hover   { transform: translateY(-1px); }
+.btn-reserv-action:active  { transform: translateY(0); }
 
-.btn-reserv-cancel {
-  background: rgba(231,76,60,0.1);
-  border: 1px solid #e74c3c;
-  color: #e74c3c;
-  border-radius: 6px;
-  padding: 5px 12px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s;
-}
+.btn-reserv-arrive  { background: rgba(39,174,96,0.12); border-color: #27ae60; color: #27ae60; }
+.btn-reserv-arrive:hover  { background: #27ae60; color: #fff; }
+
+.btn-reserv-reporter { background: rgba(155,89,182,0.12); border-color: #9b59b6; color: #9b59b6; }
+.btn-reserv-reporter:hover { background: #9b59b6; color: #fff; }
+
+.btn-reserv-cancel { background: rgba(231,76,60,0.1); border-color: #e74c3c; color: #e74c3c; }
 .btn-reserv-cancel:hover { background: #e74c3c; color: #fff; }
 
-/* Layout module (réservations) */
-#view-reservations {
+.btn-reserv-confirm { background: rgba(52,152,219,0.12); border-color: #3498db; color: #3498db; }
+.btn-reserv-confirm:hover { background: #3498db; color: #fff; }
 
-  height: 100%;
-}
+/* ── LAYOUT MODULE ───────────────────────────────────────────────────────── */
+#view-reservations { height: 100%; }
 
 #view-reservations .module-topbar {
   background: var(--topbar-gradient);
@@ -120,19 +248,17 @@
   align-items: center;
   padding: 10px 22px;
   gap: 14px;
-  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 2px 16px rgba(0,0,0,0.4);
   flex-shrink: 0;
 }
-
 #view-reservations .module-topbar-title {
   font-size: 18px;
   font-weight: 700;
   color: var(--text);
 }
-
 #view-reservations .back-btn {
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255,255,255,0.25);
   border-radius: 20px;
   padding: 6px 14px;
   color: var(--text);
@@ -141,7 +267,9 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  transition: background 0.15s;
 }
+#view-reservations .back-btn:hover { background: rgba(255,255,255,0.1); }
 
 #view-reservations .mod-action-btn {
   background: var(--accent);
@@ -155,14 +283,16 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  transition: filter 0.15s, transform 0.15s;
 }
+#view-reservations .mod-action-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
 
 .reserv-module-body {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   padding: 16px 20px;
   overflow: hidden;
 }
@@ -175,13 +305,13 @@
   gap: 10px;
 }
 
+/* ── PLAN DE SALLE ───────────────────────────────────────────────────────── */
 .reserv-plan-hint {
   font-size: 12px;
   opacity: 0.78;
   margin: 0 0 4px;
   line-height: 1.45;
 }
-
 .reserv-plan-legend {
   display: flex;
   flex-wrap: wrap;
@@ -190,34 +320,21 @@
   margin-bottom: 10px;
   opacity: 0.9;
 }
-
 .reserv-plan-legend .dot {
   display: inline-block;
-  width: 12px;
-  height: 12px;
+  width: 12px; height: 12px;
   border-radius: 4px;
   margin-right: 6px;
   vertical-align: middle;
 }
-
-.reserv-plan-legend .dot-libre {
-  background: rgba(255, 255, 255, 0.08);
-  border: 2px solid var(--border);
-}
-
-.reserv-plan-legend .dot-reservee {
-  background: #3498db;
-  border: 2px solid #2980b9;
-}
-
-.reserv-plan-legend .dot-occupee {
-  background: #e74c3c;
-  border: 2px solid #c0392b;
-}
+.reserv-plan-legend .dot-libre    { background: rgba(255,255,255,0.08); border: 2px solid var(--border); }
+.reserv-plan-legend .dot-reservee { background: #3498db; border: 2px solid #2980b9; }
+.reserv-plan-legend .dot-arrive   { background: #27ae60; border: 2px solid #1e8449; }
+.reserv-plan-legend .dot-occupee  { background: #e74c3c; border: 2px solid #c0392b; }
 
 .reserv-plan-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
   gap: 14px;
   overflow-y: auto;
   flex: 1;
@@ -226,7 +343,7 @@
 
 .plan-table {
   border-radius: 14px;
-  min-height: 108px;
+  min-height: 114px;
   padding: 12px 10px;
   display: flex;
   flex-direction: column;
@@ -235,58 +352,27 @@
   text-align: center;
   border: 2px solid transparent;
   transition: transform 0.12s ease, box-shadow 0.12s ease;
+  cursor: default;
+  position: relative;
+  overflow: hidden;
 }
-
 .plan-table:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.28);
 }
+.plan-table--libre   { background: rgba(255,255,255,0.05); border-color: var(--border); color: var(--text); }
+.plan-table--reservee{ background: linear-gradient(145deg,#3498db,#1a5276); color:#fff; border-color:rgba(0,0,0,.12); }
+.plan-table--arrive  { background: linear-gradient(145deg,#27ae60,#1a5c38); color:#fff; border-color:rgba(0,0,0,.12); }
+.plan-table--occupee { background: linear-gradient(145deg,#e74c3c,#78281f); color:#fff; border-color:rgba(0,0,0,.12); }
 
-.plan-table--libre {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: var(--border);
-  color: var(--text);
-}
+.plan-table-num   { font-size: 28px; font-weight: 800; line-height: 1; }
+.plan-table-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.92; margin-top: 6px; }
+.plan-table-guest { font-size: 11px; margin-top: 6px; opacity: 0.95; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.plan-table-time  { font-size: 10px; opacity: 0.8; margin-top: 3px; }
 
-.plan-table--reservee {
-  background: linear-gradient(145deg, #3498db, #1a5276);
-  color: #fff;
-  border-color: rgba(0, 0, 0, 0.12);
-}
-
-.plan-table--occupee {
-  background: linear-gradient(145deg, #e74c3c, #78281f);
-  color: #fff;
-  border-color: rgba(0, 0, 0, 0.12);
-}
-
-.plan-table-num {
-  font-size: 26px;
-  font-weight: 800;
-  line-height: 1;
-}
-
-.plan-table-label {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  opacity: 0.92;
-  margin-top: 6px;
-}
-
-.plan-table-guest {
-  font-size: 11px;
-  margin-top: 8px;
-  opacity: 0.95;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Chips pour sélection de tables */
+/* ── CHIPS TABLE ─────────────────────────────────────────────────────────── */
 .reserv-table-chip {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255,255,255,0.08);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 8px 12px;
@@ -294,18 +380,74 @@
   text-align: center;
   cursor: pointer;
   font-weight: 700;
+  font-size: 13px;
   transition: all 0.2s;
   user-select: none;
+  position: relative;
 }
-.reserv-table-chip:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: var(--accent);
-}
-.reserv-table-chip.selected {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-  transform: scale(1.08);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+.reserv-table-chip:hover       { background: rgba(255,255,255,0.15); border-color: var(--accent); }
+.reserv-table-chip.selected    { background: var(--accent); border-color: var(--accent); color: #fff; transform: scale(1.08); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+.reserv-table-chip.is-reserved { border-color: rgba(243,156,18,0.6); background: rgba(243,156,18,0.08); }
+.reserv-table-chip.is-reserved::after {
+  content: '●';
+  position: absolute;
+  top: 2px; right: 4px;
+  font-size: 8px;
+  color: #f39c12;
 }
 
+/* ── MODAL CONFLIT ───────────────────────────────────────────────────────── */
+.conflict-card {
+  background: rgba(243,156,18,0.08);
+  border: 1px solid rgba(243,156,18,0.35);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+.conflict-card strong { color: #f39c12; }
+
+/* ── MODAL "RÉSERVATIONS À TRAITER" ───────────────────────────────────────── */
+.reserv-overdue-modal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 420px;
+  overflow: auto;
+  padding-right: 4px;
+}
+.reserv-overdue-item {
+  background: rgba(231,76,60,0.08);
+  border: 1px solid rgba(231,76,60,0.22);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.reserv-overdue-item-main { min-width: 0; }
+.reserv-overdue-item-title {
+  font-size: 13px;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.reserv-overdue-mini {
+  font-size: 11px;
+  opacity: 0.7;
+}
+.reserv-overdue-item-time {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #e74c3c;
+}
+.reserv-overdue-item-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}

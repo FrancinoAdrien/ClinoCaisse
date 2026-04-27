@@ -48,7 +48,7 @@
             <div class="form-group" style="max-width:160px">
               <label>Rôle *</label>
               <select class="input" id="user-role">
-                <option value="vendeur">Vendeur</option>
+                <option value="employe">Employé</option>
                 <option value="gerant">Gérant</option>
                 <option value="admin">Administrateur</option>
               </select>
@@ -129,7 +129,8 @@
     if (titleEl) titleEl.textContent = state.mode === 'actifs' ? '👤 Utilisateurs actifs' : '🚫 Utilisateurs inactifs';
 
     const perm = v => v ? `<span style="color:#2ecc71;font-size:16px">✓</span>` : `<span style="opacity:0.3">–</span>`;
-    const roleClass = { admin:'admin', gerant:'gerant', vendeur:'vendeur' };
+    const roleClass = { admin:'admin', gerant:'gerant', employe:'employe', vendeur:'employe' };
+    const roleLabel = { admin:'Administrateur', gerant:'Gérant', employe:'Employé', vendeur:'Employé' };
 
     tbody.innerHTML = toShow.map(u => `
       <tr class="users-row" data-id="${u.id}" style="cursor:pointer">
@@ -137,7 +138,7 @@
         <td><strong>${Utils.esc(u.nom)}</strong></td>
         <td>${Utils.esc(u.prenom || '')}</td>
         <td style="font-family:monospace;letter-spacing:4px">••••</td>
-        <td><span class="role-badge ${roleClass[u.role]||'vendeur'}">${u.role}</span></td>
+        <td><span class="role-badge ${roleClass[u.role]||'employe'}">${Utils.esc(roleLabel[u.role] || u.role)}</span></td>
         <td style="text-align:center">${perm(u.perm_caisse)}</td>
         <td style="text-align:center">${perm(u.perm_utilisateur)}</td>
         <td style="text-align:center">${perm(u.perm_parametres)}</td>
@@ -212,7 +213,7 @@
       const el = document.getElementById(id);
       if (el) el.value = '';
     });
-    document.getElementById('user-role').value = 'vendeur';
+    document.getElementById('user-role').value = 'employe';
     ['caisse','utilisateur','parametres','cloture','stock','remises','grossiste','depenses','ressources','achats','reserv'].forEach(p => {
       const el = document.getElementById(`perm-${p}`);
       if (el) el.checked = false;

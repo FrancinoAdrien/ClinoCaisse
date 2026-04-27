@@ -9,7 +9,7 @@ module.exports = function runMigrations(db) {
       nom             TEXT    NOT NULL,
       prenom          TEXT,
       pin             TEXT    NOT NULL,
-      role            TEXT    NOT NULL DEFAULT 'vendeur',
+      role            TEXT    NOT NULL DEFAULT 'employe',
       actif           INTEGER NOT NULL DEFAULT 1,
       theme           TEXT    DEFAULT 'default',
       perm_caisse     INTEGER NOT NULL DEFAULT 0,
@@ -286,6 +286,7 @@ module.exports = function runMigrations(db) {
       id               INTEGER PRIMARY KEY AUTOINCREMENT,
       uuid             TEXT UNIQUE,
       client_nom       TEXT NOT NULL,
+      client_tel       TEXT,
       date_reservation TEXT NOT NULL,
       nb_personnes     INTEGER DEFAULT 1,
       evenement        TEXT,
@@ -504,10 +505,19 @@ module.exports = function runMigrations(db) {
     // ── Table ESPACES
     { table: 'espaces',      col: 'type_tarif',       def: "TEXT DEFAULT 'heure'" },
 
-    // ── Table RESERVATIONS (Multi-tables & Durée)
+    // ── Table RESERVATIONS (Multi-tables, Durée & Arrivée client)
     { table: 'reservations', col: 'tables_json',      def: "TEXT DEFAULT '[]'" },
+    { table: 'reservations', col: 'duree_heures',     def: 'REAL' },
+    { table: 'reservations', col: 'montant_acompte',  def: 'REAL DEFAULT 0' },
+    { table: 'reservations', col: 'client_arrive',    def: 'INTEGER DEFAULT 0' },
+    { table: 'reservations', col: 'note_report',      def: 'TEXT' },
+    { table: 'reservations', col: 'montant_report',   def: 'REAL DEFAULT 0' },
+    { table: 'reservations', col: 'client_tel',       def: 'TEXT' },
     // ── Table EMPLOYES
     { table: 'employes',          col: 'actif',            def: 'INTEGER DEFAULT 1' },
+    { table: 'employes',          col: 'mode_premier_salaire', def: "TEXT DEFAULT 'ce_mois'" },
+    { table: 'employes',          col: 'montant_premier_salaire', def: 'REAL DEFAULT 0' },
+    { table: 'employes',          col: 'premier_mois_paye', def: 'INTEGER DEFAULT 0' },
     // ── Table DEPENSES
     { table: 'depenses',          col: 'statut',           def: "TEXT DEFAULT 'payee'" },
     { table: 'depenses',          col: 'fournisseur_nom',  def: 'TEXT' },
@@ -744,8 +754,8 @@ module.exports = function runMigrations(db) {
     'caisse.remise2':           '20',
     'caisse.devise':            'Ar',
     'caisse.nom_poste':         'Poste n°1',
-    'caisse.version':           '2.0.0',
-    'license.activated':        '0',
+    'caisse.version':           '1.7.0',
+    'license.activated':        '1',
     'license.first_launch':     '',
   };
   const setParam = db.prepare("INSERT OR IGNORE INTO parametres (uuid, cle, valeur) VALUES (lower(hex(randomblob(16))), ?, ?)");
