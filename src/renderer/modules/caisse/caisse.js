@@ -1148,9 +1148,11 @@
       title: 'Aperçu du ticket',
       width: '520px',
       content: `
-        <div class="ticket-preview-paper">
-          ${state.entreprise.logo_url ? `<div style="text-align:center;margin-bottom:10px;"><img src="${Utils.esc(state.entreprise.logo_url)}" style="max-height:60px; max-width: 150px; object-fit: contain;"></div>` : ''}
-          ${Utils.esc(lignes).replace(/\*\*(.*?)\*\*/g, '<strong style="color:#000; font-weight:bold">$1</strong>')}
+        <div class="ticket-preview-paper" style="display: flex; justify-content: center;">
+          <div style="display: inline-block; text-align: left;">
+            ${state.entreprise.logo_url ? `<div style="display:block; width:100%; text-align:center; margin-bottom:10px; line-height:1;"><img src="${Utils.esc(state.entreprise.logo_url)}" style="max-height:60px; max-width: 150px; object-fit: contain; display:block; margin:0 auto;"></div>` : ''}
+            <pre style="margin:0; padding:0; font-family:'Courier New', Courier, monospace; font-size:13px; line-height:1.2; font-weight:900; white-space:pre;">${Utils.esc(lignes).replace(/\*\*(.*?)\*\*/g, '<strong style="color:#000; font-weight:bold">$1</strong>')}</pre>
+          </div>
         </div>
       `,
       footer: `
@@ -1213,9 +1215,11 @@
       title: `Addition — ${nom_table}`,
       width: '520px',
       content: `
-        <div class="ticket-preview-paper">
-          ${state.entreprise.logo_url ? `<div style="text-align:center;margin-bottom:10px;"><img src="${Utils.esc(state.entreprise.logo_url)}" style="max-height:60px; max-width: 150px; object-fit: contain;"></div>` : ''}
-          ${Utils.esc(texte).replace(/\*\*(.*?)\*\*/g, '<strong style="color:#000; font-weight:bold">$1</strong>')}
+        <div class="ticket-preview-paper" style="display: flex; justify-content: center;">
+          <div style="display: inline-block; text-align: left;">
+            ${state.entreprise.logo_url ? `<div style="display:block; width:100%; text-align:center; margin-bottom:10px; line-height:1;"><img src="${Utils.esc(state.entreprise.logo_url)}" style="max-height:60px; max-width: 150px; object-fit: contain; display:block; margin:0 auto;"></div>` : ''}
+            <pre style="margin:0; padding:0; font-family:'Courier New', Courier, monospace; font-size:13px; line-height:1.2; font-weight:900; white-space:pre;">${Utils.esc(texte).replace(/\*\*(.*?)\*\*/g, '<strong style="color:#000; font-weight:bold">$1</strong>')}</pre>
+          </div>
         </div>
       `,
       footer: `

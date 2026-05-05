@@ -415,23 +415,24 @@ function escapeHtml(text) {
 
 function buildTicketHtml(ticketText, logoUrl) {
   const safeLogo = escapeHtml(logoUrl || '');
-  const safeText = escapeHtml(ticketText).replace(/\n/g, '<br/>');
+  const safeText = escapeHtml(ticketText);
   return `
     <html>
       <head>
         <style>
           @page { margin: 0; }
-          body { margin: 0; padding: 0; background: #fff; color: #000; font-family: 'Courier New', Courier, monospace; }
-          .wrap { padding: 0; }
-          .logo { text-align: center; margin: 0 0 6px 0; }
-          .logo img { max-width: 160px; max-height: 72px; object-fit: contain; }
-          .ticket { font-size: 13px; line-height: 1.2; font-weight: 900; white-space: nowrap; }
+          * { box-sizing: border-box; }
+          body { margin: 0; padding: 0; background: #fff; color: #000; font-family: 'Courier New', Courier, monospace; text-align: left; }
+          .wrap { padding: 0; display: inline-block; }
+          .logo { display: block; width: 100%; text-align: center; margin: 0 0 4px 0; line-height: 1; }
+          .logo img { max-width: 160px; max-height: 72px; object-fit: contain; display: block; margin: 0 auto; }
+          pre { margin: 0; padding: 0; font-size: 13px; line-height: 1.2; font-weight: 900; white-space: pre; font-family: 'Courier New', Courier, monospace; }
         </style>
       </head>
       <body>
         <div class="wrap">
           ${safeLogo ? `<div class="logo"><img src="${safeLogo}" alt="Logo" /></div>` : ''}
-          <div class="ticket">${safeText}</div>
+          <pre>${safeText}</pre>
         </div>
       </body>
     </html>
