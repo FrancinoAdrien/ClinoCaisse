@@ -56,7 +56,7 @@ contextBridge.exposeInMainWorld('api', {
   stock: {
     getAlertes:      ()                           => ipcRenderer.invoke('stock:getAlertes'),
     getAlertesCount: ()                           => ipcRenderer.invoke('stock:getAlertesCount'),
-    ajustement:      (id, qty, motif, op, pu, pt) => ipcRenderer.invoke('stock:ajustement', id, qty, motif, op, pu, pt),
+    ajustement:      (id, qty, motif, op, pu, pt, impactCapital) => ipcRenderer.invoke('stock:ajustement', id, qty, motif, op, pu, pt, impactCapital),
     historique:      (id)                          => ipcRenderer.invoke('stock:historique', id),
   },
 
@@ -117,6 +117,7 @@ contextBridge.exposeInMainWorld('api', {
     printTicket: (data)           => ipcRenderer.invoke('printer:printTicket', data),
     printCloture: (data)          => ipcRenderer.invoke('printer:printCloture', data),
     printBon: (data)              => ipcRenderer.invoke('printer:printBon', data),
+    printBonLivraison: (data)     => ipcRenderer.invoke('printer:printBonLivraison', data),
     test: (printerName)           => ipcRenderer.invoke('printer:test', printerName),
   },
 
@@ -186,6 +187,16 @@ contextBridge.exposeInMainWorld('api', {
     updateEmploye:         (data)  => ipcRenderer.invoke('rh:updateEmploye', data),
     deletePaiement:        (uuid)  => ipcRenderer.invoke('rh:deletePaiement', uuid),
     getEmployeeNetSalary:  (uuid)  => ipcRenderer.invoke('rh:getEmployeeNetSalary', uuid),
+  },
+
+  // ── LIVRAISONS ───────────────────────────────────────────────────────
+  livraisons: {
+    createFromCaisse: (data)   => ipcRenderer.invoke('livraisons:createFromCaisse', data),
+    getAll: ()                 => ipcRenderer.invoke('livraisons:getAll'),
+    getBonDetail: (id)         => ipcRenderer.invoke('livraisons:getBonDetail', id),
+    updateStatut: (id, s, op) => ipcRenderer.invoke('livraisons:updateStatut', id, s, op),
+    annuler: (id, op)          => ipcRenderer.invoke('livraisons:annuler', id, op),
+    decaler: (id, data, op)    => ipcRenderer.invoke('livraisons:decaler', id, data, op),
   },
 
   // ── TERRAIN (Réservation d'espaces) ──────────────────────────────────

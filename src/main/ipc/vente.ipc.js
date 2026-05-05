@@ -3,121 +3,17 @@ const { randomUUID } = require('crypto');
 const { logAction } = require('./journal.ipc');
 const { notifyChange } = require('../sync/notifier');
 const { broadcastChange } = require('../realtime/broadcast');
+const { insertVenteComplete } = require('./venteCreateCore');
 
 module.exports = function(ipcMain, db) {
 
-  // Helper: ajuster le capital
-  function adjustCapital(delta) {
-    const row = db.prepare("SELECT valeur FROM parametres WHERE cle = 'finance.capital'").get();
-    const current = parseFloat(row?.valeur || '0');
-    db.prepare("INSERT OR REPLACE INTO parametres (uuid, cle, valeur, date_maj, last_modified_at, sync_status) VALUES (COALESCE((SELECT uuid FROM parametres WHERE cle = 'finance.capital'), lower(hex(randomblob(16)))), 'finance.capital', ?, datetime('now'), ?, 0)")
-      .run(String(current + delta), Date.now());
-  }
-
-  // Générer numéro de ticket
-  function genNumeroTicket() {
-    const now = new Date();
-    const d = now.toISOString().slice(0,10).replace(/-/g,'');
-    const count = db.prepare("SELECT COUNT(*) as n FROM ventes WHERE date_vente LIKE ?").get(`${now.toISOString().slice(0,10)}%`).n;
-    return `T${d}-${String(count + 1).padStart(4,'0')}`;
-  }
-
   // ── CRÉER UNE VENTE ──────────────────────────────────────────────────
   ipcMain.handle('ventes:create', (e, data) => {
-    const createVente = db.transaction((data) => {
-      const numero   = genNumeroTicket();
-      const venteUid = randomUUID();
-      const now      = Date.now();
-
-      const venteResult = db.prepare(`
-        INSERT INTO ventes (uuid, numero_ticket, date_vente, nom_caissier, total_ttc,
-          mode_paiement, montant_paye, monnaie_rendue, statut, table_numero, note,
-          last_modified_at, sync_status)
-        VALUES (?, ?, datetime('now'), ?, ?, ?, ?, ?, 'valide', ?, ?, ?, 0)
-      `).run(
-        venteUid,
-        numero,
-        data.nom_caissier,
-        data.total_ttc,
-        data.mode_paiement || 'CASH',
-        data.montant_paye || data.total_ttc,
-        data.monnaie_rendue || 0,
-        data.table_numero || null,
-        data.note || null,
-        now
-      );
-
-      const venteId  = venteResult.lastInsertRowid;
-      const insLigne = db.prepare(`
-        INSERT INTO lignes_vente (uuid, vente_id, vente_uuid, produit_id, produit_nom, quantite,
-          prix_unitaire, remise, rabais, total_ttc, est_offert, statut_cuisine, last_modified_at, sync_status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
-      `);
-
-      const hasTable = data.table_numero != null && data.table_numero !== '';
-      for (const ligne of data.lignes) {
-        const defCuisine = ligne.statut_cuisine
-          || (hasTable && !ligne.est_offert ? 'en_attente' : 'servi');
-        insLigne.run(
-          randomUUID(),
-          venteId,
-          venteUid,
-          ligne.produit_id || null,
-          ligne.produit_nom,
-          ligne.quantite,
-          ligne.prix_unitaire,
-          ligne.remise || 0,
-          ligne.rabais || 0,
-          ligne.total_ttc,
-          ligne.est_offert ? 1 : 0,
-          defCuisine,
-          now
-        );
-
-        // Décrémenter le stock si pas illimité
-        if (ligne.produit_id && !ligne.est_offert) {
-          const p = db.prepare('SELECT stock_actuel, stock_bar, is_prepared, uuid FROM produits WHERE id = ? OR uuid = ?').get(ligne.produit_id, ligne.produit_id);
-          if (p) {
-            if (p.is_prepared) {
-              // Décrémenter les ingrédients
-              const ingredients = db.prepare(`
-                SELECT rl.ingredient_uuid, rl.quantite_requise
-                FROM recettes_lignes rl
-                WHERE rl.plat_uuid = ?
-              `).all(p.uuid);
-
-              for (const ing of ingredients) {
-                const totalADeduire = ing.quantite_requise * ligne.quantite;
-                db.prepare(`
-                  UPDATE produits 
-                  SET stock_actuel = MAX(0, stock_actuel - ?),
-                      stock_bar = MAX(0, COALESCE(stock_bar, stock_actuel) - ?)
-                  WHERE uuid = ? AND stock_actuel != -1
-                `).run(totalADeduire, totalADeduire, ing.ingredient_uuid);
-              }
-            } else if (p.stock_actuel !== -1) {
-              // Produit simple, décrémentation classique
-              db.prepare(`
-                UPDATE produits 
-                SET stock_actuel = MAX(0, stock_actuel - ?),
-                    stock_bar = MAX(0, COALESCE(stock_bar, stock_actuel) - ?)
-                WHERE id = ? OR uuid = ?
-              `).run(ligne.quantite, ligne.quantite, ligne.produit_id, ligne.produit_id);
-            }
-          }
-        }
-      }
-
-      return { success: true, id: venteId, numero_ticket: numero };
-    });
+    const createVente = db.transaction((data) => insertVenteComplete(db, data));
 
     try {
       const result = createVente(data);
-      // Ajouter au capital le montant réellement encaissé
       if (result.success) {
-        const paye = data.montant_paye !== undefined && data.montant_paye !== null ? data.montant_paye : data.total_ttc;
-        const encaisse = parseFloat(paye || 0);
-
         logAction(db, {
           categorie: 'VENTE',
           action: 'Vente créée',
@@ -127,9 +23,7 @@ module.exports = function(ipcMain, db) {
           icone: '🛒'
         });
         notifyChange();
-        // Stock peut changer suite à la vente → notif dashboard instantanée
         broadcastChange({ scope: 'stock', ts: Date.now() });
-        // Commandes cuisine peuvent être créées → notif caisse instantanée
         broadcastChange({ scope: 'cuisine', ts: Date.now() });
       }
       return result;

@@ -135,7 +135,7 @@
           </button>
 
           <!-- Employés RH (petite) -->
-          <button class="module-btn tile-metro tile-metro-small tile--rh" id="btn-rh" data-perm="perm_ressources">
+          <button class="module-btn tile-metro tile-metro-small tile--rh" id="btn-rh" data-perm="perm_ressources" style="display:none">
             <svg class="mod-icon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
               <circle cx="9" cy="7" r="4"></circle>
@@ -192,9 +192,15 @@
           </div>
           </div><!-- /.dash-grid -->
 
-          <!-- Panneau latéral droit : bouton Terrain -->
+          <!-- Panneau latéral droit : Livraison + Terrain -->
           <div class="dash-side-panel">
-            <button class="module-btn dash-terrain-btn" id="btn-terrain" data-perm="perm_reserv" style="display:none">
+            <button class="module-btn dash-livraison-btn" id="btn-livraison-dash" data-perm="perm_caisse" title="Livraisons">
+              <svg class="mod-icon" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+              </svg>
+              <span class="mod-label mod-label-xs">Livraison</span>
+            </button>
+            <button class="module-btn dash-terrain-btn" id="btn-terrain" data-perm="perm_reserv">
               <svg class="mod-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
                 <polyline points="9 22 9 12 15 12 15 22"/>
@@ -377,7 +383,8 @@
       'btn-reservations': { view: 'reservations', perm: 'perm_reserv' },
       'btn-finances':     { view: 'finances',     perm: 'perm_depenses' },
       'btn-rh':           { view: 'rh',           perm: 'perm_ressources' },
-      'btn-terrain':      { view: 'terrain',      perm: 'perm_reserv' },
+      'btn-terrain':         { view: 'terrain',      perm: 'perm_reserv' },
+      'btn-livraison-dash':  { view: 'livraison',    perm: 'perm_caisse' },
     };
 
     Object.entries(navMap).forEach(([btnId, { view, perm }]) => {

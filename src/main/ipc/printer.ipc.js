@@ -101,6 +101,99 @@ function formatTicket(data, largeurMm = 80) {
   return lines.join('\n');
 }
 
+// ── BON DE COMMANDE LIVRAISON (même corps que ticket + bloc livraison + signature) ──
+function formatBonLivraison(data, largeurMm = 80) {
+  const w = parseInt(largeurMm) || 80;
+  const L = w <= 58 ? 32 : (w <= 76 ? 32 : 34);
+  const sep = '─'.repeat(L);
+  const sep2 = '═'.repeat(L);
+  const devise = data.devise || 'Ar';
+  const formatMoney = (v) => Math.round(v || 0).toLocaleString('fr-FR').replace(/\s/g, ' ');
+  const center = (s) => { const p = Math.max(0, Math.floor((L - s.length) / 2)); return ' '.repeat(p) + s; };
+  const right = (label, val) => {
+    const l = `  ${label}`;
+    return l.padEnd(Math.max(l.length, L - val.length)) + val;
+  };
+  const lines = [];
+  const liv = data.livraison || {};
+
+  lines.push(sep2);
+  if (data.entrepriseNom) lines.push(center(data.entrepriseNom.toUpperCase()));
+  if (data.entrepriseAdresse) lines.push(center(data.entrepriseAdresse));
+  if (data.entrepriseVille) lines.push(center(data.entrepriseVille));
+  if (data.entrepriseTel) lines.push(center('Tél: ' + data.entrepriseTel));
+  if (data.entrepriseEmail) lines.push(center('Email: ' + data.entrepriseEmail));
+  if (data.entrepriseNif) lines.push(center('NIF: ' + data.entrepriseNif));
+  if (data.entrepriseStat) lines.push(center('STAT: ' + data.entrepriseStat));
+  lines.push(sep2);
+  lines.push('');
+  lines.push(center('BON DE COMMANDE'));
+  lines.push('');
+
+  lines.push(`Bon N° : ${data.numero_bon || data.numero_ticket || '-'}`);
+  lines.push(`Date   : ${new Date(data.date_vente || Date.now()).toLocaleString('fr-FR')}`);
+  lines.push(`Vendeur: ${data.nom_caissier || '-'}`);
+  lines.push('');
+  lines.push(sep);
+  lines.push(center('LIVRAISON'));
+  if (liv.adresse) lines.push(`Adresse : ${liv.adresse}`);
+  if (liv.lieu) lines.push(`Lieu    : ${liv.lieu}`);
+  if (liv.date_prevue) lines.push(`Livr. le: ${liv.date_prevue}${liv.heure_prevue ? ' à ' + liv.heure_prevue : ''}`);
+  else if (liv.heure_prevue) lines.push(`Heure   : ${liv.heure_prevue}`);
+  if (liv.client_nom) lines.push(`Client  : ${liv.client_nom}`);
+  if (liv.contact_tel) lines.push(`Tél.    : ${liv.contact_tel}`);
+  lines.push(sep);
+  lines.push('');
+
+  const colQ = 4;
+  const colP = L <= 35 ? 11 : 14;
+  const colD = Math.max(8, L - colQ - colP - 2);
+  lines.push(`${'Qté'.padEnd(colQ)} ${'Désignation'.padEnd(colD)} ${'Montant'.padStart(colP)}`);
+  lines.push(sep);
+
+  for (const l of (data.lignes || [])) {
+    const qte = String(Math.round(l.quantite || 1)).padEnd(colQ).slice(0, colQ);
+    const nom = (l.produit_nom || '').padEnd(colD).slice(0, colD);
+    const mtStr = l.est_offert ? '(OFFERT)' : `${formatMoney(l.total_ttc)} ${devise}`;
+    const mt = mtStr.padStart(colP).slice(0, colP);
+    lines.push(`${qte} ${nom} ${mt}`);
+    if (l.remise > 0) lines.push(`${''.padEnd(colQ + 1)}↳ Remise: ${l.remise}%`);
+  }
+
+  lines.push(sep);
+  lines.push('');
+
+  const totalTTC = Math.round(data.total_ttc || 0);
+  const montantP = Math.round(data.montant_paye || 0);
+  const monnaie = Math.round(data.monnaie_rendue || 0);
+
+  if ((data.remise_totale || 0) > 0) {
+    lines.push(right('Remises :', `-${formatMoney(data.remise_totale)} ${devise}`));
+  }
+  lines.push(right('TOTAL  :', `${formatMoney(totalTTC)} ${devise}`));
+  lines.push(right('Mode   :', data.mode_paiement || 'CASH'));
+  if (montantP > 0) {
+    lines.push(right('Payé   :', `${formatMoney(montantP)} ${devise}`));
+    lines.push(right('Rendu  :', `${formatMoney(monnaie)} ${devise}`));
+  }
+
+  lines.push('');
+  lines.push(sep2);
+  if (data.slogan) {
+    lines.push(center(data.slogan));
+    lines.push(sep2);
+  }
+  lines.push('');
+  lines.push(sep);
+  lines.push(center('Signature du client'));
+  lines.push('');
+  lines.push('_'.repeat(Math.min(L, 32)));
+  lines.push('');
+  lines.push('_'.repeat(Math.min(L, 32)));
+  lines.push(''); lines.push(''); lines.push('');
+  return lines.join('\n');
+}
+
 // ── FORMATER UN RAPPORT DE CLÔTURE ────────────────────────────────────────
 function formatCloture(data, largeurMm = 80) {
   const w = parseInt(largeurMm) || 80;
@@ -443,6 +536,41 @@ async function printHtml(html, requestedPrinterName) {
       };
 
       const text = formatTicket(ticketData, largeur);
+      const html = buildTicketHtml(text, ticketData.logoUrl);
+      let success = false;
+      for (let i = 0; i < copies; i++) {
+        const r = ticketData.logoUrl ? await printHtml(html, printerName) : await printText(text, printerName);
+        if (r.success) success = true;
+      }
+      return { success, text };
+    });
+
+    // ── IMPRIMER UN BON DE COMMANDE LIVRAISON ─────────────────────────────
+    ipcMain.handle('printer:printBonLivraison', async (e, data) => {
+      const rows = db.prepare("SELECT cle, valeur FROM parametres WHERE cle LIKE 'impression.%' OR cle LIKE 'entreprise.%' OR cle = 'caisse.devise'").all();
+      const p = {};
+      rows.forEach(r => p[r.cle] = r.valeur);
+
+      const printerName = p['impression.imprimante'] || 'XPrinter XP80C';
+      const largeur = p['impression.largeur'] || '80';
+      const copies = data.copies || parseInt(p['impression.copies_ticket'] || '1');
+
+      const ticketData = {
+        ...data,
+        table_numero: undefined,
+        entrepriseNom: p['entreprise.nom'] || '',
+        entrepriseAdresse: p['entreprise.adresse'] || '',
+        entrepriseVille: p['entreprise.ville'] || '',
+        entrepriseTel: p['entreprise.telephone'] || '',
+        entrepriseEmail: p['entreprise.email'] || '',
+        entrepriseNif: p['entreprise.nif'] || '',
+        entrepriseStat: p['entreprise.stat'] || '',
+        slogan: p['entreprise.slogan'] || '',
+        logoUrl: p['entreprise.logo_url'] || '',
+        devise: p['caisse.devise'] || 'Ar',
+      };
+
+      const text = formatBonLivraison(ticketData, largeur);
       const html = buildTicketHtml(text, ticketData.logoUrl);
       let success = false;
       for (let i = 0; i < copies; i++) {

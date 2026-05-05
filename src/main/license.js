@@ -54,6 +54,38 @@ const LicenseManager = {
     return `${encryptedDate}${encryptedDay}IA12D3ll!`;
   },
 
+  // ── SÉCURITÉ ──────────────────────────────────────────────────────────────
+  SECRET_KEY: crypto.createHash('sha256').update('clinocaisse_secure_key_1412_0410').digest(),
+  
+  encrypt(text) {
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipheriv('aes-256-cbc', this.SECRET_KEY, iv);
+    let encrypted = cipher.update(text, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    return iv.toString('hex') + ':' + encrypted;
+  },
+
+  decrypt(hash) {
+    try {
+      const parts = hash.split(':');
+      if (parts.length !== 2) return null;
+      const iv = Buffer.from(parts[0], 'hex');
+      const encryptedText = parts[1];
+      const decipher = crypto.createDecipheriv('aes-256-cbc', this.SECRET_KEY, iv);
+      let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
+      decrypted += decipher.final('utf8');
+      return decrypted;
+    } catch (e) {
+      return null;
+    }
+  },
+
+  _setLicenseValue(db, value) {
+    const enc = this.encrypt(value);
+    db.prepare("INSERT OR REPLACE INTO parametres (uuid, cle, valeur, date_maj, last_modified_at, sync_status) VALUES (COALESCE((SELECT uuid FROM parametres WHERE cle = 'license.activated'), lower(hex(randomblob(16)))), 'license.activated', ?, datetime('now'), ?, 0)")
+      .run(enc, Date.now());
+  },
+
   // ── VÉRIFICATION ──────────────────────────────────────────────────────────
 
   /**
@@ -63,7 +95,21 @@ const LicenseManager = {
     try {
       // 1. Vérifier si déjà activé définitivement
       const activatedRow = db.prepare("SELECT valeur FROM parametres WHERE cle = 'license.activated'").get();
-      const isActivated = (activatedRow && activatedRow.valeur === '1');
+      let isActivated = false;
+      
+      if (activatedRow) {
+        const val = activatedRow.valeur;
+        if (val === '1') {
+          isActivated = true;
+          this._setLicenseValue(db, '1412');
+        } else if (val === '0') {
+          isActivated = false;
+          this._setLicenseValue(db, '0410');
+        } else {
+          const decrypted = this.decrypt(val);
+          isActivated = (decrypted === '1412');
+        }
+      }
       
       if (isActivated) {
         return { status: 'activated', valid: true };
@@ -106,8 +152,13 @@ const LicenseManager = {
   activate(db, key) {
     const validKey = this.generateKey();
     if (key === validKey) {
-      db.prepare("INSERT OR REPLACE INTO parametres (uuid, cle, valeur, date_maj, last_modified_at, sync_status) VALUES (COALESCE((SELECT uuid FROM parametres WHERE cle = 'license.activated'), lower(hex(randomblob(16)))), 'license.activated', '1', datetime('now'), ?, 0)")
-        .run(Date.now());
+      this._setLicenseValue(db, '1412');
+      
+      // Enregistrer la date et heure d'activation dans license.first_launch
+      const nowStr = new Date().toLocaleString('fr-FR');
+      db.prepare("INSERT OR REPLACE INTO parametres (uuid, cle, valeur, date_maj, last_modified_at, sync_status) VALUES (COALESCE((SELECT uuid FROM parametres WHERE cle = 'license.first_launch'), lower(hex(randomblob(16)))), 'license.first_launch', ?, datetime('now'), ?, 0)")
+        .run(nowStr, Date.now());
+
       return { success: true, message: 'Application activée avec succès !' };
     }
     return { success: false, message: 'Clé d\'activation invalide.' };

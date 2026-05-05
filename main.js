@@ -27,6 +27,7 @@ require('./src/main/ipc/printer.ipc')(ipcMain, db);
 require('./src/main/ipc/journal.ipc')(ipcMain, db);
 require('./src/main/ipc/reservation.ipc')(ipcMain, db);
 require('./src/main/ipc/terrain.ipc')(ipcMain, db);
+require('./src/main/ipc/livraison.ipc')(ipcMain, db);
 require('./src/main/ipc/cuisine.ipc')(ipcMain, db);
 require('./src/main/ipc/finances.ipc')(ipcMain, db);
 require('./src/main/ipc/rh.ipc')(ipcMain, db);

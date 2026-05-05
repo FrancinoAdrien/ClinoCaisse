@@ -131,10 +131,11 @@
               </button>
             </div>
 
-            <!-- TICKET principal -->
-            <button class="btn-ticket-main" id="btn-ticket">
-              TICKET
-            </button>
+            <!-- TICKET + LIVRAISON -->
+            <div class="panier-act-row panier-ticket-row">
+              <button class="btn-ticket-main" id="btn-ticket" type="button">TICKET</button>
+              <button class="btn-livraison-main" id="btn-livraison" type="button">LIVRAISON</button>
+            </div>
 
             <!-- VISUALISER panier courant -->
             <button class="btn-visu-main" id="btn-visualiser">
@@ -1307,7 +1308,14 @@
 
           <!-- Modes de paiement -->
           <div style="display:flex;flex-direction:column;gap:10px">
+            <div class="modes-grid">
+              ${modes.map(([k, label]) => `
+                <div class="mode-item ${k === selectedMode ? 'selected' : ''}" data-mode="${k}">
+                  ${label}
+                </div>
+              `).join('')}
             </div>
+          </div>
             ${tableLabel ? `<div style="font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;opacity:0.8;color:var(--text)">Table : <strong>${Utils.esc(tableLabel)}</strong></div>` : ''}
             ${hasKitchenItems && !state.tableActive ? `
               <div style="margin-top:5px">
@@ -1482,11 +1490,317 @@
     }, 20);
   }
 
+  // ── MODAL LIVRAISON (formulaire + paiement comme ticket) ──────────────
+  function openLivraisonModal() {
+    if (!state.panier.length) { Toast.warn('Panier vide'); return; }
+    const total = calcTotal();
+    let selectedMode = 'CASH';
+    let montantSaisi = '';
+    const hasKitchenItems = state.panier.some(l => l.envoi_cuisine);
+    const tableLabel = state.tableActive ? (state.tableActive.nom_table || `Table ${state.tableActive.numero}`) : '';
+    const now = new Date();
+    const dateDef = now.toISOString().slice(0, 10);
+    const heureDef = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+    const livId = 'livraison-' + Date.now();
+    Modal.open({
+      id: livId,
+      title: 'Vente avec livraison',
+      width: '820px',
+      content: `
+        <div class="ticket-modal-body livraison-modal-body">
+          <div class="livraison-form-section">
+            <div class="livraison-form-title">Informations de livraison</div>
+            <div class="livraison-form-grid">
+              <div class="lv-field lv-field-full">
+                <label>Adresse complète *</label>
+                <input type="text" id="lv-adresse" class="commande-nom-input" placeholder="Adresse de livraison" autocomplete="street-address" />
+              </div>
+              <div class="lv-field">
+                <label>Lieu (ville, quartier, repère…) *</label>
+                <input type="text" id="lv-lieu" placeholder="Ex: Antananarivo, Ankorondrano" />
+              </div>
+              <div class="lv-field">
+                <label>Jour de livraison *</label>
+                <input type="date" id="lv-date" value="${dateDef}" />
+              </div>
+              <div class="lv-field">
+                <label>Heure *</label>
+                <input type="time" id="lv-heure" value="${heureDef}" />
+              </div>
+              <div class="lv-field">
+                <label>Nom du client (optionnel)</label>
+                <input type="text" id="lv-nom" placeholder="Destinataire" autocomplete="name" />
+              </div>
+              <div class="lv-field">
+                <label>Téléphone (optionnel)</label>
+                <input type="tel" id="lv-tel" placeholder="Pour le livreur" autocomplete="tel" />
+              </div>
+              <div class="lv-field">
+                <label>Frais de livraison (${localStorage.getItem('cc_devise') || 'Ar'})</label>
+                <input type="number" id="lv-frais" placeholder="0" min="0" step="1" value="0" />
+              </div>
+            </div>
+          </div>
+
+          <div class="montants-row">
+            <div class="montant-box">
+              <label>Articles</label>
+              <div class="montant-val" id="lv-apayer">${Math.round(total).toLocaleString('fr-FR')}</div>
+            </div>
+            <div class="montant-box">
+              <label>Total + Frais</label>
+              <div class="montant-val" id="lv-total-frais">${Math.round(total).toLocaleString('fr-FR')}</div>
+            </div>
+            <div class="montant-box">
+              <label>Perçu</label>
+              <div class="montant-val" id="lv-percu">0,00</div>
+            </div>
+            <div class="montant-box">
+              <label>A rendre</label>
+              <div class="montant-val positif" id="lv-rendre">0</div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div class="num-keyboard">
+              <button type="button" class="num-key" data-lv-num="7">7</button>
+              <button type="button" class="num-key" data-lv-num="8">8</button>
+              <button type="button" class="num-key" data-lv-num="9">9</button>
+              <button type="button" class="num-key shortcut" data-lv-adj="+1000">+1000</button>
+
+              <button type="button" class="num-key" data-lv-num="4">4</button>
+              <button type="button" class="num-key" data-lv-num="5">5</button>
+              <button type="button" class="num-key" data-lv-num="6">6</button>
+              <button type="button" class="num-key shortcut" data-lv-adj="+2000">+2000</button>
+
+              <button type="button" class="num-key" data-lv-num="1">1</button>
+              <button type="button" class="num-key" data-lv-num="2">2</button>
+              <button type="button" class="num-key" data-lv-num="3">3</button>
+              <button type="button" class="num-key shortcut" data-lv-adj="+5000">+5000</button>
+
+              <button type="button" class="num-key" data-lv-num="0">0</button>
+              <button type="button" class="num-key" data-lv-num=".">.</button>
+              <button type="button" class="num-key del-key" id="lv-del">⌫</button>
+              <button type="button" class="num-key shortcut" id="lv-shortcut-total" data-lv-shortcut="${Math.round(total)}">Total: ${Math.round(total).toLocaleString('fr-FR')}</button>
+
+              <button type="button" class="num-key clear-key" id="lv-clear" style="grid-column: 1 / -1">C (Effacer)</button>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div class="modes-grid">
+              ${[
+                ['CASH', 'CASH'],
+                ['MVOLA', 'MVOLA'],
+                ['ORANGE_MONEY', 'ORANGE MONEY'],
+                ['AIRTEL_MONEY', 'AIRTEL MONEY'],
+                ['CARTE', 'CARTE (VISA/MC)'],
+                ['VIREMENT', 'VIREMENT']
+              ].map(([k, label]) => `
+                <div class="mode-item ${k === selectedMode ? 'selected' : ''}" data-mode="${k}">
+                  ${label}
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:10px">
+            ${tableLabel ? `<div style="font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;opacity:0.8;color:var(--text)">Table : <strong>${Utils.esc(tableLabel)}</strong></div>` : ''}
+            ${hasKitchenItems && !state.tableActive ? `
+              <div style="margin-top:5px">
+                <div style="font-size:11px;font-weight:700;opacity:0.6;text-transform:uppercase;margin-bottom:4px;color:var(--accent-light)">Nom de la commande (Cuisine) *</div>
+                <input type="text" id="lv-nom-commande" class="commande-nom-input" placeholder="Ex: Livraison M. Rakoto" />
+              </div>
+            ` : ''}
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <button type="button" class="ticket-btn-enreg" id="lv-enreg">Enregistrer la livraison</button>
+            <button type="button" class="ticket-btn-annuler" data-close="${livId}">✕ Annuler</button>
+          </div>
+
+          <div class="impression-zone">
+            <div>
+              <div style="font-size:11px;font-weight:700;opacity:0.6;text-transform:uppercase;margin-bottom:6px; color:#eee;">Imprimer le bon</div>
+              <label class="toggle-imprimer" id="toggle-imprimer-liv-lbl">
+                <input type="checkbox" id="lv-imprimer" ${state.impression.actif ? 'checked' : ''} />
+                <div class="toggle-track${state.impression.actif ? '  on' : ''}" id="lv-toggle-track">
+                  <div class="toggle-thumb"></div>
+                </div>
+                <span class="toggle-label-txt" id="lv-toggle-txt">${state.impression.actif ? 'ON' : 'OFF'}</span>
+              </label>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:700;opacity:0.6;text-transform:uppercase;margin-bottom:6px; color: #eee">Copies</div>
+              <input type="number" class="copies-input" id="lv-copies"
+                value="${state.impression.copies}" min="1" max="9" />
+            </div>
+          </div>
+        </div>
+      `,
+    });
+
+    setTimeout(() => {
+      const updateMontants = () => {
+        const frais = parseFloat(document.getElementById('lv-frais')?.value) || 0;
+        const totalAvecFrais = total + frais;
+        
+        let percu = parseFloat(montantSaisi);
+        if (isNaN(percu) || montantSaisi === '') percu = totalAvecFrais; // fallback pour affichage et calcul
+        
+        const rendre = Math.max(0, percu - totalAvecFrais);
+        const elTF = document.getElementById('lv-total-frais');
+        const elP = document.getElementById('lv-percu');
+        const elRd = document.getElementById('lv-rendre');
+        const btnShortcut = document.getElementById('lv-shortcut-total');
+        
+        if (elTF) elTF.textContent = Math.round(totalAvecFrais).toLocaleString('fr-FR');
+        if (elP) elP.textContent = percu.toLocaleString('fr-FR', { minimumFractionDigits: 2 });
+        if (elRd) {
+          elRd.textContent = Math.round(rendre).toLocaleString('fr-FR');
+          elRd.className = rendre > 0 ? 'montant-val positif' : 'montant-val';
+        }
+        if (btnShortcut) {
+          btnShortcut.dataset.lvShortcut = totalAvecFrais;
+          btnShortcut.textContent = `Total: ${Math.round(totalAvecFrais).toLocaleString('fr-FR')}`;
+        }
+        const btnEnreg = document.getElementById('lv-enreg');
+        if (btnEnreg) {
+          let ok = percu >= totalAvecFrais;
+          if (ok && hasKitchenItems && !state.tableActive) {
+            const inputNom = document.getElementById('lv-nom-commande');
+            ok = !!(inputNom && inputNom.value.trim());
+          }
+          btnEnreg.disabled = !ok;
+          btnEnreg.style.opacity = ok ? '1' : '0.5';
+        }
+      };
+
+      updateMontants();
+
+      document.querySelectorAll('.mode-item').forEach(item => {
+        item.addEventListener('click', () => {
+          document.querySelectorAll('.mode-item').forEach(m => m.classList.remove('selected'));
+          item.classList.add('selected');
+          selectedMode = item.dataset.mode;
+        });
+      });
+
+      document.querySelectorAll('.num-key[data-lv-num]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const n = btn.dataset.lvNum;
+          if (n === '.' && montantSaisi.includes('.')) return;
+          montantSaisi += n;
+          updateMontants();
+        });
+      });
+      document.getElementById('lv-del')?.addEventListener('click', () => {
+        montantSaisi = montantSaisi.slice(0, -1);
+        updateMontants();
+      });
+      document.getElementById('lv-clear')?.addEventListener('click', () => {
+        montantSaisi = '';
+        updateMontants();
+      });
+      document.querySelectorAll('.num-key[data-lv-shortcut]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          montantSaisi = btn.dataset.lvShortcut;
+          updateMontants();
+        });
+      });
+      document.querySelectorAll('.num-key[data-lv-adj]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const adj = parseFloat(btn.dataset.lvAdj);
+          montantSaisi = String((parseFloat(montantSaisi) || 0) + adj);
+          updateMontants();
+        });
+      });
+
+      const lvImp = document.getElementById('lv-imprimer');
+      const lvTrack = document.getElementById('lv-toggle-track');
+      const lvTxt = document.getElementById('lv-toggle-txt');
+      lvImp?.addEventListener('change', () => {
+        state.impression.actif = lvImp.checked;
+        lvTrack?.classList.toggle('on', lvImp.checked);
+        if (lvTxt) lvTxt.textContent = lvImp.checked ? 'ON' : 'OFF';
+        saveImpressionPref();
+      });
+      document.getElementById('lv-copies')?.addEventListener('change', e => {
+        state.impression.copies = parseInt(e.target.value) || 1;
+        saveImpressionPref();
+      });
+
+      document.getElementById('lv-enreg')?.addEventListener('click', async () => {
+        const frais = parseFloat(document.getElementById('lv-frais')?.value) || 0;
+        const totalAvecFrais = total + frais;
+        
+        let percu = parseFloat(montantSaisi);
+        if (isNaN(percu) || montantSaisi === '') percu = totalAvecFrais;
+        
+        const rendre = Math.max(0, percu - totalAvecFrais);
+        if (percu < totalAvecFrais) {
+          Toast.warn('Le montant perçu est insuffisant');
+          return;
+        }
+
+        const adresse = document.getElementById('lv-adresse')?.value.trim() || '';
+        const lieu = document.getElementById('lv-lieu')?.value.trim() || '';
+        const date_prevue = document.getElementById('lv-date')?.value || '';
+        const heure_prevue = document.getElementById('lv-heure')?.value || '';
+        if (!adresse || !lieu || !date_prevue || !heure_prevue) {
+          Toast.warn('Renseignez l\'adresse, le lieu, le jour et l\'heure de livraison');
+          return;
+        }
+
+        const copiesEl = document.getElementById('lv-copies');
+        if (copiesEl) { state.impression.copies = parseInt(copiesEl.value) || 1; saveImpressionPref(); }
+
+        let note = '';
+        if (hasKitchenItems) {
+          if (state.tableActive) {
+            note = state.tableActive.nom_table || `Table ${state.tableActive.numero}`;
+          } else {
+            const inputNom = document.getElementById('lv-nom-commande');
+            note = inputNom?.value.trim() || '';
+            if (!note) {
+              Toast.warn('Veuillez entrer un nom pour la cuisine');
+              inputNom?.focus();
+              return;
+            }
+          }
+        }
+
+        const livraisonPayload = {
+          adresse,
+          lieu,
+          date_prevue,
+          heure_prevue,
+          client_nom: document.getElementById('lv-nom')?.value.trim() || undefined,
+          contact_tel: document.getElementById('lv-tel')?.value.trim() || undefined,
+          frais_livraison: frais > 0 ? frais : undefined,
+        };
+
+        const btn = document.getElementById('lv-enreg');
+        if (btn) { btn.disabled = true; btn.textContent = 'Enregistrement...'; }
+
+        await validerVente(selectedMode, percu, rendre, livId, note, livraisonPayload);
+      });
+
+      // Recalcul quand frais changent
+      document.getElementById('lv-frais')?.addEventListener('input', () => updateMontants());
+
+      if (hasKitchenItems && !state.tableActive) {
+        document.getElementById('lv-nom-commande')?.addEventListener('input', () => updateMontants());
+      }
+    }, 20);
+  }
+
   function saveImpressionPref() {
     localStorage.setItem('cc_impression', JSON.stringify(state.impression));
   }
 
-  async function validerVente(mode, montantPaye, monnaie, modalId, note = '') {
+  async function validerVente(mode, montantPaye, monnaie, modalId, note = '', livraisonPayload = null) {
     const total = calcTotal();
     const sousTotal = state.panier.reduce((s, l) => s + l.prix * l.qte, 0);
     const remiseTotale = sousTotal - total;
@@ -1517,16 +1831,88 @@
     };
 
     try {
+      if (livraisonPayload) {
+        const fraisLiv = parseFloat(livraisonPayload?.frais_livraison) || 0;
+        const totalAvecFrais = total + fraisLiv;
+        
+        // On ajoute les frais comme une ligne d'article pour l'impression et la clôture
+        const lignesSnapshot = [...lignesVente];
+        if (fraisLiv > 0) {
+          lignesSnapshot.push({
+            produit_nom: 'Frais de livraison',
+            prix_unitaire: fraisLiv,
+            quantite: 1,
+            total_ttc: fraisLiv,
+            est_offert: false,
+            remise: 0
+          });
+        }
+        
+        const snapshot = {
+          lignes: lignesSnapshot,
+          total_ttc: totalAvecFrais,
+          frais_livraison: fraisLiv > 0 ? fraisLiv : 0,
+          remise_totale: remiseTotale,
+          mode_paiement: mode,
+          montant_paye: montantPaye,
+          monnaie_rendue: monnaie,
+          nom_caissier: user?.nom || '-',
+          note: note || null,
+          table_numero: state.tableActive?.numero || null,
+          livraison: { ...livraisonPayload },
+        };
+        const result = await window.api.livraisons.createFromCaisse({
+          snapshot,
+          operateur: user?.nom || null,
+        });
+        if (!result.success) { Toast.error('Erreur: ' + result.message); return; }
+
+        if (state.tableActive?.id) {
+          await window.api.tables.supprimer(state.tableActive.id);
+        }
+
+        state.dernierTicket = {
+          numero_bon: result.numero_bon,
+          numero_ticket: result.numero_bon,
+          date_vente: new Date().toISOString(),
+          nom_caissier: user?.nom || '-',
+          total_ttc: totalAvecFrais,
+          remise_totale: remiseTotale,
+          mode_paiement: mode,
+          montant_paye: montantPaye,
+          monnaie_rendue: monnaie,
+          copies: state.impression.copies,
+          lignes: lignesSnapshot,
+          estBonLivraison: true,
+          livraison: { ...livraisonPayload },
+          livraisonPending: true,
+        };
+
+        if (state.impression.actif) {
+          await window.api.printer.printBonLivraison(state.dernierTicket);
+        }
+
+        state.panier = [];
+        state.selectedIndex = -1;
+        state.tableActive = null;
+        updateTableBadge();
+        renderPanier();
+        state.produits = (await window.api.produits.getAll()).filter(p => !p.is_ingredient);
+        renderProducts();
+
+        Modal.close(modalId);
+        Toast.success(`Bon ${result.numero_bon} — la vente sera enregistrée à la clôture lorsque la livraison sera terminée.`);
+        setTimeout(() => openBonLivraisonPreviewModal(), 150);
+        return;
+      }
+
       const result = await window.api.ventes.create(venteData);
       if (!result.success) { Toast.error('Erreur: ' + result.message); return; }
 
-      // Fermer ticket table si applicable
       if (state.tableActive?.id) {
         await window.api.tables.supprimer(state.tableActive.id);
       }
 
-      // Préparer ticket pour visualisation / impression
-      // Note: les infos entreprise sont récupérées côté main process (printer.ipc.js)
       state.dernierTicket = {
         numero_ticket: result.numero_ticket,
         date_vente: new Date().toISOString(),
@@ -1536,24 +1922,20 @@
         mode_paiement: mode,
         montant_paye: montantPaye,
         monnaie_rendue: monnaie,
-        // PAS de table_numero — ne s'affiche pas sur le ticket
         copies: state.impression.copies,
         lignes: lignesVente,
+        estBonLivraison: false,
       };
 
-      // Impression si activé
       if (state.impression.actif) {
         await window.api.printer.printTicket(state.dernierTicket);
       }
 
-      // Réinitialiser panier
       state.panier = [];
       state.selectedIndex = -1;
       state.tableActive = null;
       updateTableBadge();
       renderPanier();
-
-      // Recharger produits (stocks)
       state.produits = (await window.api.produits.getAll()).filter(p => !p.is_ingredient);
       renderProducts();
 
@@ -1565,6 +1947,92 @@
     }
   }
 
+  function buildBonPreviewText(t) {
+    const L = 40;
+    const s2 = '═'.repeat(L);
+    const s1 = '─'.repeat(L);
+    const ctr = str => { const p = Math.max(0, (L - str.length) / 2 | 0); return ' '.repeat(p) + str; };
+    const rgt = (label, val) => `${label.padEnd(L - val.length - 1)}${val}`;
+    const dev = state.devise;
+    const en = state.entreprise || {};
+    const liv = t.livraison || {};
+    const lines = [
+      s2,
+      en.nom ? ctr(en.nom.toUpperCase()) : null,
+      en.adresse ? ctr(en.adresse) : null,
+      en.ville ? ctr(en.ville) : null,
+      en.tel ? ctr('Tél: ' + en.tel) : null,
+      en.email ? ctr('Email: ' + en.email) : null,
+      en.nif ? ctr('NIF: ' + en.nif) : null,
+      en.stat ? ctr('STAT: ' + en.stat) : null,
+      s2, '',
+      ctr('BON DE COMMANDE'),
+      '',
+      `Bon N° : ${t.numero_bon || t.numero_ticket}`,
+      `Date   : ${new Date(t.date_vente).toLocaleString('fr-FR')}`,
+      `Vendeur: ${t.nom_caissier || '-'}`,
+      '', s1,
+      ctr('LIVRAISON'),
+    ];
+    if (liv.adresse) lines.push(`Adresse : ${liv.adresse}`);
+    if (liv.lieu) lines.push(`Lieu    : ${liv.lieu}`);
+    if (liv.date_prevue) {
+      lines.push(`Livr. le: ${liv.date_prevue}${liv.heure_prevue ? ' à ' + liv.heure_prevue : ''}`);
+    }
+    if (liv.client_nom) lines.push(`Client  : ${liv.client_nom}`);
+    if (liv.contact_tel) lines.push(`Tél.    : ${liv.contact_tel}`);
+    lines.push(s1, '');
+    lines.push(`${'Qté'.padEnd(4)} ${'Désignation'.padEnd(L - 17).slice(0, L - 17)} ${'Montant'.padStart(11)}`);
+    lines.push(s1);
+    for (const l of (t.lignes || [])) {
+      const mt = l.est_offert
+        ? '(OFFERT)'.padStart(11)
+        : `${String(Math.round(l.total_ttc || 0)).padStart(9)} ${dev}`;
+      const sub = l.remise > 0 ? `\n${''.padEnd(5)}↳ Remise: ${l.remise}%` : '';
+      lines.push(`${String(Math.round(l.quantite)).padEnd(4)} ${l.produit_nom.padEnd(L - 17).slice(0, L - 17)} ${mt}${sub}`);
+    }
+    lines.push(s1, '');
+    if (t.remise_totale > 0) lines.push(rgt('Remises  :', `-${Math.round(t.remise_totale)} ${dev}`));
+    lines.push(rgt('TOTAL    :', `${Math.round(t.total_ttc || 0).toLocaleString('fr-FR')} ${dev}`));
+    lines.push(rgt('Mode     :', t.mode_paiement || 'CASH'));
+    if ((t.montant_paye || 0) > 0) lines.push(rgt('Payé     :', `${Math.round(t.montant_paye).toLocaleString('fr-FR')} ${dev}`));
+    if ((t.monnaie_rendue || 0) > 0) lines.push(rgt('Rendu    :', `${Math.round(t.monnaie_rendue).toLocaleString('fr-FR')} ${dev}`));
+    lines.push('', s2);
+    if (en.slogan) lines.push(ctr(en.slogan));
+    if (en.slogan) lines.push(s2);
+    lines.push('', s1, ctr('Signature du client'), '', '_'.repeat(32), '', '_'.repeat(32));
+    return lines.filter(l => l !== null && l !== undefined && l !== '').join('\n');
+  }
+
+  function openBonLivraisonPreviewModal() {
+    const t = state.dernierTicket;
+    if (!t || !t.estBonLivraison) return;
+    const lignes = buildBonPreviewText(t);
+    const visId = 'bon-liv-' + Date.now();
+    Modal.open({
+      id: visId,
+      title: `Bon de commande ${t.numero_ticket}`,
+      width: '540px',
+      content: `
+        <div class="ticket-preview-paper">
+          ${state.entreprise.logo_url ? `<div style="text-align:center;margin-bottom:10px;"><img src="${Utils.esc(state.entreprise.logo_url)}" style="max-height:60px; max-width: 150px; object-fit: contain;"></div>` : ''}
+          ${Utils.esc(lignes).replace(/\*\*(.*?)\*\*/g, '<strong style="font-size:1.15em; color:#000; font-weight:900">$1</strong>')}
+        </div>
+      `,
+      footer: `
+        <button class="btn btn-ghost" data-close="${visId}">Fermer</button>
+        <button class="btn btn-primary" id="btn-reimpr-bon-liv">Imprimer le bon</button>
+      `,
+    });
+    setTimeout(() => {
+      document.getElementById('btn-reimpr-bon-liv')?.addEventListener('click', async () => {
+        await window.api.printer.printBonLivraison({ ...t, copies: state.impression.copies });
+        Toast.success('Bon envoyé à l\'imprimante');
+        Modal.close(visId);
+      });
+    }, 20);
+  }
+
   // ── VISUALISER DERNIER TICKET (après enregistrement) ────────────────────
   function openVisualiseur() {
     if (!state.dernierTicket) {
@@ -1572,6 +2040,33 @@
       return;
     }
     const t = state.dernierTicket;
+    if (t.estBonLivraison) {
+      const lignesBon = buildBonPreviewText(t);
+      const visId = 'visu-' + Date.now();
+      Modal.open({
+        id: visId,
+        title: `Bon ${t.numero_ticket}`,
+        width: '540px',
+        content: `
+          <div class="ticket-preview-paper">
+            ${state.entreprise.logo_url ? `<div style="text-align:center;margin-bottom:10px;"><img src="${Utils.esc(state.entreprise.logo_url)}" style="max-height:60px; max-width: 150px; object-fit: contain;"></div>` : ''}
+            ${Utils.esc(lignesBon).replace(/\*\*(.*?)\*\*/g, '<strong style="font-size:1.15em; color:#000; font-weight:900">$1</strong>')}
+          </div>
+        `,
+        footer: `
+          <button class="btn btn-ghost" data-close="${visId}">Fermer</button>
+          <button class="btn btn-primary" id="btn-reimprimer-bon-visu">Imprimer le bon</button>
+        `,
+      });
+      setTimeout(() => {
+        document.getElementById('btn-reimprimer-bon-visu')?.addEventListener('click', async () => {
+          await window.api.printer.printBonLivraison({ ...t, copies: state.impression.copies });
+          Toast.success(`${state.impression.copies} copie(s) envoyée(s)`);
+          Modal.close(visId);
+        });
+      }, 20);
+      return;
+    }
     const L = 40;
     const s2 = '═'.repeat(L);
     const s1 = '─'.repeat(L);
@@ -1655,6 +2150,7 @@
     document.getElementById('btn-tables')?.addEventListener('click', openTables);
     document.getElementById('btn-sauver-table')?.addEventListener('click', openSauverTable);
     document.getElementById('btn-ticket')?.addEventListener('click', openTicketModal);
+    document.getElementById('btn-livraison')?.addEventListener('click', openLivraisonModal);
     document.getElementById('btn-visualiser')?.addEventListener('click', openVisualiseurPanier);
 
     document.getElementById('btn-vider-panier')?.addEventListener('click', () => {

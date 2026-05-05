@@ -193,9 +193,9 @@
       const annulee = r.statut === 'annulee';
 
       const actionsHTML = annulee ? '' : `
-        ${r.statut_paiement !== 'complet' && r.montant_total > 0 ? `<button class="btn-resa-action btn-payer" data-id="${r.id}" data-action="payer">💰 Payer</button>` : ''}
-        <button class="btn-resa-action btn-decaler" data-id="${r.id}" data-action="decaler">📅 Décaler</button>
-        <button class="btn-resa-action btn-annuler" data-id="${r.id}" data-action="annuler">✕ Annuler</button>
+        ${r.statut_paiement !== 'complet' && r.montant_total > 0 ? `<button class="btn-resa-action btn-payer" data-id="${r.id || r.uuid}" data-action="payer">💰 Payer</button>` : ''}
+        <button class="btn-resa-action btn-decaler" data-id="${r.id || r.uuid}" data-action="decaler">📅 Décaler</button>
+        <button class="btn-resa-action btn-annuler" data-id="${r.id || r.uuid}" data-action="annuler">✕ Annuler</button>
       `;
 
       return `
@@ -235,9 +235,9 @@
   function bindResaCardEvents() {
     document.querySelectorAll('.btn-resa-action[data-action]').forEach(btn => {
       btn.addEventListener('click', () => {
-        const id = parseInt(btn.dataset.id);
+        const idStr = btn.dataset.id;
         const action = btn.dataset.action;
-        const resa = reservations.find(r => r.id === id);
+        const resa = reservations.find(r => String(r.id) === idStr || String(r.uuid) === idStr);
         if (!resa) return;
 
         if (action === 'payer')   openPayerSolde(resa);
@@ -800,7 +800,7 @@
       const btn = document.getElementById('payer-modal-submit');
       btn.disabled = true; btn.textContent = 'Traitement…';
 
-      const res = await window.api.terrain.payerSolde(resa.id, montant);
+      const res = await window.api.terrain.payerSolde(resa.id || resa.uuid, montant);
       if (res.success) {
         Toast.success('Paiement encaissé !');
         closeModal(modal);
@@ -856,7 +856,7 @@
       const btn = document.getElementById('annuler-modal-submit');
       btn.disabled = true; btn.textContent = 'Annulation…';
 
-      const res = await window.api.terrain.annuler(resa.id, rembourser);
+      const res = await window.api.terrain.annuler(resa.id || resa.uuid, rembourser);
       if (res.success) {
         Toast.success(rembourser ? 'Réservation annulée et remboursée' : 'Réservation annulée');
         closeModal(modal);
@@ -921,7 +921,7 @@
       btn.disabled = true; btn.textContent = 'Mise à jour…';
 
       const execDecaler = async (force) => {
-        const res = await window.api.terrain.decaler(resa.id, { date_debut: dateDebut, date_fin: dateFin, note, force });
+        const res = await window.api.terrain.decaler(resa.id || resa.uuid, { date_debut: dateDebut, date_fin: dateFin, note, force });
         
         if (res.code === 'CONFLICT') {
           btn.disabled = false; btn.textContent = 'Confirmer le décalage';

@@ -33,6 +33,7 @@
     { id: 'UTILISATEUR', label: 'Utilisateurs',  icone: '👤' },
     { id: 'RESERVATION', label: 'Réservations',  icone: '📅' },
     { id: 'TERRAIN',     label: 'Terrain',       icone: '🏟️' },
+    { id: 'LIVRAISON',   label: 'Livraisons',    icone: '🚚' },
     { id: 'PARAMETRE',   label: 'Paramètres',    icone: '⚙️'  },
   ];
 

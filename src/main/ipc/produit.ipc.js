@@ -323,10 +323,13 @@ module.exports = function(ipcMain, db, syncEngine) {
 
   ipcMain.handle('categories:create', (e, data) => {
     try {
+      const uid = randomUUID();
       const result = db.prepare(
-        'INSERT INTO categories (code, nom, description, ordre, parent_id) VALUES (?, ?, ?, ?, ?)'
-      ).run(data.code || data.nom.toUpperCase(), data.nom, data.description || null, data.ordre || 99, data.parent_id || null);
-      return { success: true, id: result.lastInsertRowid };
+        'INSERT INTO categories (uuid, code, nom, description, ordre, parent_id) VALUES (?, ?, ?, ?, ?, ?)'
+      ).run(uid, data.code || data.nom.toUpperCase(), data.nom, data.description || null, data.ordre || 99, data.parent_id || null);
+      const rowId = result.lastInsertRowid;
+      db.prepare('UPDATE categories SET id = ? WHERE rowid = ?').run(rowId, rowId);
+      return { success: true, id: rowId };
     } catch (err) {
       return { success: false, message: err.message };
     }

@@ -43,12 +43,14 @@
   }
 
   function catOptionsHtml(selectedId) {
-    const sorted = [...state.categories].sort((a, b) => {
-      const da = categoryDepth(a);
-      const db = categoryDepth(b);
-      if (da !== db) return da - db;
-      return (a.ordre || 0) - (b.ordre || 0) || a.nom.localeCompare(b.nom);
-    });
+    const sorted = [...state.categories]
+      .filter(c => c.code !== 'TOUT')
+      .sort((a, b) => {
+        const da = categoryDepth(a);
+        const db = categoryDepth(b);
+        if (da !== db) return da - db;
+        return (a.ordre || 0) - (b.ordre || 0) || a.nom.localeCompare(b.nom);
+      });
     return sorted.map(c => {
       const d = categoryDepth(c);
       const sp = d ? `${'\u00A0\u00A0'.repeat(d)}\u21B3 ` : '';
@@ -598,14 +600,20 @@
           <label>Quantité à ajouter (+ ou -)</label>
           <input type="number" class="input" id="aj-stock-qty" value="0" step="0.5" />
         </div>
+        
         <div style="display:flex; gap:12px; align-items:flex-end">
           <div class="form-group" style="flex:1">
             <label id="lbl-aj-stock-prix">Prix d'achat (Fixe)</label>
             <input type="number" class="input" id="aj-stock-prix" value="${p.prix_achat || 0}" step="0.01" readonly style="opacity:0.7" />
           </div>
         </div>
-        <div style="font-size: 10px; opacity: 0.6; margin-top: -8px; margin-bottom: 12px">Le prix d'achat est celui défini dans la fiche produit.</div>
+        <div style="font-size: 10px; opacity: 0.6; margin-top: -8px; margin-bottom: 15px">Le prix d'achat est celui défini dans la fiche produit.</div>
         
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; background:rgba(var(--accent-rgb), 0.1); padding:8px; border-radius:6px; border:1px solid var(--accent)">
+          <input type="checkbox" id="aj-impact-capital" checked style="cursor:pointer" />
+          <label for="aj-impact-capital" style="font-size:12px; margin:0; cursor:pointer; font-weight:bold; color:var(--accent-light)">Déduire le coût du capital (Dépense)</label>
+        </div>
+
         <div class="form-group">
           <label>Motif</label>
           <input type="text" class="input" id="aj-stock-motif" placeholder="Inventaire, casse, achat…" />
@@ -621,10 +629,11 @@
         if (Number.isNaN(q) || q === 0) { Toast.warn('Quantité invalide'); return; }
         const pu = parseFloat(document.getElementById('aj-stock-prix')?.value) || 0;
         const pType = 'unitaire';
+        const impactCapital = document.getElementById('aj-impact-capital').checked;
         const motif = document.getElementById('aj-stock-motif').value.trim() || (q > 0 ? 'Ajustement positif' : 'Ajustement négatif');
         
         const currentUserStr = Session.getUser()?.nom || 'Admin';
-        const res = await window.api.stock.ajustement(p.uuid, q, motif, currentUserStr, pu, pType);
+        const res = await window.api.stock.ajustement(p.uuid, q, motif, currentUserStr, pu, pType, impactCapital);
         if (res.success) {
           Toast.success('Stock mis à jour');
           Modal.closeAll();

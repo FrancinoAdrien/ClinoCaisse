@@ -35,7 +35,7 @@ module.exports = function(ipcMain, db) {
   ipcMain.handle('utilisateurs:create', (e, data) => {
     try {
       if (!data.nom || !data.pin) return { success: false, message: 'Nom et PIN requis' };
-      if (!/^\d{4}$/.test(data.pin)) return { success: false, message: 'Le PIN doit être 4 chiffres' };
+      if (!/^\\d{4}$/.test(data.pin)) return { success: false, message: 'Le PIN doit être 4 chiffres' };
       
       const existPin = db.prepare('SELECT id FROM utilisateurs WHERE pin = ? AND actif = 1').get(data.pin);
       if (existPin) return { success: false, message: 'Ce PIN est déjà utilisé' };
@@ -49,6 +49,9 @@ module.exports = function(ipcMain, db) {
         randomUUID(), data.nom, data.prenom || null, data.pin, data.role || 'employe', Date.now(),
         ...pv
       );
+      
+      const rowId = result.lastInsertRowid;
+      db.prepare('UPDATE utilisateurs SET id = ? WHERE rowid = ?').run(rowId, rowId);
 
       logAction(db, {
         categorie: 'UTILISATEUR',
@@ -57,7 +60,7 @@ module.exports = function(ipcMain, db) {
         icone: '👥'
       });
 
-      return { success: true, id: result.lastInsertRowid };
+      return { success: true, id: rowId };
     } catch (err) {
       return { success: false, message: err.message };
     }

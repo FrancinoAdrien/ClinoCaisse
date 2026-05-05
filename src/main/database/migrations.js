@@ -107,6 +107,7 @@ module.exports = function runMigrations(db) {
       produit_nom     TEXT    NOT NULL,
       quantite        REAL    NOT NULL DEFAULT 1,
       prix_unitaire   REAL    NOT NULL DEFAULT 0,
+      prix_achat      REAL    DEFAULT 0,
       remise          REAL    DEFAULT 0,
       rabais          REAL    DEFAULT 0,
       total_ttc       REAL    NOT NULL DEFAULT 0,
@@ -495,6 +496,7 @@ module.exports = function runMigrations(db) {
     { table: 'lignes_vente', col: 'sync_status',      def: 'INTEGER DEFAULT 0' },
     { table: 'lignes_vente', col: 'unite_choisie',    def: "TEXT DEFAULT 'Unité'" },
     { table: 'lignes_vente', col: 'statut_cuisine',   def: "TEXT DEFAULT 'servi'" },
+    { table: 'lignes_vente', col: 'prix_achat',       def: 'REAL DEFAULT 0' },
 
     // ── Table CLOTURES
     { table: 'clotures',     col: 'uuid',             def: 'TEXT' },
@@ -582,6 +584,16 @@ module.exports = function runMigrations(db) {
     { table: 'livraisons',        col: 'last_modified_at', def: 'INTEGER DEFAULT 0' },
     { table: 'livraisons',        col: 'sync_status',      def: 'INTEGER DEFAULT 0' },
     { table: 'livraisons',        col: 'poste_source',     def: 'TEXT' },
+    { table: 'livraisons',        col: 'client_nom',       def: 'TEXT' },
+    { table: 'livraisons',        col: 'adresse',          def: 'TEXT' },
+    { table: 'livraisons',        col: 'lieu',             def: 'TEXT' },
+    { table: 'livraisons',        col: 'date_prevue',      def: 'TEXT' },
+    { table: 'livraisons',        col: 'heure_prevue',     def: 'TEXT' },
+    { table: 'livraisons',        col: 'contact_tel',      def: 'TEXT' },
+    { table: 'livraisons',        col: 'snapshot_json',    def: 'TEXT' },
+    { table: 'livraisons',        col: 'numero_bon',       def: 'TEXT' },
+    { table: 'livraisons',        col: 'montant_total',    def: 'REAL DEFAULT 0' },
+    { table: 'livraisons',        col: 'operateur_creation', def: 'TEXT' },
 
     { table: 'recettes_lignes',   col: 'uuid',             def: 'TEXT' },
     { table: 'recettes_lignes',   col: 'last_modified_at', def: 'INTEGER DEFAULT 0' },
@@ -674,25 +686,32 @@ module.exports = function runMigrations(db) {
 
   // ── DONNÉES PAR DÉFAUT ────────────────────────────────────────────────
 
+  // UUID fixe et déterministe pour l'admin — garantit l'unicité dans Supabase
+  const ADMIN_UUID = 'aaaaaaaa-0000-0000-0000-000000000001';
+
   // Admin par défaut (PIN: 0000)
   const adminExiste = db.prepare('SELECT id FROM utilisateurs WHERE role = ?').get('admin');
   if (!adminExiste) {
     db.prepare(`
-      INSERT INTO utilisateurs (nom, prenom, pin, role, actif,
+      INSERT INTO utilisateurs (uuid, nom, prenom, pin, role, actif,
         perm_caisse, perm_utilisateur, perm_parametres, perm_cloture, perm_stock, perm_remises,
-        perm_grossiste, perm_depenses, perm_ressources, perm_achats, perm_reserv)
-      VALUES (?, ?, ?, ?, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
-    `).run('Admin', 'Système', '0000', 'admin');
+        perm_grossiste, perm_depenses, perm_ressources, perm_achats, perm_reserv,
+        last_modified_at, sync_status)
+      VALUES (?, ?, ?, ?, ?, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ?, 0)
+    `).run(ADMIN_UUID, 'Admin', 'Système', '0000', 'admin', Date.now());
   } else {
-    // Si l'admin existe déjà, on s'assure qu'il reçoit les nouvelles permissions V3
+    // Corriger l'UUID si l'admin a un UUID aléatoire (anciennes installations)
+    // + mettre à jour les permissions V3 et forcer la re-sync
     try {
       db.prepare(`
         UPDATE utilisateurs 
-        SET perm_caisse = 1, perm_utilisateur = 1, perm_parametres = 1, perm_cloture = 1,
+        SET uuid = COALESCE(CASE WHEN uuid != ? THEN ? ELSE uuid END, ?),
+            perm_caisse = 1, perm_utilisateur = 1, perm_parametres = 1, perm_cloture = 1,
             perm_stock = 1, perm_remises = 1,
-            perm_grossiste = 1, perm_depenses = 1, perm_ressources = 1, perm_achats = 1, perm_reserv = 1
+            perm_grossiste = 1, perm_depenses = 1, perm_ressources = 1, perm_achats = 1, perm_reserv = 1,
+            sync_status = 0, last_modified_at = ?
         WHERE role = 'admin'
-      `).run();
+      `).run(ADMIN_UUID, ADMIN_UUID, ADMIN_UUID, Date.now());
     } catch (e) {
       console.log('Erreur mise à jour permissions admin:', e);
     }
@@ -755,7 +774,7 @@ module.exports = function runMigrations(db) {
     'caisse.devise':            'Ar',
     'caisse.nom_poste':         'Poste n°1',
     'caisse.version':           '1.7.0',
-    'license.activated':        '1',
+    'license.activated':        '0',
     'license.first_launch':     '',
   };
   const setParam = db.prepare("INSERT OR IGNORE INTO parametres (uuid, cle, valeur) VALUES (lower(hex(randomblob(16))), ?, ?)");

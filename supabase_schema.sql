@@ -115,6 +115,7 @@ CREATE TABLE IF NOT EXISTS lignes_vente (
     produit_nom TEXT NOT NULL,
     quantite REAL DEFAULT 1,
     prix_unitaire REAL DEFAULT 0,
+    prix_achat REAL DEFAULT 0,
     remise REAL DEFAULT 0,
     rabais REAL DEFAULT 0,
     total_ttc REAL DEFAULT 0,
@@ -323,6 +324,11 @@ CREATE TABLE IF NOT EXISTS reservations (
     statut TEXT DEFAULT 'en_attente',
     tables_json TEXT DEFAULT '[]',
     duree_heures REAL,
+    montant_acompte REAL DEFAULT 0,
+    client_arrive INTEGER DEFAULT 0,
+    note_report TEXT,
+    montant_report REAL DEFAULT 0,
+    client_tel TEXT,
     last_modified_at BIGINT DEFAULT 0,
     sync_status INTEGER DEFAULT 0,
     poste_source TEXT
@@ -400,6 +406,16 @@ CREATE TABLE IF NOT EXISTS livraisons (
     statut TEXT DEFAULT 'en_cours',
     date_depart TEXT,
     date_livraison TEXT,
+    client_nom TEXT,
+    adresse TEXT,
+    lieu TEXT,
+    date_prevue TEXT,
+    heure_prevue TEXT,
+    contact_tel TEXT,
+    snapshot_json TEXT,
+    numero_bon TEXT,
+    montant_total REAL DEFAULT 0,
+    operateur_creation TEXT,
     last_modified_at BIGINT DEFAULT 0,
     sync_status INTEGER DEFAULT 0,
     poste_source TEXT
@@ -530,3 +546,39 @@ BEGIN
         EXECUTE format('CREATE TRIGGER tr_update_last_modified BEFORE INSERT OR UPDATE ON %I FOR EACH ROW EXECUTE PROCEDURE update_last_modified()', t);
     END LOOP;
 END $$;
+
+-- ═══════════════════════════════════════════════════════════════════
+-- CORRECTIONS DE COMPATIBILITÉ (SUPABASE FIX COLUMNS)
+-- Rend les colonnes «id» nullables pour la synchro depuis SQLite
+-- ═══════════════════════════════════════════════════════════════════
+
+-- journal_activite (id SERIAL → nullable)
+ALTER TABLE journal_activite ALTER COLUMN id DROP NOT NULL;
+ALTER TABLE journal_activite ALTER COLUMN id DROP DEFAULT;
+-- date_action peut être NULL pour compatibilité
+ALTER TABLE journal_activite ALTER COLUMN date_action DROP NOT NULL;
+
+-- stock_historique (id SERIAL → nullable)
+ALTER TABLE stock_historique ALTER COLUMN id DROP NOT NULL;
+ALTER TABLE stock_historique ALTER COLUMN id DROP DEFAULT;
+
+-- utilisateurs.pin peut être vide pour admin système
+ALTER TABLE utilisateurs ALTER COLUMN pin DROP NOT NULL;
+
+-- Nouvelles colonnes manquantes
+ALTER TABLE employes ADD COLUMN IF NOT EXISTS mode_premier_salaire TEXT DEFAULT 'ce_mois';
+ALTER TABLE employes ADD COLUMN IF NOT EXISTS montant_premier_salaire REAL DEFAULT 0;
+ALTER TABLE employes ADD COLUMN IF NOT EXISTS premier_mois_paye INTEGER DEFAULT 0;
+ALTER TABLE reservations ADD COLUMN IF NOT EXISTS duree_heures REAL;
+ALTER TABLE reservations ADD COLUMN IF NOT EXISTS montant_acompte REAL DEFAULT 0;
+ALTER TABLE reservations ADD COLUMN IF NOT EXISTS client_arrive INTEGER DEFAULT 0;
+ALTER TABLE reservations ADD COLUMN IF NOT EXISTS note_report TEXT;
+ALTER TABLE reservations ADD COLUMN IF NOT EXISTS montant_report REAL DEFAULT 0;
+ALTER TABLE reservations ADD COLUMN IF NOT EXISTS client_tel TEXT;
+
+-- Colonne prix_achat dans lignes_vente (historique des marges)
+ALTER TABLE lignes_vente ADD COLUMN IF NOT EXISTS prix_achat REAL DEFAULT 0;
+
+-- Forcer le rafraîchissement du cache PostgREST
+NOTIFY pgrst, 'reload schema';
+

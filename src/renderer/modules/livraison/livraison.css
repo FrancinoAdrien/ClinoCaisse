@@ -1,0 +1,207 @@
+/* ── MODULE LIVRAISONS ─────────────────────────────────────────────── */
+
+#view-livraison {
+  height: 100%;
+  min-height: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+
+#livraison-topbar {
+  display: flex;
+  align-items: center;
+  padding: 14px 20px;
+  gap: 16px;
+  background: var(--topbar-gradient);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.35);
+  flex-shrink: 0;
+}
+
+.livraison-topbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.livraison-logo-icon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+#livraison-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 10px 20px 0;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.livraison-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 10px 10px 0 0;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  opacity: 0.75;
+  transition: opacity 0.15s, background 0.15s;
+}
+
+.livraison-tab:hover {
+  opacity: 1;
+}
+
+.livraison-tab.active {
+  opacity: 1;
+  background: var(--bg);
+  border-color: var(--accent);
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.15);
+}
+
+.livraison-tab .liv-tab-count {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.livraison-tab.active .liv-tab-count {
+  background: var(--accent);
+  color: #fff;
+}
+
+#livraison-content {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 16px 20px 24px;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+}
+
+.livraison-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+}
+
+.livraison-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.livraison-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.livraison-card-num {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--accent-light);
+}
+
+.livraison-card-meta {
+  font-size: 12px;
+  opacity: 0.8;
+  line-height: 1.45;
+}
+
+.livraison-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.livraison-card-actions label {
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.7;
+  margin-right: 4px;
+}
+
+.liv-statut-lecture {
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 0;
+  opacity: 0.9;
+}
+
+.livraison-card-actions select {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--text);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.livraison-empty {
+  text-align: center;
+  padding: 48px 24px;
+  opacity: 0.55;
+  font-size: 14px;
+}
+
+.btn-liv-voir-bon {
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--accent);
+  background: rgba(var(--accent-rgb), 0.15);
+  color: var(--accent-light);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-liv-voir-bon:hover {
+  filter: brightness(1.15);
+}
+
+.btn-liv-secondaire {
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-liv-secondaire:hover {
+  border-color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.12);
+}
+
+.btn-liv-danger {
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(220, 80, 80, 0.5);
+  background: rgba(180, 50, 50, 0.2);
+  color: #f0a0a0;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-liv-danger:hover {
+  filter: brightness(1.12);
+}

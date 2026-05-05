@@ -36,7 +36,7 @@ module.exports = function(ipcMain, db) {
   });
 
   // ── AJUSTEMENT STOCK ─────────────────────────────────────────────────
-  ipcMain.handle('stock:ajustement', (e, identifier, delta, motif, operateur, prixVal = 0, prixType = 'unitaire') => {
+  ipcMain.handle('stock:ajustement', (e, identifier, delta, motif, operateur, prixVal = 0, prixType = 'unitaire', impactCapital = true) => {
     try {
       const produit = db.prepare('SELECT * FROM produits WHERE id = ? OR uuid = ?').get(identifier, identifier);
       if (!produit) return { success: false, message: 'Produit non trouvé' };
@@ -53,8 +53,8 @@ module.exports = function(ipcMain, db) {
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)
       `).run(randomUUID(), identifier, produit.nom, ancienneQty, nouvelleQty, delta, motif || 'Ajustement manuel', Date.now());
 
-      // Si c'est un achat (delta positif et prix fourni)
-      if (delta > 0 && prixVal > 0) {
+      // Si c'est un achat (delta positif et prix fourni) ET qu'on veut impacter le capital
+      if (delta > 0 && prixVal > 0 && impactCapital) {
         const montantTotal = (prixType === 'total') ? prixVal : (delta * prixVal);
         const pu = (prixType === 'total') ? (prixVal / delta) : prixVal;
         const uuidDepense = randomUUID();
@@ -80,7 +80,7 @@ module.exports = function(ipcMain, db) {
         action: delta > 0 ? 'Approvisionnement stock' : 'Ajustement stock',
         detail: `${produit.nom}: ${delta > 0 ? '+' : ''}${delta} ${produit.unite_base || 'unité'}(s) — ${motif || 'Ajustement manuel'}`,
         operateur: operateur || null,
-        montant: delta > 0 && prixVal > 0 ? (prixType === 'total' ? prixVal : delta * prixVal) : null,
+        montant: delta > 0 && prixVal > 0 && impactCapital ? (prixType === 'total' ? prixVal : delta * prixVal) : null,
         icone: delta > 0 ? '📦' : '⚠️'
       });
       notifyChange();

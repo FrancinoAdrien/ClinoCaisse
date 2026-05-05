@@ -20,7 +20,9 @@
   --btn-param:          linear-gradient(135deg, #95a5a6, #7f8c8d, #566573);
   --btn-cloture:        linear-gradient(135deg, #9b59b6, #8e44ad, #6c3483);
   --btn-analytique:     linear-gradient(135deg, #2ecc71, #27ae60, #1e8449);
-  --btn-terrain:        linear-gradient(135deg, #3498db, #2980b9, #1f618d);
+  --btn-livraison:      linear-gradient(135deg, #f39c12, #e67e22, #b86b12);
+  --btn-terrain:        linear-gradient(135deg, #2ecc71, #27ae60, #1e8449);
+  
   --clock-gradient:     linear-gradient(135deg, #1a3355, #244070, #1a2d45);
   --text:               #e8f2ff;
   --accent:             #5ab4ff;
@@ -59,7 +61,9 @@
   --btn-param:          linear-gradient(135deg, #757575, #616161, #424242);
   --btn-cloture:        linear-gradient(135deg, #8e24aa, #6a1b9a, #4a148c);
   --btn-analytique:     linear-gradient(135deg, #43a047, #388e3c, #2e7d32);
-  --btn-terrain:        linear-gradient(135deg, #1976d2, #1565c0, #0d47a1);
+  --btn-livraison:      linear-gradient(135deg, #ff7043, #e64a19, #bf360c);
+  --btn-terrain:        linear-gradient(135deg, #43a047, #388e3c, #2e7d32);
+  
   --clock-gradient:     linear-gradient(135deg, #1f0808, #2f1212, #200808);
   --text:               #ffe8e8;
   --accent:             #ff5555;
@@ -98,7 +102,9 @@
   --btn-param:          linear-gradient(135deg, #8d6e63, #6d4c41, #4e342e);
   --btn-cloture:        linear-gradient(135deg, #ab47bc, #8e24aa, #6a1b9a);
   --btn-analytique:     linear-gradient(135deg, #66bb6a, #4caf50, #388e3c);
-  --btn-terrain:        linear-gradient(135deg, #42a5f5, #2196f3, #1976d2);
+  --btn-livraison:      linear-gradient(135deg, #ffa726, #ff9800, #e65100);
+  --btn-terrain:        linear-gradient(135deg, #66bb6a, #4caf50, #388e3c);
+  
   --clock-gradient:     linear-gradient(135deg, #2d1608, #3d2410, #2a1508);
   --text:               #f5e0c8;
   --accent:             #d48848;
@@ -137,7 +143,9 @@
   --btn-param:          linear-gradient(135deg, #9575cd, #7e57c2, #673ab7);
   --btn-cloture:        linear-gradient(135deg, #ba68c8, #ab47bc, #8e24aa);
   --btn-analytique:     linear-gradient(135deg, #81c784, #66bb6a, #4caf50);
-  --btn-terrain:        linear-gradient(135deg, #64b5f6, #42a5f5, #2196f3);
+  --btn-livraison:      linear-gradient(135deg, #ffb74d, #ffa726, #e65100);
+  --btn-terrain:        linear-gradient(135deg, #81c784, #66bb6a, #4caf50);
+  
   --clock-gradient:     linear-gradient(135deg, #302050, #403060, #30204e);
   --text:               #f0e8ff;
   --accent:             #b080e0;
@@ -176,7 +184,9 @@
   --btn-param:          linear-gradient(135deg, #b39ddb, #9575cd, #7e57c2);
   --btn-cloture:        linear-gradient(135deg, #ce93d8, #ba68c8, #ab47bc);
   --btn-analytique:     linear-gradient(135deg, #a5d6a7, #81c784, #66bb6a);
-  --btn-terrain:        linear-gradient(135deg, #90caf9, #64b5f6, #42a5f5);
+  --btn-livraison:      linear-gradient(135deg, #ffcc80, #ffb74d, #ef6c00);
+  --btn-terrain:        linear-gradient(135deg, #a5d6a7, #81c784, #66bb6a);
+  
   --clock-gradient:     linear-gradient(135deg, #38182a, #4a2535, #3a1a32);
   --text:               #fae8f5;
   --accent:             #d060b8;
@@ -215,7 +225,9 @@
   --btn-param:          linear-gradient(135deg, #34495e, #2c3e50, #1a252f);
   --btn-cloture:        linear-gradient(135deg, #8e44ad, #7d3c98, #6c3483);
   --btn-analytique:     linear-gradient(135deg, #27ae60, #229954, #1e8449);
-  --btn-terrain:        linear-gradient(135deg, #ff9f43, #ff8c1a, #e67e00);
+  --btn-livraison:      linear-gradient(135deg, #ff9f43, #e67e22, #c0392b);
+  --btn-terrain:        linear-gradient(135deg, #27ae60, #229954, #1e8449);
+  
   --clock-gradient:     linear-gradient(135deg, #203030, #304040, #283838);
   --text:               #e8f0f0;
   --accent:             #80b0b0;
@@ -254,7 +266,9 @@
   --btn-param:          linear-gradient(135deg, #546e7a, #455a64, #37474f);
   --btn-cloture:        linear-gradient(135deg, #5e35b1, #512da8, #4527a0);
   --btn-analytique:     linear-gradient(135deg, #43a047, #388e3c, #2e7d32);
-  --btn-terrain:        linear-gradient(135deg, #039be5, #0288d1, #0277bd);
+  --btn-livraison:      linear-gradient(135deg, #ffa000, #ff8f00, #e65100);
+  --btn-terrain:        linear-gradient(135deg, #43a047, #388e3c, #2e7d32);
+  
   --clock-gradient:     linear-gradient(135deg, #142850, #1a3550, #0c2040);
   --text:               #b8d8f8;
   --accent:             #50a0ff;
@@ -293,7 +307,9 @@
   --btn-param:          linear-gradient(135deg, #8d6e63, #795548, #6d4c41);
   --btn-cloture:        linear-gradient(135deg, #26c6da, #00bcd4, #00acc1);
   --btn-analytique:     linear-gradient(135deg, #9ccc65, #8bc34a, #7cb342);
-  --btn-terrain:        linear-gradient(135deg, #ffa726, #ff9800, #fb8c00);
+  --btn-livraison:      linear-gradient(135deg, #ffd54f, #ffca28, #ff8f00);
+  --btn-terrain:        linear-gradient(135deg, #9ccc65, #8bc34a, #7cb342);
+  
   --clock-gradient:     linear-gradient(135deg, #2e1515, #3e2020, #2e1616);
   --text:               #f5d8d0;
   --accent:             #d05050;
@@ -332,7 +348,9 @@
   --btn-param:          linear-gradient(135deg, #4db6ac, #26a69a, #00897b);
   --btn-cloture:        linear-gradient(135deg, #26c6da, #00acc1, #0097a7);
   --btn-analytique:     linear-gradient(135deg, #66bb6a, #4caf50, #43a047);
-  --btn-terrain:        linear-gradient(135deg, #29b6f6, #039be5, #0288d1);
+  --btn-livraison:      linear-gradient(135deg, #26c6da, #00acc1, #0097a7);
+  --btn-terrain:        linear-gradient(135deg, #66bb6a, #4caf50, #43a047);
+  
   --clock-gradient:     linear-gradient(135deg, #143828, #1a4835, #102c20);
   --text:               #b8e8d0;
   --accent:             #40c898;
@@ -371,7 +389,9 @@
   --btn-param:          linear-gradient(135deg, #a1887f, #8d6e63, #795548);
   --btn-cloture:        linear-gradient(135deg, #ffb74d, #ffa726, #ff9800);
   --btn-analytique:     linear-gradient(135deg, #81c784, #66bb6a, #4caf50);
-  --btn-terrain:        linear-gradient(135deg, #4fc3f7, #29b6f6, #03a9f4);
+  --btn-livraison:      linear-gradient(135deg, #ffb74d, #ffa726, #e65100);
+  --btn-terrain:        linear-gradient(135deg, #81c784, #66bb6a, #4caf50);
+  
   --clock-gradient:     linear-gradient(135deg, #2e150a, #3e1a08, #2e1008);
   --text:               #fad8b0;
   --accent:             #f07040;
@@ -410,7 +430,9 @@
   --btn-param:          linear-gradient(135deg, #a1887f, #8d6e63, #6d4c41);
   --btn-cloture:        linear-gradient(135deg, #f06292, #e91e63, #c2185b);
   --btn-analytique:     linear-gradient(135deg, #4db6ac, #009688, #00796b);
-  --btn-terrain:        linear-gradient(135deg, #ffb74d, #ff9800, #f57c00);
+  --btn-livraison:      linear-gradient(135deg, #a5d6a7, #81c784, #388e3c);
+  --btn-terrain:        linear-gradient(135deg, #4db6ac, #009688, #00796b);
+  
   --clock-gradient:     linear-gradient(135deg, #1a2e1a, #243824, #182818);
   --text:               #c8e0c0;
   --accent:             #5aa85a;
@@ -449,7 +471,9 @@
   --btn-param:          linear-gradient(135deg, #7986cb, #5c6bc0, #3f51b5);
   --btn-cloture:        linear-gradient(135deg, #9575cd, #7e57c2, #673ab7);
   --btn-analytique:     linear-gradient(135deg, #4db6ac, #26a69a, #00897b);
-  --btn-terrain:        linear-gradient(135deg, #64b5f6, #42a5f5, #2196f3);
+  --btn-livraison:      linear-gradient(135deg, #7986cb, #5c6bc0, #3f51b5);
+  --btn-terrain:        linear-gradient(135deg, #4db6ac, #26a69a, #00897b);
+  
   --clock-gradient:     linear-gradient(135deg, #0a0a20, #121230, #08081a);
   --text:               #d0d0f0;
   --accent:             #7070e0;
@@ -487,7 +511,9 @@
   --btn-users:          linear-gradient(135deg, #f5f5f5, #eeeeee, #e0e0e0);
   --btn-cloture:        linear-gradient(135deg, #bcaaa4, #a1887f, #8d6e63);
   --btn-analytique:     linear-gradient(135deg, #d7ccc8, #bcaaa4, #a1887f);
-  --btn-terrain:        linear-gradient(135deg, #f5f5f5, #eeeeee, #e0e0e0);
+  --btn-livraison:      linear-gradient(135deg, #ffcc80, #ffb74d, #a1887f);
+  --btn-terrain:        linear-gradient(135deg, #d7ccc8, #bcaaa4, #a1887f);
+  
   --clock-gradient:     linear-gradient(135deg, #1a1408, #241808, #1a1008);
   --text:               #e0c0a0;
   --accent:             #a87048;
@@ -525,7 +551,9 @@
   --btn-param:          linear-gradient(135deg, #a1887f, #8d6e63, #795548);
   --btn-cloture:        linear-gradient(135deg, #ffb74d, #ffa726, #ff9800);
   --btn-analytique:     linear-gradient(135deg, #81c784, #66bb6a, #4caf50);
-  --btn-terrain:        linear-gradient(135deg, #4fc3f7, #29b6f6, #03a9f4);
+  --btn-livraison:      linear-gradient(135deg, #ff8a65, #ff7043, #e64a19);
+  --btn-terrain:        linear-gradient(135deg, #81c784, #66bb6a, #4caf50);
+  
   --clock-gradient:     linear-gradient(135deg, #2e1506, #3e1a08, #2e1206);
   --text:               #fad0b0;
   --accent:             #f06040;
@@ -564,7 +592,9 @@
   --btn-param:          linear-gradient(135deg, #607d8b, #455a64, #37474f);
   --btn-cloture:        linear-gradient(135deg, #e91e63, #c2185b, #ad1457);
   --btn-analytique:     linear-gradient(135deg, #009688, #00796b, #00695c);
-  --btn-terrain:        linear-gradient(135deg, #ff9800, #f57c00, #ef6c00);
+  --btn-livraison:      linear-gradient(135deg, #ffd700, #ffb300, #ff8f00);
+  --btn-terrain:        linear-gradient(135deg, #009688, #00796b, #00695c);
+  
   --clock-gradient:     linear-gradient(135deg, #1c0820, #281028, #1c0820);
   --text:               #f0e0c8;
   --accent:             #d0a040;

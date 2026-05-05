@@ -79,3 +79,5 @@ module.exports = function(ipcMain, db) {
     return session;
   });
 };
+
+module.exports.getSession = () => session;

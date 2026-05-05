@@ -17,7 +17,7 @@ const { dialog } = require('electron');
  *
  * @param {object} db - Instance better-sqlite3
  * @param {object} data
- *   @param {string} data.categorie   - 'AUTH' | 'VENTE' | 'STOCK' | 'PRODUIT' | 'FINANCE' | 'RH' | 'CLOTURE' | 'UTILISATEUR' | 'RESERVATION' | 'PARAMETRE'
+ *   @param {string} data.categorie   - 'AUTH' | 'VENTE' | 'STOCK' | 'PRODUIT' | 'FINANCE' | 'RH' | 'CLOTURE' | 'UTILISATEUR' | 'RESERVATION' | 'TERRAIN' | 'LIVRAISON' | 'PARAMETRE'
  *   @param {string} data.action      - Description courte de l'action
  *   @param {string} [data.detail]    - Détail supplémentaire
  *   @param {string} [data.operateur] - Nom de l'utilisateur
@@ -28,6 +28,22 @@ const { dialog } = require('electron');
 function logAction(db, data) {
   try {
     const { randomUUID } = require('crypto');
+    
+    let operateur = data.operateur;
+    if (!operateur) {
+      try {
+        const { getSession } = require('./auth.ipc');
+        const session = getSession();
+        if (session && session.nom) {
+          operateur = session.prenom ? `${session.nom} ${session.prenom}` : session.nom;
+        } else {
+          operateur = 'Système';
+        }
+      } catch (e) {
+        operateur = 'Système';
+      }
+    }
+
     db.prepare(`
       INSERT INTO journal_activite (uuid, categorie, action, detail, operateur, montant, icone, meta_json, last_modified_at, sync_status)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
@@ -36,7 +52,7 @@ function logAction(db, data) {
       data.categorie || 'SYSTEME',
       data.action    || '',
       data.detail    || null,
-      data.operateur || null,
+      operateur      || null,
       data.montant   != null ? data.montant : null,
       data.icone     || null,
       data.meta      ? JSON.stringify(data.meta) : null,
