@@ -859,3 +859,67 @@
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.35; }
 }
+
+/* ── BADGE LICENCE MENSUELLE (topbar) ───────────────────────────────────── */
+.dash-license-badge {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 13px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.05);
+  color: rgba(255,255,255,0.65);
+  white-space: nowrap;
+  transition: all 0.25s ease;
+  letter-spacing: 0.2px;
+  backdrop-filter: blur(6px);
+}
+
+.dash-license-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+}
+
+/* Vert — licence valide longtemps */
+.dash-license--ok {
+  background: rgba(46,204,113,0.12);
+  border-color: rgba(46,204,113,0.35);
+  color: #2ecc71;
+}
+.dash-license--ok:hover {
+  background: rgba(46,204,113,0.2);
+  box-shadow: 0 4px 14px rgba(46,204,113,0.2);
+}
+
+/* Orange — expire bientôt */
+.dash-license--warn {
+  background: rgba(243,156,18,0.15);
+  border-color: rgba(243,156,18,0.4);
+  color: #f39c12;
+  animation: licensePulse 2s ease-in-out infinite;
+}
+.dash-license--warn:hover {
+  background: rgba(243,156,18,0.25);
+  box-shadow: 0 4px 14px rgba(243,156,18,0.25);
+}
+
+/* Rouge — expirée */
+.dash-license--err {
+  background: rgba(231,76,60,0.15);
+  border-color: rgba(231,76,60,0.4);
+  color: #e74c3c;
+  animation: licensePulse 1s ease-in-out infinite;
+}
+.dash-license--err:hover {
+  background: rgba(231,76,60,0.25);
+  box-shadow: 0 4px 14px rgba(231,76,60,0.3);
+}
+
+@keyframes licensePulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.7; }
+}

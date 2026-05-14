@@ -2,9 +2,10 @@
 
 (function DashboardModule() {
 
-  let clockInterval  = null;
-  let notifInterval  = null;
-  let realtimeBound  = false;
+  let clockInterval   = null;
+  let notifInterval   = null;
+  let realtimeBound   = false;
+  let licenseBound    = false;
 
   function render() {
     const container = document.getElementById('view-dashboard');
@@ -54,6 +55,15 @@
         </div>
 
         <div style="flex:1"></div>
+
+        <!-- Badge Licence Mensuelle -->
+        <button id="dash-license-badge" class="dash-license-badge" title="Statut de la licence">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <rect x="3" y="11" width="18" height="11" rx="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <span id="dash-license-text">Licence…</span>
+        </button>
 
         <div class="dash-user-info" id="dash-user-btn" title="Cliquer pour se déconnecter">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="2" stroke-linecap="round">
@@ -228,6 +238,7 @@
     updateClock();
     loadParams();
     checkNotifications();
+    updateLicenseBadge();
     if (notifInterval) clearInterval(notifInterval);
     // Temps réel: stock/réservations doivent apparaître/disparaître rapidement
     notifInterval = setInterval(checkNotifications, 5000);
@@ -348,6 +359,58 @@
           : `${pretCount} plats prêts à servir`;
       }
     } catch (e) { /* silencieux */ }
+  }
+
+  // ── Badge Licence ─────────────────────────────────────────────────────
+  async function updateLicenseBadge(statusOverride) {
+    const badge = document.getElementById('dash-license-badge');
+    const text  = document.getElementById('dash-license-text');
+    if (!badge || !text) return;
+
+    let status = statusOverride;
+    if (!status) {
+      try { status = await window.api.license.checkRealtime(); } catch { return; }
+    }
+
+    const WARN_MS = status.warnAt || 5 * 60 * 1000;
+    const rem     = status.remainingMs || 0;
+
+    badge.classList.remove('dash-license--ok', 'dash-license--warn', 'dash-license--err');
+
+    if (status.valid && status.status === 'activated') {
+      // Licence définitive
+      badge.classList.add('dash-license--ok');
+      text.textContent = '🔐 Licence : Illimitée';
+    } else if (status.valid && status.status === 'activated_monthly') {
+      if (rem > WARN_MS) {
+        badge.classList.add('dash-license--ok');
+        text.textContent = `🔐 Expire : ${status.expiresAtFormatted || '—'}`;
+      } else {
+        badge.classList.add('dash-license--warn');
+        text.textContent = `⚠️ Expire dans ${status.remainingText || '?'}`;
+      }
+    } else {
+      badge.classList.add('dash-license--err');
+      text.textContent = '❌ Licence expirée';
+    }
+
+    // Clic → page activation (restreint aux admins et non-définitif)
+    const user = Session.getUser();
+    if (user && user.role === 'admin' && status.status !== 'activated') {
+      badge.style.cursor = 'pointer';
+      badge.onclick = () => Router.go('activation');
+    } else {
+      badge.style.cursor = 'default';
+      badge.onclick = null;
+    }
+
+    // Écouter les ticks du watcher
+    if (!licenseBound) {
+      licenseBound = true;
+      document.addEventListener('license:tick', (e) => {
+        updateLicenseBadge(e.detail);
+      });
+    }
   }
 
   function updateClock() {

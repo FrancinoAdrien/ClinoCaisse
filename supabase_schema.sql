@@ -579,6 +579,38 @@ ALTER TABLE reservations ADD COLUMN IF NOT EXISTS client_tel TEXT;
 -- Colonne prix_achat dans lignes_vente (historique des marges)
 ALTER TABLE lignes_vente ADD COLUMN IF NOT EXISTS prix_achat REAL DEFAULT 0;
 
+-- ═══════════════════════════════════════════════════════════════════
+-- LICENCE MENSUELLE — Clés dans la table parametres
+-- ═══════════════════════════════════════════════════════════════════
+-- Les données de licence sont stockées dans la table `parametres`
+-- avec les clés suivantes :
+--   license.monthly_activated_at  → ISO string de la 1ère activation du mois courant
+--   license.monthly_expires_at    → ISO string de la date d'expiration
+--   license.monthly_first_day     → jour DD de la 1ère activation
+--   license.future_1              → clé chiffrée mois +1 (pré-enregistrée)
+--   license.future_1_meta         → métadonnées JSON du slot +1
+--   license.future_2              → clé chiffrée mois +2
+--   license.future_2_meta         → métadonnées JSON du slot +2
+--   license.future_3              → clé chiffrée mois +3
+--   license.future_3_meta         → métadonnées JSON du slot +3
+--
+-- Ces enregistrements sont synchronisés en temps réel via la table parametres
+-- (déjà incluse dans la publication supabase_realtime).
+-- Aucune table supplémentaire n'est nécessaire.
+
+-- Vue utilitaire : état actuel de la licence (lecture seule)
+CREATE OR REPLACE VIEW v_license_status AS
+SELECT
+    MAX(CASE WHEN cle = 'license.monthly_activated_at' THEN valeur END) AS activated_at,
+    MAX(CASE WHEN cle = 'license.monthly_expires_at'   THEN valeur END) AS expires_at,
+    MAX(CASE WHEN cle = 'license.monthly_first_day'    THEN valeur END) AS first_day,
+    MAX(CASE WHEN cle = 'license.future_1'             THEN 'oui' END)  AS slot_1_active,
+    MAX(CASE WHEN cle = 'license.future_2'             THEN 'oui' END)  AS slot_2_active,
+    MAX(CASE WHEN cle = 'license.future_3'             THEN 'oui' END)  AS slot_3_active,
+    now() AS checked_at
+FROM parametres
+WHERE cle LIKE 'license.%';
+
 -- Forcer le rafraîchissement du cache PostgREST
 NOTIFY pgrst, 'reload schema';
 

@@ -215,9 +215,11 @@ contextBridge.exposeInMainWorld('api', {
     getStats:                ()           => ipcRenderer.invoke('terrain:getStats'),
   },
   license: {
-    status:   ()          => ipcRenderer.invoke('license:status'),
-    activate: (key)       => ipcRenderer.invoke('license:activate', key),
-    sync:     ()          => ipcRenderer.invoke('license:sync'),
+    status:        ()    => ipcRenderer.invoke('license:status'),
+    activate:      (key) => ipcRenderer.invoke('license:activate', key),
+    sync:          ()    => ipcRenderer.invoke('license:sync'),
+    checkRealtime: ()    => ipcRenderer.invoke('license:check-realtime'),
+    generateKey:   ()    => ipcRenderer.invoke('license:generate-key'),
   }
   ,
   // ── EVENTS (Main -> Renderer) ─────────────────────────────────────────

@@ -1,0 +1,12 @@
+♈ Bélier	mars		->	8eI
+♉ Taureau	avril		->	74n
+♊ Gémeaux	mai		    ->	6ew
+♋ Cancer	juin		->	C4u
+♌ Lion		juillet		->	IiO
+♍ Vierge	août		->	Vie
+♎ Balance	septembre	->	84i
+♏ Scorpion	octobre		->	5co
+♐ Sagittaire	novembre->	546
+♑ Capricorne	décembre->	C4p
+♒ Verseau	janvier		->	V3r
+♓ Poissons	février		->	P0i

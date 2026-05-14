@@ -263,6 +263,62 @@
                 <li>Utiliser le bouton <strong>« Envoyer les tables »</strong> pour initialiser la structure du cloud</li>
               </ol>
             </div>
+
+            <!-- ACTIVATION DÉFINITIVE -->
+            <div class="params-form-card" style="border-color:rgba(46,204,113,0.3);background:rgba(46,204,113,0.04)">
+              <h3 style="color:#2ecc71">🔐 Activation Définitive</h3>
+              <div id="param-perm-status" style="display:none;font-size:13px;color:#2ecc71;font-weight:600;margin-bottom:10px">
+                ✅ Application activée définitivement. Accès illimité.
+              </div>
+              <div id="param-perm-input-container">
+                <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">
+                  Si vous possédez une clé d'activation définitive, vous pouvez l'entrer ici.
+                </p>
+                <div style="display:flex;gap:8px">
+                  <input type="text" class="input" id="param-perm-key" placeholder="Clé définitive…" spellcheck="false" autocomplete="off" style="font-family:monospace;font-size:12px">
+                  <button class="btn btn-success btn-sm" id="btn-param-perm">Activer</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- PRÉ-ACTIVATION MENSUELLE -->
+            <div class="params-form-card" id="param-future-slots-container" style="border-color:rgba(74,159,212,0.3);background:rgba(74,159,212,0.04)">
+              <h3 style="color:var(--accent)">🗓 Pré-activation Mensuelle</h3>
+              <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">
+                Pré-enregistrez les clés des mois à venir. Le mois +1 doit être enregistré avant le mois +2.
+              </p>
+              <div id="future-slot-1" style="margin-bottom:12px">
+                <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                  <span style="background:rgba(74,159,212,0.15);border:1px solid rgba(74,159,212,0.3);border-radius:6px;padding:1px 8px;font-size:11px;color:var(--accent)">Mois +1</span>
+                  <span id="future-slot-1-status"></span>
+                </label>
+                <div style="display:flex;gap:8px">
+                  <input type="text" class="input" id="future-key-1" placeholder="Clé du mois +1…" spellcheck="false" autocomplete="off" style="font-family:monospace;font-size:12px">
+                  <button class="btn btn-primary btn-sm" id="btn-future-1">Enregistrer</button>
+                </div>
+              </div>
+              <div id="future-slot-2" style="margin-bottom:12px;opacity:0.55">
+                <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                  <span style="background:rgba(74,159,212,0.15);border:1px solid rgba(74,159,212,0.3);border-radius:6px;padding:1px 8px;font-size:11px;color:var(--accent)">Mois +2</span>
+                  <span id="future-slot-2-status">🔒 Nécessite le mois +1</span>
+                </label>
+                <div style="display:flex;gap:8px">
+                  <input type="text" class="input" id="future-key-2" placeholder="Clé du mois +2…" spellcheck="false" autocomplete="off" style="font-family:monospace;font-size:12px" disabled>
+                  <button class="btn btn-primary btn-sm" id="btn-future-2" disabled>Enregistrer</button>
+                </div>
+              </div>
+              <div id="future-slot-3" style="opacity:0.55">
+                <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                  <span style="background:rgba(74,159,212,0.15);border:1px solid rgba(74,159,212,0.3);border-radius:6px;padding:1px 8px;font-size:11px;color:var(--accent)">Mois +3</span>
+                  <span id="future-slot-3-status">🔒 Nécessite les mois +1 et +2</span>
+                </label>
+                <div style="display:flex;gap:8px">
+                  <input type="text" class="input" id="future-key-3" placeholder="Clé du mois +3…" spellcheck="false" autocomplete="off" style="font-family:monospace;font-size:12px" disabled>
+                  <button class="btn btn-primary btn-sm" id="btn-future-3" disabled>Enregistrer</button>
+                </div>
+              </div>
+            </div>
+
           </div>
 
         </div>
@@ -321,6 +377,7 @@
         setValue('p-sync-url', cfg.url || '');
         setValue('p-sync-key', cfg.key || '');
         await loadSyncStatus();
+        await loadFutureSlots();
       } catch {}
     }
   }
@@ -345,6 +402,55 @@
         badge.style.color       = '#2ecc71';
       }
     } catch {}
+  }
+
+  async function loadFutureSlots() {
+    let status;
+    try { status = await window.api.license.status(); } catch { return; }
+    
+    const permStatus = document.getElementById('param-perm-status');
+    const permInputContainer = document.getElementById('param-perm-input-container');
+    const futureContainer = document.getElementById('param-future-slots-container');
+
+    if (status.status === 'activated') {
+      if (permStatus) permStatus.style.display = 'block';
+      if (permInputContainer) permInputContainer.style.display = 'none';
+      if (futureContainer) futureContainer.style.display = 'none';
+      return;
+    }
+
+    if (permStatus) permStatus.style.display = 'none';
+    if (permInputContainer) permInputContainer.style.display = 'block';
+    if (futureContainer) futureContainer.style.display = 'block';
+
+    const slots = status.futureSlotsActivated || {};
+
+    function applySlot(num, isActive, isUnlocked) {
+      const slotEl  = document.getElementById(`future-slot-${num}`);
+      const statEl  = document.getElementById(`future-slot-${num}-status`);
+      const input   = document.getElementById(`future-key-${num}`);
+      const btn     = document.getElementById(`btn-future-${num}`);
+      if (!slotEl) return;
+      if (isActive) {
+        slotEl.style.opacity = '1';
+        if (statEl) statEl.textContent = '✅ Enregistrée';
+        if (statEl) statEl.style.color = '#2ecc71';
+        if (input)  { input.disabled = true; input.value = ''; }
+        if (btn)    { btn.disabled = true; btn.textContent = '✅ OK'; }
+      } else if (isUnlocked || num === 1) {
+        slotEl.style.opacity = '1';
+        if (statEl) statEl.textContent = '';
+        if (input)  input.disabled = false;
+        if (btn)    { btn.disabled = false; btn.textContent = 'Enregistrer'; }
+      } else {
+        slotEl.style.opacity = '0.45';
+        if (input)  input.disabled = true;
+        if (btn)    btn.disabled = true;
+      }
+    }
+    applySlot(1, slots.slot1, true);
+    applySlot(2, slots.slot2, slots.slot1 === true);
+    applySlot(3, slots.slot3, slots.slot2 === true);
   }
 
   function renderPrinterList(supported) {
@@ -659,6 +765,57 @@
         navigator.clipboard.writeText(sql);
         Toast.success('Code copié !');
       });
+    }
+
+    // ── PRÉ-ACTIVATION MENSUELLE ──────────────────────────
+    function bindFutureSlot(num) {
+      const btn   = document.getElementById(`btn-future-${num}`);
+      const input = document.getElementById(`future-key-${num}`);
+      if (!btn || !input) return;
+      btn.addEventListener('click', async () => {
+        const key = input.value.trim();
+        if (!key) { Toast.warn('Veuillez entrer une clé.'); return; }
+        btn.disabled    = true;
+        btn.textContent = '⌛…';
+        const res = await window.api.license.activate(key);
+        btn.disabled    = false;
+        btn.textContent = 'Enregistrer';
+        if (res.success) {
+          Toast.success(res.message);
+          input.value = '';
+          await loadFutureSlots();
+        } else {
+          Toast.error(res.message);
+        }
+      });
+      input.addEventListener('keydown', (e) => { if (e.key === 'Enter') btn.click(); });
+    }
+    bindFutureSlot(1);
+    bindFutureSlot(2);
+    bindFutureSlot(3);
+
+    // Activation définitive
+    const btnPerm = document.getElementById('btn-param-perm');
+    const inputPerm = document.getElementById('param-perm-key');
+    if (btnPerm && inputPerm) {
+      btnPerm.addEventListener('click', async () => {
+        const key = inputPerm.value.trim();
+        if (!key) { Toast.warn('Veuillez entrer une clé définitive.'); return; }
+        btnPerm.disabled = true;
+        btnPerm.textContent = '⌛…';
+        const res = await window.api.license.activate(key);
+        btnPerm.disabled = false;
+        btnPerm.textContent = 'Activer';
+        if (res.success) {
+          Toast.success(res.message);
+          inputPerm.value = '';
+          await loadFutureSlots(); // Recharge l'UI (qui va masquer les slots)
+          setTimeout(() => window.location.reload(), 1500); // Recharge l'app pour propager
+        } else {
+          Toast.error(res.message);
+        }
+      });
+      inputPerm.addEventListener('keydown', (e) => { if (e.key === 'Enter') btnPerm.click(); });
     }
   }
 

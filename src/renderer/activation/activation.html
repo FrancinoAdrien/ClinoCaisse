@@ -1,43 +1,120 @@
-<div class="activation-container">
-    <div class="activation-card">
-        <div class="activation-header" style="position: relative;">
-            <button id="btn-activation-retour" class="btn btn-ghost" style="position: absolute; top: -15px; left: -15px; display: none;">← Retour</button>
-            <div class="activation-icon">🔐</div>
-            <h1>Activation Requise</h1>
-            <p id="activation-msg">Votre période d'essai est terminée. Veuillez activer votre licence pour continuer à utiliser ClinoCaisse.</p>
-        </div>
+<div class="act-container">
+  <div class="act-card">
 
-        <div class="activation-body">
-            <div class="input-group">
-                <label for="license-key">Clé d'activation du jour</label>
-                <input type="text" id="license-key" placeholder="Entrez la clé ici..." spellcheck="false" autocomplete="off">
-            </div>
-            
-            <button id="btn-activate" class="btn-primary">Valider la clé</button>
-            
-            <div class="activation-divider">
-                <span>OU SYNCHRONISATION CLOUD</span>
-            </div>
-            
-            <p class="sync-desc">Saisissez l'URL et la clé Supabase pour activer via le cloud.</p>
-            
-            <div class="input-group">
-                <label for="cloud-url">URL Supabase</label>
-                <input type="text" id="cloud-url" placeholder="https://xyz.supabase.co" spellcheck="false" autocomplete="off">
-            </div>
-            <div class="input-group">
-                <label for="cloud-key">Clé Anon / Service Role</label>
-                <input type="text" id="cloud-key" placeholder="votre-cle-api" spellcheck="false" autocomplete="off">
-            </div>
+    <!-- Bouton Retour (visible si app encore active) -->
+    <button id="btn-act-retour" class="act-back-btn" style="display:none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+      Retour
+    </button>
 
-            <button id="btn-sync-cloud" class="btn-secondary" style="margin-top: 8px;">
-                <span class="icon">☁️</span> Enregistrer et Synchroniser
-            </button>
-        </div>
-
-        <div class="activation-footer">
-            <p>Besoin d'aide ? Contactez votre administrateur.</p>
-            <p class="trial-id" id="trial-info"></p>
-        </div>
+    <!-- En-tête -->
+    <div class="act-header">
+      <div class="act-icon">🔐</div>
+      <h1>Activation ClinoCaisse</h1>
+      <p id="act-status-msg" class="act-status-neutral">Vérification du statut de la licence…</p>
     </div>
+
+    <!-- Statut courant (affiché si licence active) -->
+    <div class="act-status-card" id="act-status-card" style="display:none">
+      <div class="act-status-row">
+        <span class="act-status-label">Statut</span>
+        <span id="act-status-badge" class="act-badge">—</span>
+      </div>
+      <div class="act-status-row" id="act-expire-row">
+        <span class="act-status-label">Expire le</span>
+        <span id="act-expire-date">—</span>
+      </div>
+      <div class="act-status-row" id="act-remain-row">
+        <span class="act-status-label">Temps restant</span>
+        <span id="act-remain">—</span>
+      </div>
+    </div>
+
+    <!-- Zone saisie clé -->
+    <div class="act-section" id="act-section-normal">
+      <label class="act-label" for="act-key-current">
+        🗝️ Clé d'activation (mensuelle ou définitive)
+      </label>
+      <div class="act-input-row">
+        <input type="text" id="act-key-current"
+               class="act-input" placeholder="Entrez votre clé ici…"
+               spellcheck="false" autocomplete="off">
+        <button id="btn-act-current" class="act-btn-primary">Activer</button>
+      </div>
+      <p style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:6px">
+        La clé mensuelle change chaque mois. La clé définitive active l'application sans limitation.
+      </p>
+    </div>
+
+    <!-- Zone pré-activation (Visible uniquement si déjà activé et hors alerte) -->
+    <div class="act-section" id="act-section-future" style="display:none;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1)">
+      <label class="act-label" style="color:var(--accent);margin-bottom:12px">
+        🗓 Pré-activation Mensuelle
+      </label>
+      <p style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:14px;line-height:1.4">
+        Votre licence actuelle est valide. Vous pouvez pré-enregistrer les mois suivants.
+      </p>
+      
+      <!-- Mois +1 -->
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:11px;color:var(--accent);border:1px solid rgba(74,159,212,0.3);padding:2px 6px;border-radius:4px;background:rgba(74,159,212,0.1)">Mois +1</span>
+          <span id="act-future-1-status" style="font-size:11px;font-weight:600"></span>
+        </div>
+        <div class="act-input-row">
+          <input type="text" id="act-future-1" class="act-input" placeholder="Clé mois +1…" spellcheck="false" autocomplete="off" style="font-family:monospace;font-size:13px">
+          <button id="btn-act-future-1" class="act-btn-primary">OK</button>
+        </div>
+      </div>
+
+      <!-- Mois +2 -->
+      <div style="margin-bottom:12px;opacity:0.5" id="act-future-slot-2">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:11px;color:var(--accent);border:1px solid rgba(74,159,212,0.3);padding:2px 6px;border-radius:4px;background:rgba(74,159,212,0.1)">Mois +2</span>
+          <span id="act-future-2-status" style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.3)">🔒 Nécessite mois +1</span>
+        </div>
+        <div class="act-input-row">
+          <input type="text" id="act-future-2" class="act-input" placeholder="Clé mois +2…" spellcheck="false" autocomplete="off" style="font-family:monospace;font-size:13px" disabled>
+          <button id="btn-act-future-2" class="act-btn-primary" disabled>OK</button>
+        </div>
+      </div>
+
+      <!-- Mois +3 -->
+      <div style="opacity:0.5" id="act-future-slot-3">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:11px;color:var(--accent);border:1px solid rgba(74,159,212,0.3);padding:2px 6px;border-radius:4px;background:rgba(74,159,212,0.1)">Mois +3</span>
+          <span id="act-future-3-status" style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.3)">🔒 Nécessite mois +2</span>
+        </div>
+        <div class="act-input-row">
+          <input type="text" id="act-future-3" class="act-input" placeholder="Clé mois +3…" spellcheck="false" autocomplete="off" style="font-family:monospace;font-size:13px" disabled>
+          <button id="btn-act-future-3" class="act-btn-primary" disabled>OK</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="act-divider"><span>OU SYNCHRONISATION CLOUD</span></div>
+
+    <p class="act-sync-desc">Saisissez l'URL et la clé Supabase pour vérifier l'activation via le cloud.</p>
+
+    <div class="act-input-group">
+      <label for="cloud-url">URL Supabase</label>
+      <input type="text" id="cloud-url" class="act-input"
+             placeholder="https://xyz.supabase.co" spellcheck="false" autocomplete="off">
+    </div>
+    <div class="act-input-group">
+      <label for="cloud-key">Clé Anon / Service Role</label>
+      <input type="text" id="cloud-key" class="act-input"
+             placeholder="votre-cle-api" spellcheck="false" autocomplete="off">
+    </div>
+    <button id="btn-sync-cloud" class="act-btn-secondary">
+      <span>☁️</span> Enregistrer et Synchroniser
+    </button>
+
+    <div class="act-footer">
+      <p>Besoin d'aide ? Contactez votre administrateur ClinoKeys.</p>
+      <p style="font-size:11px;opacity:0.5;margin-top:4px">Pour pré-activer les mois à venir → Paramètres → Cloud (admin)</p>
+    </div>
+  </div>
 </div>
